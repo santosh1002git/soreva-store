@@ -1,3 +1,4 @@
+let HERO_SLIDES = [];
 /* ==========================================================================
    SORÈVA LUXURY JEWELLERY - STORE ENGINE
    Reference: soreva.in
@@ -229,6 +230,7 @@ let PRODUCTS = [
         description: "Continuous fire of handset round brilliant stones. Flexible, feather-light, and flawlessly secure."
     }
 ];
+let HERO_SLIDES = [];
 
 // App State
 let cart = [];
