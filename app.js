@@ -1446,7 +1446,7 @@ function initIntro() {
     if (!intro) return;
     
     // Play only once per session
-    if (sessionStorage.getItem('soreva_intro_played') === 'true') {
+    if (false && sessionStorage.getItem('soreva_intro_played') === 'true') {
         intro.style.display = 'none';
         return;
     }
