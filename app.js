@@ -242,24 +242,54 @@ function openEntryPrologue() {
     }
 }
 
+
+let logoTypingTimeouts = [];
+
 function initIntro() {
     const intro = document.getElementById('entryExperience');
     if (!intro) return;
     
-    if (false && sessionStorage.getItem('soreva_intro_played')) {
-        intro.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        entryActive = false;
-        return;
+    // if (false && sessionStorage.getItem('soreva_intro_played')) { ... }
+    
+    intro.style.display = 'flex';
+    intro.classList.remove('unveiled');
+    document.body.style.overflow = 'hidden';
+    entryActive = true;
+    
+    // Clear previous timeouts if re-running
+    logoTypingTimeouts.forEach(t => clearTimeout(t));
+    logoTypingTimeouts = [];
+    
+    const logoInner = document.getElementById('logoTypeInner');
+    const logoCursor = document.getElementById('logoTypeCursor');
+    
+    if (logoInner) logoInner.classList.remove('revealed');
+    if (logoCursor) {
+        logoCursor.classList.remove('revealed');
+        logoCursor.classList.remove('fade-out');
     }
     
-    sessionStorage.setItem('soreva_intro_played', 'true');
-    document.body.style.overflow = 'hidden';
+    // 1. Initial pause, then start typing (revealing)
+    let t1 = setTimeout(() => {
+        if (logoInner && entryActive) {
+            logoInner.classList.add('revealed');
+            if (logoCursor) logoCursor.classList.add('revealed');
+        }
+    }, 400);
     
-    // Automatically close the intro after 2.5 seconds (or adjust based on CSS animation duration)
+    // 2. Fade out the cursor after typing finishes
+    let t2 = setTimeout(() => {
+        if (logoCursor && entryActive) {
+            logoCursor.classList.add('fade-out');
+        }
+    }, 1800); // 400ms delay + 1.4s transition
+    
+    // 3. Automatically close the intro
     entryAutoTimer = setTimeout(() => {
         closeEntryPrologue();
-    }, 2500);
+    }, 2800);
+    
+    logoTypingTimeouts.push(t1, t2);
 }
 
 // Call initIntro on DOMContentLoaded
