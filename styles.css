@@ -2515,7 +2515,7 @@ ul {
     width: 100vw;
     height: 100vh;
     z-index: 99999;
-    background: #fbf8f5;
+    background: #ffffff;
     background: radial-gradient(ellipse at center, #ffffff 0%, #fbf8f5 65%, #f4ede4 100%);
     display: flex;
     align-items: center;
@@ -2559,32 +2559,12 @@ ul {
     position: relative;
     width: clamp(280px, 38vw, 440px);
     aspect-ratio: 767 / 200;
-    overflow: visible;
-}
-
-.logo-type-inner {
-    width: 0%;
-    border-right: 0px solid transparent;
-    position: absolute;
-    inset: 0;
     overflow: hidden;
-    
-    
-    transition: width 1.4s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: width;
 }
 
-.logo-type-inner .logo-type-img {
-    position: absolute;
-    inset: 0;
-    width: clamp(280px, 38vw, 440px);
-    height: 100%;
-    object-fit: contain;
-    object-position: left center;
-    display: block;
-    user-select: none;
-    pointer-events: none;
-}
+
+
+
 
 .logo-type-cursor {
     position: absolute;
@@ -2696,13 +2676,51 @@ ul {
     background: rgba(197,160,89,0.08); color: var(--gold-accent); opacity: 1;
 }
 
-.logo-type-inner.revealed {
-    width: 100%;
-    
-    
-}
+
 
 /* Prevent intro flicker */
 html.skip-intro .logo-intro-experience {
     display: none !important;
+}
+
+.logo-type-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.logo-reveal-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    z-index: 2;
+    transition: transform 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.logo-reveal-cover.revealed {
+    transform: translateX(100%);
+}
+
+.logo-type-cursor {
+    position: absolute;
+    top: 2%;
+    left: 0%;
+    width: 3px;
+    height: 96%;
+    background-color: #c5a059;
+    box-shadow: 0 0 12px rgba(197, 160, 89, 0.9), 0 0 4px #c5a059;
+    border-radius: 2px;
+    z-index: 3;
+    transition: left 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.logo-type-cursor.revealed {
+    left: 100%;
 }

@@ -1460,7 +1460,7 @@ function initIntro() {
     logoTypingTimeouts.forEach(t => clearTimeout(t));
     logoTypingTimeouts = [];
     
-    const logoInner = document.getElementById('logoTypeInner');
+    const logoInner = document.getElementById('logoRevealCover');
     const logoCursor = document.getElementById('logoTypeCursor');
     
     if (logoInner) logoInner.classList.remove('revealed');
