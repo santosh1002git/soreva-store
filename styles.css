@@ -2563,21 +2563,24 @@ ul {
 }
 
 .logo-type-inner {
+    width: 0%;
+    border-right: 0px solid transparent;
     position: absolute;
     inset: 0;
     overflow: hidden;
-    -webkit-clip-path: inset(0 100% 0 0);
-    clip-path: inset(0 100% 0 0);
-    transition: -webkit-clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1), clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: clip-path;
+    
+    
+    transition: width 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: width;
 }
 
 .logo-type-inner .logo-type-img {
     position: absolute;
     inset: 0;
-    width: 100%;
+    width: clamp(280px, 38vw, 440px);
     height: 100%;
     object-fit: contain;
+    object-position: left center;
     display: block;
     user-select: none;
     pointer-events: none;
@@ -2694,6 +2697,12 @@ ul {
 }
 
 .logo-type-inner.revealed {
-    -webkit-clip-path: inset(0 0% 0 0);
-    clip-path: inset(0 0% 0 0);
+    width: 100%;
+    
+    
+}
+
+/* Prevent intro flicker */
+html.skip-intro .logo-intro-experience {
+    display: none !important;
 }
