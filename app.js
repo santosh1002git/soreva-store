@@ -1661,7 +1661,7 @@ function updateHeroUI() {
     if (activeNameEl) activeNameEl.textContent = slide.name;
     if (activePriceEl) activePriceEl.textContent = `${formatPrice(slide.priceINR)} • ${slide.finish}`;
 }
-\n
+
 function initApp() {
     if (typeof initAnnouncementTicker === 'function') initAnnouncementTicker();
     if (typeof initCurrencySwitcher === 'function') initCurrencySwitcher();
