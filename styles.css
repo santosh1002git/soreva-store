@@ -2566,8 +2566,9 @@ ul {
     position: absolute;
     inset: 0;
     overflow: hidden;
+    -webkit-clip-path: inset(0 100% 0 0);
     clip-path: inset(0 100% 0 0);
-    transition: clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: -webkit-clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1), clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1);
     will-change: clip-path;
 }
 
@@ -2690,4 +2691,9 @@ ul {
 }
 .nav-dropdown-menu a:hover {
     background: rgba(197,160,89,0.08); color: var(--gold-accent); opacity: 1;
+}
+
+.logo-type-inner.revealed {
+    -webkit-clip-path: inset(0 0% 0 0);
+    clip-path: inset(0 0% 0 0);
 }
