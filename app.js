@@ -1205,7 +1205,15 @@ function openQuickView(productId) {
     const modalPrice = document.getElementById('modalPrice');
     const modalOriginal = document.getElementById('modalOriginalPrice');
     const modalDesc = document.getElementById('modalDescription');
+    
     const finishPillsWrap = document.getElementById('modalFinishPills');
+    
+    // Update Full Details Link
+    const fullDetailsBtn = document.getElementById('modalFullDetailsBtn');
+    if (fullDetailsBtn) {
+        fullDetailsBtn.href = `product.html?id=${product.id}`;
+    }
+
 
     if (modalImg) modalImg.src = product.primaryImg;
     if (modalCat) modalCat.textContent = `${product.category} • ${product.subCategory}`;
