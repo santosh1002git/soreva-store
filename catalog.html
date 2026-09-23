@@ -129,6 +129,11 @@
             transform: scale(1.02);
         }
     </style>
+<script>
+    if (sessionStorage.getItem('soreva_intro_played') === 'true') {
+        document.documentElement.classList.add('skip-intro');
+    }
+</script>
 </head>
 <body>
 
@@ -339,7 +344,7 @@
                 </div>
 
                 <div class="product-grid" id="productsGrid">
-                    <!-- Injected by app.js?v=v2.0 -->
+                    <!-- Injected by app.js?v=v2.2 -->
                 </div>
             </div>
         </section>
@@ -457,7 +462,7 @@
 
         <!-- Cart Items List -->
         <div class="cart-items-list" id="cartItemsList">
-            <!-- Rendered by app.js?v=v2.0 -->
+            <!-- Rendered by app.js?v=v2.2 -->
         </div>
 
         <!-- Cart Drawer Footer -->
@@ -680,7 +685,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=v2.0"></script>
+    <script src="app.js?v=v2.2"></script>
 
     </body>
 </html>
