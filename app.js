@@ -1,4 +1,3 @@
-let HERO_SLIDES = [];
 /* ==========================================================================
    SORÈVA LUXURY JEWELLERY - STORE ENGINE
    Reference: soreva.in
