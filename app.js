@@ -991,7 +991,7 @@ async function handlePlaceOrder(e) {
             // Clear cart
             cart = [];
             appliedCoupon = null;
-            saveCart();
+            localStorage.setItem('sorevaCart', JSON.stringify(cart));
             updateCartUI();
 
             // Populate Success View
@@ -1472,7 +1472,7 @@ function initIntro() {
     if (!intro) return;
     
     // Play only once per session
-    if (false && sessionStorage.getItem('soreva_intro_played') === 'true') {
+    if (sessionStorage.getItem('soreva_intro_played') === 'true') {
         intro.style.display = 'none';
         return;
     }
@@ -1814,7 +1814,7 @@ function initProductPage() {
             } else {
                 cart.push({...product, quantity: qty, selectedFinish: product.finish || '18K Gold Plated'});
             }
-            saveCart();
+            localStorage.setItem('sorevaCart', JSON.stringify(cart));
             updateCartUI();
             
             // Show cart drawer
