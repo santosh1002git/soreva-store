@@ -206,3 +206,62 @@ function initChatbot() {
 }
 
 document.addEventListener('DOMContentLoaded', initChatbot);
+
+// ==========================================
+// INTRO ANIMATION (Rebuilt for V1.0)
+// ==========================================
+let entryActive = true;
+let entryAutoTimer;
+
+function closeEntryPrologue() {
+    if (!entryActive) return;
+    entryActive = false;
+    clearTimeout(entryAutoTimer);
+    
+    const intro = document.getElementById('entryExperience');
+    if (intro) {
+        intro.classList.add('unveiled');
+        // Let CSS handle the transition, then remove from DOM or just keep hidden
+        setTimeout(() => {
+            intro.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }, 800);
+    } else {
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function openEntryPrologue() {
+    const intro = document.getElementById('entryExperience');
+    if (intro) {
+        intro.style.display = 'flex';
+        intro.classList.remove('unveiled');
+        document.body.style.overflow = 'hidden';
+        entryActive = true;
+        initIntro();
+    }
+}
+
+function initIntro() {
+    const intro = document.getElementById('entryExperience');
+    if (!intro) return;
+    
+    if (false && sessionStorage.getItem('soreva_intro_played')) {
+        intro.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        entryActive = false;
+        return;
+    }
+    
+    sessionStorage.setItem('soreva_intro_played', 'true');
+    document.body.style.overflow = 'hidden';
+    
+    // Automatically close the intro after 2.5 seconds (or adjust based on CSS animation duration)
+    entryAutoTimer = setTimeout(() => {
+        closeEntryPrologue();
+    }, 2500);
+}
+
+// Call initIntro on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', initIntro);
+
