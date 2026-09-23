@@ -18,7 +18,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
 
     <!-- Custom Stylesheet with Cache-Buster -->
-    <link rel="stylesheet" href="styles.css?v=v3.0">
+    <link rel="stylesheet" href="styles.css?v=v3.1">
 
     <!-- Inline Critical Styles for Intro Screen (Guarantees zero-delay rendering without cache issues) -->
     <style>
@@ -134,7 +134,24 @@
         document.documentElement.classList.add('skip-intro');
     }
 </script>
+
+<script>
+window.addEventListener('error', function(e) {
+    const err = document.createElement('div');
+    err.style.position = 'fixed';
+    err.style.top = '0';
+    err.style.left = '0';
+    err.style.zIndex = '9999999';
+    err.style.background = 'red';
+    err.style.color = 'white';
+    err.style.padding = '20px';
+    err.style.fontSize = '20px';
+    err.innerHTML = 'JS ERROR: ' + e.message + ' at ' + e.filename + ':' + e.lineno;
+    document.body.appendChild(err);
+});
+</script>
 </head>
+
 <body>
 
     <!-- ==========================================
@@ -146,8 +163,9 @@
         <div class="logo-intro-stage">
             <div class="logo-intro-ambient-glow"></div>
             <div class="logo-type-frame" id="logoTypeFrame">
-                <img src="assets/logo-black.png?v=clean2026" alt="Sorèva" class="logo-type-img" id="logoTypeImg">
-                <div class="logo-reveal-cover" id="logoRevealCover"></div>
+                <div class="logo-type-inner" id="logoTypeInner">
+                    <img src="assets/logo-black.png?v=clean2026" alt="Sorèva" class="logo-type-img" id="logoTypeImg">
+                </div>
                 <span class="logo-type-cursor" id="logoTypeCursor"></span>
             </div>
         </div>
@@ -755,7 +773,7 @@
 
         <!-- Cart Items List -->
         <div class="cart-items-list" id="cartItemsList">
-            <!-- Rendered by app.js?v=v3.0 -->
+            <!-- Rendered by app.js?v=v3.1 -->
         </div>
 
         <!-- Cart Drawer Footer -->
@@ -978,7 +996,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=v3.0"></script>
+    <script src="app.js?v=v3.1"></script>
 
     </body>
 </html>
