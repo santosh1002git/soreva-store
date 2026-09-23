@@ -30,7 +30,7 @@ let PRODUCTS = [
         rating: 4.9,
         reviews: 36,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver", "Rose Gold"],
+        availableFinishes: ["24K Gold", "Rhodium Silver", "Rose Gold"],
         badge: "Bestseller",
         launchOffer: false,
         disabled: false,
@@ -57,7 +57,7 @@ let PRODUCTS = [
         rating: 4.8,
         reviews: 24,
         plating: "silver",
-        availableFinishes: ["Rhodium Silver", "18K Gold"],
+        availableFinishes: ["Rhodium Silver", "24K Gold"],
         badge: "Trending",
         launchOffer: false,
         disabled: false,
@@ -83,7 +83,7 @@ let PRODUCTS = [
         rating: 4.9,
         reviews: 19,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver"],
+        availableFinishes: ["24K Gold", "Rhodium Silver"],
         badge: "Bridal Pick",
         launchOffer: false,
         disabled: false,
@@ -109,7 +109,7 @@ let PRODUCTS = [
         rating: 5.0,
         reviews: 28,
         plating: "silver",
-        availableFinishes: ["Rhodium Silver", "18K Gold", "Rose Gold"],
+        availableFinishes: ["Rhodium Silver", "24K Gold", "Rose Gold"],
         badge: "Popular",
         launchOffer: false,
         disabled: false,
@@ -135,7 +135,7 @@ let PRODUCTS = [
         rating: 4.8,
         reviews: 15,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver"],
+        availableFinishes: ["24K Gold", "Rhodium Silver"],
         badge: "Classic",
         launchOffer: false,
         disabled: false,
@@ -161,7 +161,7 @@ let PRODUCTS = [
         rating: 5.0,
         reviews: 31,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver"],
+        availableFinishes: ["24K Gold", "Rhodium Silver"],
         badge: "Royal Edition",
         launchOffer: false,
         disabled: false,
@@ -187,7 +187,7 @@ let PRODUCTS = [
         rating: 4.9,
         reviews: 22,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver"],
+        availableFinishes: ["24K Gold", "Rhodium Silver"],
         badge: "Festive Pick",
         launchOffer: false,
         disabled: false,
@@ -213,7 +213,7 @@ let PRODUCTS = [
         rating: 4.9,
         reviews: 18,
         plating: "gold",
-        availableFinishes: ["18K Gold", "Rhodium Silver", "Rose Gold"],
+        availableFinishes: ["24K Gold", "Rhodium Silver", "Rose Gold"],
         badge: "Bestseller",
         launchOffer: false,
         disabled: false,
@@ -1014,7 +1014,7 @@ async function handlePlaceOrder(e) {
     }
 }
 
-function addToCart(productId, finish = "18K Gold", quantity = 1) {
+function addToCart(productId, finish = "24K Gold", quantity = 1) {
     const existing = cart.find(item => item.productId === productId && item.finish === finish);
     if (existing) {
         existing.qty += quantity;
@@ -1160,7 +1160,7 @@ function updateWishlistUI() {
 // Quick View Modal
 // ==========================================
 let currentModalProductId = null;
-let currentModalSelectedFinish = "18K Gold";
+let currentModalSelectedFinish = "24K Gold";
 
 function initQuickView() {
     const modalBackdrop = document.getElementById('quickViewBackdrop');
@@ -1767,7 +1767,7 @@ function initProductPage() {
                     </summary>
                     <div style="padding-top: 16px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
                         • Primary Material: Brass & Copper Alloy<br>
-                        • Plating: ${product.finish || '18K Gold'}<br>
+                        • Plating: ${product.finish || '24K Gold'}<br>
                         • Stones: AAA+ Austrian Cubic Zirconia<br>
                         • Fastening: Adjustable<br>
                         • Hypoallergenic & Nickel-Free
@@ -1812,7 +1812,7 @@ function initProductPage() {
             if (existing) {
                 existing.quantity += qty;
             } else {
-                cart.push({...product, quantity: qty, selectedFinish: product.finish || '18K Gold Plated'});
+                cart.push({...product, quantity: qty, selectedFinish: product.finish || '24K Gold Plated'});
             }
             localStorage.setItem('sorevaCart', JSON.stringify(cart));
             updateCartUI();
