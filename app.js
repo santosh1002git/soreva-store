@@ -473,7 +473,7 @@ function applyStoreData(data) {
     if (data.products && data.products.length) {
         PRODUCTS = data.products;
         renderProducts();
-        if (typeof initProductPage === \'function\') initProductPage();
+        if (typeof initProductPage === 'function') initProductPage();
     }
     if (data.heroSlides && data.heroSlides.length) {
         HERO_SLIDES = data.heroSlides;
