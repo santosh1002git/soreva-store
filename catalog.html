@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorèva - Exquisite Cubic Zirconia Jewellery for Every Occasion</title>
+    <meta name="description" content="Discover Sorèva — premium CZ jewellery designed to make every day feel special. Shop elegant necklaces, earrings, rings, pendants and wristwear.">
+
+    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+
+    <!-- Custom Stylesheet with Cache-Buster -->
+    <link rel="stylesheet" href="styles.css?v=20260922_exact">
+
+    <!-- Inline Critical Styles for Intro Screen (Guarantees zero-delay rendering without cache issues) -->
+    <style>
+        .entry-experience.logo-intro-experience {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            background: #fbf8f5 !important;
+            background: radial-gradient(ellipse at center, #ffffff 0%, #fbf8f5 65%, #f4ede4 100%) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s !important;
+            -webkit-font-smoothing: antialiased !important;
+        }
+        .entry-experience.logo-intro-experience.unveiled {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transform: scale(1.02) !important;
+            pointer-events: none !important;
+        }
+        .logo-intro-stage {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        .logo-intro-ambient-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(580px, 85vw);
+            height: min(380px, 60vw);
+            transform: translate(-50%, -50%);
+            background: radial-gradient(ellipse at center, rgba(223, 189, 124, 0.25) 0%, rgba(197, 160, 89, 0.06) 50%, transparent 75%);
+            filter: blur(40px);
+            pointer-events: none;
+        }
+        .logo-type-frame {
+            position: relative;
+            width: clamp(280px, 38vw, 440px);
+            aspect-ratio: 767 / 200;
+            overflow: visible;
+        }
+        .logo-type-inner {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            -webkit-clip-path: inset(0 100% 0 0);
+            clip-path: inset(0 100% 0 0);
+            transition: -webkit-clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1), clip-path 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: clip-path, -webkit-clip-path;
+        }
+        .logo-type-inner.revealed {
+            -webkit-clip-path: inset(0 0% 0 0);
+            clip-path: inset(0 0% 0 0);
+        }
+        .logo-type-inner .logo-type-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+            pointer-events: none;
+        }
+        .logo-type-cursor {
+            position: absolute;
+            top: 2%;
+            left: 0%;
+            width: 3px;
+            height: 96%;
+            background-color: #c5a059;
+            box-shadow: 0 0 12px rgba(197, 160, 89, 0.9), 0 0 4px #c5a059;
+            border-radius: 2px;
+            pointer-events: none;
+            animation: logoCursorBlink 0.7s infinite;
+            transition: left 1.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            will-change: left, opacity;
+        }
+        .logo-type-cursor.revealed {
+            left: 100%;
+        }
+        .logo-type-cursor.fade-out {
+            opacity: 0;
+        }
+        @keyframes logoCursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .brand-logo-img {
+            height: 44px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            display: block;
+            transition: transform 0.25s ease;
+        }
+        .brand-logo-img:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         SORÈVA LUXURY LOGO ENTRY INTRO
+         "I want just the logo coming in and then it will go ahead with the website.
+          And I want my existing logo to have that animation."
+         ========================================== -->
+    <section class="entry-experience logo-intro-experience" id="entryExperience" aria-label="Sorèva Intro" onclick="closeEntryPrologue()" title="Click to enter immediately">
+        <div class="logo-intro-stage">
+            <div class="logo-intro-ambient-glow"></div>
+            <div class="logo-type-frame" id="logoTypeFrame">
+                <div class="logo-type-inner" id="logoTypeInner">
+                    <img src="assets/logo-black.png?v=clean2026" 
+                         alt="Sorèva" 
+                         class="logo-type-img" 
+                         id="logoTypeImg">
+                </div>
+                <span class="logo-type-cursor" id="logoTypeCursor"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOP PROMOTIONAL ANNOUNCEMENT TICKER -->
+    <aside class="announcement-bar" aria-label="Store Announcements">
+        <div class="container announcement-inner">
+            <div class="announcement-slides" id="announcementSlides">
+                <div class="announcement-slide active">
+                    <span class="announcement-badge">Special Offer</span>
+                    <span><strong>LAUNCH15</strong> — Celebrate our launch with 15% OFF across all products</span>
+                </div>
+                <div class="announcement-slide">
+                    <i class="fa-solid fa-truck-fast" style="color: var(--gold-badge);"></i>
+                    <span>Express Shipping Across India — Delivered Within 2–5 Days</span>
+                </div>
+                <div class="announcement-slide">
+                    <i class="fa-solid fa-globe" style="color: var(--gold-badge);"></i>
+                    <span>Worldwide Shipping Available • Premium Luxury Packaging Included</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- STICKY SITE HEADER -->
+    <header class="site-header">
+        <div class="header-main container">
+            <!-- Left Navigation Menu -->
+            <nav class="header-nav-left" aria-label="Main Navigation">
+                <button class="btn-prologue-toggle" onclick="openEntryPrologue()" title="Replay Sorèva Brand Intro">
+                    <i class="fa-solid fa-sparkles" style="color: var(--gold-accent);"></i>
+                    <span>Intro</span>
+                </button>
+                <a href="catalog.html" class="nav-link-btn">Shop</a>
+                <a href="#art-of-brilliance" class="nav-link-btn">The Craft</a>
+                <a href="#testimonials" class="nav-link-btn">Reviews</a>
+            </nav>
+
+            <!-- Brand Logo (Soreva) -->
+            <div class="header-brand">
+                <a href="index.html" aria-label="Sorèva Home" style="display: inline-flex; align-items: center; justify-content: center;">
+                    <img class="brand-logo-img" id="siteLogoImg"
+                         src="assets/logo-black.png?v=clean2026" 
+                         alt="Sorèva Exquisite Jewellery">
+                </a>
+            </div>
+
+            <!-- Right Header Actions -->
+            <div class="header-actions-right">
+                <!-- Currency Selector -->
+                <div class="currency-selector">
+                    <button class="currency-btn" id="currencyBtn" aria-label="Select Currency">
+                        <i class="fa-solid fa-globe" style="font-size: 0.8rem; color: var(--gold-accent);"></i>
+                        <span id="currentCurrencyLabel">INR</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem;"></i>
+                    </button>
+                    <div class="currency-dropdown" id="currencyDropdown">
+                        <div class="currency-option active" data-currency="INR">
+                            <span>INR (₹)</span>
+                            <i class="fa-solid fa-check" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <div class="currency-option" data-currency="USD">
+                            <span>USD ($)</span>
+                        </div>
+                        <div class="currency-option" data-currency="AED">
+                            <span>AED (د.إ)</span>
+                        </div>
+                        <div class="currency-option" data-currency="GBP">
+                            <span>GBP (£)</span>
+                        </div>
+                        <div class="currency-option" data-currency="EUR">
+                            <span>EUR (€)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Search Button -->
+                <button class="header-action-btn search-open-btn" aria-label="Search Collection" title="Search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+
+                <!-- Wishlist Button -->
+                <button class="header-action-btn" onclick="document.getElementById('products-catalog').scrollIntoView({behavior: 'smooth'})" aria-label="Wishlist" title="Wishlist">
+                    <i class="fa-regular fa-heart"></i>
+                    <span class="badge-count wishlist-count-badge">2</span>
+                </button>
+
+                <!-- Shopping Bag Button -->
+                <button class="header-action-btn cart-open-btn" aria-label="Shopping Cart" title="Shopping Cart">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span class="badge-count cart-count-badge">1</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Secondary Category Navigation Bar (Soreva Signature) -->
+        <nav class="header-category-bar" aria-label="Category Navigation">
+            <div class="container">
+                <ul class="category-nav-list dropdown-nav-list">
+                    <li class="nav-dropdown-item"><a href="catalog.html?cat=all" class="cat-nav-link active">All Jewellery</a></li>
+                    
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=necklace" class="cat-nav-link">Necklaces <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=necklace&sub=Bridal%20Necklaces">Bridal Necklaces</a>
+                            <a href="catalog.html?cat=necklace&sub=Traditional%20Necklaces">Traditional Sets</a>
+                            <a href="catalog.html?cat=necklace&sub=Aurous%20Collection">Aurous Collection</a>
+                            <a href="catalog.html?cat=necklace&sub=Classic%20Necklaces">Classic Necklaces</a>
+                            <a href="catalog.html?cat=necklace&sub=Collar%20Necklaces">Collar Necklaces</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=earrings" class="cat-nav-link">Earrings <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=earrings&sub=Big%20Size%20Earrings">Statement Earrings</a>
+                            <a href="catalog.html?cat=earrings&sub=Medium%20Earrings">Elegant Drops</a>
+                            <a href="catalog.html?cat=earrings&sub=Tops%20%26%20Studs">Essential Studs</a>
+                            <a href="catalog.html?cat=earrings&sub=Small%20Earrings">Minimal Earrings</a>
+                            <a href="catalog.html?cat=earrings&sub=Jhumka%20Earrings">Royal Jhumkas</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=rings" class="cat-nav-link">Finger Rings <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=rings&sub=Finger%20Rings">Statement Rings</a>
+                            <a href="catalog.html?cat=rings&sub=925%20Sterling%20Silver%20Rings">Sterling Silver Rings</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=pendants" class="cat-nav-link">Pendants <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=pendants&sub=CZ%20Pendant%20Sets">CZ Pendant Sets</a>
+                            <a href="catalog.html?cat=pendants&sub=CZ%20Mangalsutra">CZ Mangalsutra</a>
+                            <a href="catalog.html?cat=pendants&sub=Pendant%20With%20Broad%20Chain">Pendant With Broad Chain</a>
+                            <a href="catalog.html?cat=pendants&sub=Pendant%20With%20Medium%20Chain">Pendant With Medium Chain</a>
+                            <a href="catalog.html?cat=pendants&sub=925%20Sterling%20Silver%20Pendants">925 Sterling Silver</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=bracelets" class="cat-nav-link">Wristwear <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=bracelets&sub=CZ%20Bracelets">CZ Bracelets</a>
+                            <a href="catalog.html?cat=bracelets&sub=CZ%20Bangles">CZ Bangles</a>
+                            <a href="catalog.html?cat=bracelets&sub=Bracelets%20Rings%20Combo">Bracelet Rings Combo</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page-content">
+        <section class="products-section" id="products-catalog" style="padding-top: 120px; padding-bottom: 80px;">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title" id="catalogTitle">The <em>Catalog</em></h2>
+                    <p class="section-desc" id="catalogDesc">Filter and explore our meticulously handcrafted luxury pieces.</p>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-category="all">All Designs</button>
+                        <button class="filter-tab" data-category="necklace">Necklace</button>
+                        <button class="filter-tab" data-category="earrings">Earrings</button>
+                        <button class="filter-tab" data-category="rings">Finger Rings</button>
+                        <button class="filter-tab" data-category="pendants">Pendants</button>
+                        <button class="filter-tab" data-category="bracelets">Wristwear</button>
+                    </div>
+
+                    <div class="filter-extra-controls">
+                        <select class="plating-select" id="platingFilter" aria-label="Filter by Plating">
+                            <option value="all">All Finishes</option>
+                            <option value="gold">18K Gold Plated</option>
+                            <option value="silver">Rhodium Silver</option>
+                            <option value="rosegold">Rose Gold Plated</option>
+                        </select>
+
+                        <select class="sort-select" id="sortBy" aria-label="Sort products">
+                            <option value="featured">Featured</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="rating">Highest Rated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="product-grid" id="productsGrid">
+                    <!-- Injected by app.js -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-top">
+            <div class="footer-grid">
+                <!-- Col 1: Brand & Contact -->
+                <div class="footer-col footer-about">
+                    <a href="index.html" aria-label="Sorèva Home" style="display: inline-block; margin-bottom: 16px;">
+                        <img class="footer-logo-img" id="footerLogoImg" 
+                             src="assets/logo-white.png" 
+                             alt="Sorèva Exquisite Jewellery" 
+                             onerror="this.style.display='none'; document.getElementById('footerFallbackLogo').style.display='flex';">
+                        <div id="footerFallbackLogo" class="brand-wordmark" style="display: none; align-items: flex-start; color: #ffffff;">
+                            SORÈVA
+                            <span class="tagline">EXQUISITE JEWELLERY</span>
+                        </div>
+                    </a>
+                    <p>
+                        Discover Sorèva — premium Cubic Zirconia jewellery handcrafted to celebrate modern grace and timeless Indian grandeur.
+                    </p>
+                    <div class="footer-contact-item">
+                        <i class="fa-solid fa-phone"></i>
+                        <a href="tel:+919741118940" id="footerContactPhone">+91 98200 12345</a>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <a href="mailto:care@soreva.in" id="footerContactEmail">care@soreva.in</a>
+                    </div>
+                </div>
+
+                <!-- Col 2: Jewellery Collections -->
+                <div class="footer-col footer-links">
+                    <h4>Collections</h4>
+                    <ul>
+                        <li><a href="catalog.html" onclick="document.querySelector('.cat-nav-link[data-category=necklace]').click()">Necklaces & Chokers</a></li>
+                        <li><a href="catalog.html" onclick="document.querySelector('.cat-nav-link[data-category=earrings]').click()">Earrings & Jhumkas</a></li>
+                        <li><a href="catalog.html" onclick="document.querySelector('.cat-nav-link[data-category=rings]').click()">Signature Finger Rings</a></li>
+                        <li><a href="catalog.html" onclick="document.querySelector('.cat-nav-link[data-category=pendants]').click()">Solitaire Pendants</a></li>
+                        <li><a href="catalog.html" onclick="document.querySelector('.cat-nav-link[data-category=wristwear]').click()">Tennis Bracelets</a></li>
+                        <li><a href="catalog.html">New Arrivals</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Customer Care & Policies -->
+                <div class="footer-col footer-links">
+                    <h4>Customer Care</h4>
+                    <ul>
+                        <li><a href="javascript:void(0)" onclick="showToast('Soreva Shipping: 2-5 days express delivery across India.')">Shipping & Delivery Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('15-day return and exchange policy.')">Return & Exchange Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Privacy Policy: All data encrypted and safe.')">Privacy Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Terms and Conditions of Sorèva.')">Terms & Conditions</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Track order details sent via SMS & Email upon dispatch.')">Track Your Order</a></li>
+                        <li><a href="javascript:void(0)" onclick="showToast('Contact support: care@soreva.in')">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Newsletter & Exclusive Offers -->
+                <div class="footer-col">
+                    <h4>Join The Sorèva Circle</h4>
+                    <p class="newsletter-desc">
+                        Subscribe for private seasonal sales, new collection drops, and receive <strong>15% OFF</strong> on your first order.
+                    </p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); showToast('Thank you for subscribing to Sorèva!'); this.reset();">
+                        <input type="email" class="newsletter-input" placeholder="Your email address" required>
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/soreva_jewels" target="_blank" rel="noopener" class="social-link-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.facebook.com" target="_blank" rel="noopener" class="social-link-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://youtube.com/@soreva_jewels" target="_blank" rel="noopener" class="social-link-btn" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://wa.me/919741118940" target="_blank" rel="noopener" class="social-link-btn" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container footer-bottom">
+            <p id="footerCopyright">© 2026 Sorèva Jewellery. All Rights Reserved. Reference: soreva.in · <a href="/admin.html" class="admin-link" style="color: var(--gold-accent); text-decoration: none; font-weight: 500; margin-left: 8px;"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i> Admin Portal</a> · <a href="/portal.html" class="admin-link" style="color: var(--gold-accent); text-decoration: none; font-weight: 500; margin-left: 8px;"><i class="fa-solid fa-users-gear" style="font-size: 0.75rem;"></i> Staff Portal</a></p>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa" title="Visa"></i>
+                <i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+                <i class="fa-brands fa-cc-amex" title="American Express"></i>
+                <i class="fa-brands fa-google-pay" title="Google Pay"></i>
+                <i class="fa-brands fa-apple-pay" title="Apple Pay"></i>
+            </div>
+        </div>
+    </footer>
+
+    <!-- CART SLIDE-OVER DRAWER -->
+    <div class="drawer-backdrop" id="cartDrawerBackdrop"></div>
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping Bag">
+        <div class="drawer-header">
+            <h3 class="drawer-title">
+                <i class="fa-solid fa-bag-shopping" style="color: var(--gold-accent);"></i>
+                <span>Your Bag</span>
+                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="cart-count-badge">1</span>)</span>
+            </h3>
+            <button class="drawer-close-btn" id="cartDrawerClose" aria-label="Close Bag">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Free Shipping Progress Meter -->
+        <div class="shipping-meter">
+            <div class="shipping-meter-text" id="shippingMeterText">
+                <span>Free Express Shipping Progress</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="shippingProgressFill"></div>
+            </div>
+        </div>
+
+        <!-- Cart Items List -->
+        <div class="cart-items-list" id="cartItemsList">
+            <!-- Rendered by app.js -->
+        </div>
+
+        <!-- Cart Drawer Footer -->
+        <div class="drawer-footer">
+            <div class="coupon-box">
+                <input type="text" id="couponCodeInput" class="coupon-input" placeholder="Coupon Code (Try LAUNCH15)">
+                <button class="btn-apply-coupon" id="applyCouponBtn">Apply</button>
+            </div>
+
+            <div class="cart-summary-row">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">₹3,499</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Promotional Discount</span>
+                <span id="cartDiscount" style="color: #2e7d32;">₹0</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Shipping</span>
+                <span style="color: #2e7d32;">Complimentary</span>
+            </div>
+            <div class="cart-summary-row total-row">
+                <span>Total</span>
+                <span id="cartTotal">₹3,499</span>
+            </div>
+
+            <button class="btn-checkout" id="checkoutBtn">
+                <span>Proceed to Checkout</span>
+                <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- QUICK VIEW MODAL -->
+    <div class="modal-backdrop" id="quickViewBackdrop">
+        <div class="quickview-modal">
+            <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close Modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="quickview-grid">
+                <div class="modal-gallery">
+                    <img class="modal-main-img" id="modalMainImg" src="" alt="Product Preview">
+                    <div class="modal-thumb-row" id="modalThumbsRow"></div>
+                </div>
+
+                <div class="modal-details">
+                    <span class="modal-cat" id="modalCategory">Necklaces • Modern Chokers</span>
+                    <h2 class="modal-title" id="modalTitle">Product Title</h2>
+                    
+                    <div class="modal-price-wrap">
+                        <span class="modal-price" id="modalPrice">₹0</span>
+                        <span class="original-price" id="modalOriginalPrice" style="font-size: 1.05rem;">₹0</span>
+                    </div>
+
+                    <p class="modal-desc" id="modalDescription"></p>
+
+                    <div class="modal-option-group">
+                        <label class="modal-option-label">Metal Finish / Plating</label>
+                        <div class="plating-pills" id="modalFinishPills"></div>
+                    </div>
+
+                    <div class="modal-option-group">
+                        <label class="modal-option-label">Quantity</label>
+                        <div style="display: inline-flex; align-items: center; border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden;">
+                            <button class="qty-btn" onclick="let q=document.getElementById('modalQtyInput'); if(q.value>1) q.value--;">-</button>
+                            <input type="number" id="modalQtyInput" value="1" min="1" max="10" readonly style="width: 44px; text-align: center; border: none; font-weight: 600;">
+                            <button class="qty-btn" onclick="let q=document.getElementById('modalQtyInput'); if(q.value<10) q.value++;">+</button>
+                        </div>
+                    </div>
+
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 14px;">
+                        <button class="btn-add-cart" id="modalAddToCartBtn" style="flex: 1; padding: 14px;">
+                            <i class="fa-solid fa-bag-shopping"></i> Add To Bag
+                        </button>
+                        <a id="modalFullDetailsBtn" href="#" style="flex: 1; padding: 14px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Full Details
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    <!-- CHECKOUT MODAL -->
+    <div class="modal-backdrop" id="checkoutModalBackdrop" style="display: none; align-items: center; justify-content: center; z-index: 10000; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);">
+        <div class="checkout-modal" style="background: #1e1918; border: 1px solid rgba(197,160,89,0.35); border-radius: 16px; width: 92%; max-width: 820px; max-height: 90vh; overflow-y: auto; padding: 36px 32px; color: #fbf8f5; box-shadow: 0 25px 70px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.2); position: relative;">
+            <button class="modal-close-btn" onclick="closeCheckoutModal()" aria-label="Close Checkout" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: #fbf8f5; font-size: 1.3rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- CHECKOUT FORM VIEW -->
+            <div id="checkoutFormView">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <img src="assets/logo-white.png" alt="Sorèva" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 8px;">
+                    <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; color: #c5a059;">Boutique Atelier Checkout</h2>
+                    <p style="font-size: 0.88rem; color: rgba(251,248,245,0.7);">Enter your delivery details to reserve and finalize your handcrafted jewellery.</p>
+                </div>
+
+                <div class="checkout-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                    <!-- LEFT COLUMN: Client Details -->
+                    <div>
+                        <h4 style="font-size: 0.88rem; text-transform: uppercase; letter-spacing: 1px; color: #c5a059; margin-bottom: 14px;">
+                            <i class="fa-solid fa-location-dot"></i> Shipping Destination
+                        </h4>
+
+                        <form id="checkoutOrderForm" onsubmit="handlePlaceOrder(event)">
+                            <div style="margin-bottom: 14px;">
+                                <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Full Name *</label>
+                                <input type="text" id="chkCustName" required placeholder="e.g. Radhika Merchant" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Email *</label>
+                                    <input type="email" id="chkCustEmail" required placeholder="radhika@example.com" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Phone Number *</label>
+                                    <input type="tel" id="chkCustPhone" required placeholder="+91 98200 12345" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 14px;">
+                                <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Delivery Address *</label>
+                                <input type="text" id="chkCustAddress" required placeholder="Flat / Bungalow, Street, Landmark, Pincode" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">City *</label>
+                                    <input type="text" id="chkCustCity" required placeholder="e.g. Mumbai" value="Mumbai" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Payment Method *</label>
+                                    <select id="chkPaymentMethod" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: #26201e; border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                        <option value="UPI / Instant Pay">UPI / Instant Pay</option>
+                                        <option value="Credit / Debit Card">Credit / Debit Card</option>
+                                        <option value="Net Banking">Net Banking</option>
+                                        <option value="Cash on Delivery (Insured)">Cash on Delivery (Insured)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnSubmitOrder" style="width: 100%; background: linear-gradient(135deg, #c5a059, #967537); border: none; padding: 14px; border-radius: 8px; color: #120e0d; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Complete Order & Reserve</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Order Summary -->
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(197,160,89,0.2); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="font-size: 0.88rem; text-transform: uppercase; letter-spacing: 1px; color: #c5a059; margin-bottom: 14px;">
+                                <i class="fa-solid fa-bag-shopping"></i> Order Summary
+                            </h4>
+                            <div id="chkItemsList" style="max-height: 220px; overflow-y: auto; margin-bottom: 16px;">
+                                <!-- Items rendered dynamically -->
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid rgba(197,160,89,0.2); padding-top: 14px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: rgba(251,248,245,0.7);">
+                                <span>Subtotal</span>
+                                <span id="chkSubtotal">₹0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #81c784;">
+                                <span>Promo Discount</span>
+                                <span id="chkDiscount">₹0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; color: #81c784;">
+                                <span>Complimentary Insured Shipping</span>
+                                <span>Free</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700; color: #dfbd7c; border-top: 1px dashed rgba(197,160,89,0.3); padding-top: 10px;">
+                                <span>Grand Total</span>
+                                <span id="chkGrandTotal">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUCCESS CONFIRMATION VIEW -->
+            <div id="checkoutSuccessView" style="display: none; text-align: center; padding: 28px 12px;">
+                <div style="width: 72px; height: 72px; background: rgba(76,175,80,0.15); border: 2px solid #4caf50; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #81c784; font-size: 2rem; margin-bottom: 18px;">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.9rem; color: #dfbd7c; margin-bottom: 8px;">Order Confirmed</h2>
+                <p style="font-size: 1rem; color: rgba(251,248,245,0.85); margin-bottom: 20px;">
+                    Thank you, <strong id="successCustName" style="color: #fff;"></strong>! Your bespoke jewellery order has been received and routed into our atelier queue.
+                </p>
+
+                <div style="background: rgba(197,160,89,0.12); border: 1px solid #c5a059; border-radius: 12px; max-width: 440px; margin: 0 auto 24px; padding: 18px 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Order Number</span>
+                        <strong style="font-family: monospace; font-size: 1.05rem; color: #c5a059;" id="successOrderNum">SRV-2026-1085</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Total Charged</span>
+                        <strong style="color: #fff;" id="successTotalAmt">₹3,499</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Estimated Delivery</span>
+                        <strong style="color: #81c784;">3 - 5 Business Days</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 14px; justify-content: center;">
+                    <button class="btn-primary" onclick="closeCheckoutModal()" style="padding: 12px 28px; background: #c5a059; color: #120e0d; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                        <i class="fa-solid fa-gem"></i> Continue Shopping
+                    </button>
+                    <a href="/admin.html" target="_blank" style="padding: 12px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #c5a059; border-radius: 6px; color: #c5a059; font-weight: 600;">
+                        <i class="fa-solid fa-shield-halved"></i> View in Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js?v=20260923_chatbot"></script>
+
+    </body>
+</html>

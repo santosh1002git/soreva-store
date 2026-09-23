@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorèva Admin Portal • Luxury Store Management</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+
+    <!-- Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Admin Stylesheet -->
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         LOGIN GATEWAY (PASSWORD PROTECTED)
+         ========================================== -->
+    <div class="login-wrapper" id="loginWrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="assets/logo-black.png" alt="Sorèva" style="height: 48px; width: auto; object-fit: contain; margin-bottom: 12px;">
+                <h2>Admin Portal</h2>
+                <p>Enter your administrator credentials to access the boutique control engine.</p>
+            </div>
+
+            <form class="login-form" id="loginForm" onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label for="adminUsername">Username</label>
+                    <div class="input-with-icon">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" id="adminUsername" value="admin" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="adminPassword" placeholder="Enter password" required autocomplete="current-password">
+                        <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('adminPassword', this)" title="Toggle visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="login-error-box" id="loginErrorBox"></div>
+
+                <button type="submit" class="btn-admin-primary btn-block" id="loginSubmitBtn">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Unlock Admin Panel</span>
+                </button>
+
+                <div class="login-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Default credentials: <strong>admin</strong> / <strong>soreva@2026</strong></span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         ADMIN DASHBOARD (AUTHENTICATED)
+         ========================================== -->
+    <div class="admin-layout" id="adminLayout" style="display: none;">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-brand" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px;">
+                <img src="assets/logo-white.png" alt="Sorèva" style="height: 32px; width: auto; object-fit: contain;">
+                <span style="font-size: 0.65rem; background: rgba(197, 160, 89, 0.2); border: 1px solid var(--gold); color: var(--gold-light); padding: 2px 8px; border-radius: 12px; font-weight: 600; letter-spacing: 0.5px;">ADMIN</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="overview">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Overview</span>
+                </button>
+                <button class="nav-item" data-tab="orders">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Orders & Sales</span>
+                    <span class="badge-count" id="countBadgeOrders">4</span>
+                </button>
+                <button class="nav-item" data-tab="inventory">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Stock & Inventory</span>
+                    <span class="badge-count" id="countBadgeInventory">8</span>
+                </button>
+                <button class="nav-item" data-tab="customers">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Customer CRM</span>
+                    <span class="badge-count" id="countBadgeCustomers">4</span>
+                </button>
+                <button class="nav-item" data-tab="database">
+                    <i class="fa-solid fa-database"></i>
+                    <span>PocketBase Hub</span>
+                </button>
+                <button class="nav-item" data-tab="products">
+                    <i class="fa-solid fa-gem"></i>
+                    <span>Product Catalog</span>
+                    <span class="badge-count" id="countBadgeProducts">8</span>
+                </button>
+                <button class="nav-item" data-tab="hero">
+                    <i class="fa-solid fa-panorama"></i>
+                    <span>Hero Slider</span>
+                    <span class="badge-count" id="countBadgeHero">8</span>
+                </button>
+                <button class="nav-item" data-tab="categories">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>Categories</span>
+                    <span class="badge-count" id="countBadgeCategories">5</span>
+                </button>
+                <button class="nav-item" data-tab="announcements">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>Announcement Bar</span>
+                </button>
+                <button class="nav-item" data-tab="coupons">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Discount Coupons</span>
+                    <span class="badge-count" id="countBadgeCoupons">3</span>
+                </button>
+                <button class="nav-item" data-tab="currencies">
+                    <i class="fa-solid fa-coins"></i>
+                    <span>Currencies & Rates</span>
+                </button>
+                <button class="nav-item" data-tab="spotlight">
+                    <i class="fa-solid fa-award"></i>
+                    <span>Brand Story</span>
+                </button>
+                <button class="nav-item" data-tab="testimonials">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Customer Reviews</span>
+                    <span class="badge-count" id="countBadgeReviews">3</span>
+                </button>
+                <button class="nav-item" data-tab="instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>Social Gallery</span>
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings & Security</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/" target="_blank" class="btn-store-preview" title="Open storefront in new tab">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>View Live Store</span>
+                </a>
+                <button class="btn-logout" onclick="handleAdminLogout()" title="Log out from session">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN VIEWPORT -->
+        <main class="admin-main">
+            
+            <!-- TOP BAR -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="btn-mobile-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h2 class="current-section-title" id="currentSectionTitle">Dashboard Overview</h2>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="save-status-pill" id="saveStatusPill">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>All Changes Saved</span>
+                    </div>
+
+                    <button class="topbar-action-btn" onclick="openImageGuidelinesModal()" title="View Recommended Image Resolutions & Guidelines" style="border-color: rgba(197, 160, 89, 0.4); color: var(--gold-light);">
+                        <i class="fa-solid fa-ruler-combined"></i>
+                        <span>Image Specs</span>
+                    </button>
+
+                    <a href="/portal.html" target="_blank" class="topbar-action-btn" title="Open Collaborative Database GUI & Employee Portal" style="border-color: rgba(197, 160, 89, 0.4); color: var(--gold-light); text-decoration: none;">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Employee Portal</span>
+                    </a>
+
+                    <a href="/" target="_blank" class="topbar-action-btn" title="View Store">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Live Store</span>
+                    </a>
+
+                    <button class="topbar-action-btn btn-save-all" onclick="saveAllStoreData()" title="Save all changes to disk">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Save All</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB CONTENT PANELS -->
+            <div class="admin-content-body">
+                
+                <!-- TAB 1: OVERVIEW -->
+                <section class="tab-panel active" id="panel-overview">
+                    <div class="overview-welcome-card">
+                        <div class="welcome-copy">
+                            <span class="welcome-tag"><i class="fa-solid fa-sparkles"></i> Store Control Center</span>
+                            <h1>Welcome to Sorèva Management</h1>
+                            <p>You can update, add, remove, and restyle over 90% of your store's live content directly from this portal. All changes immediately sync with your local storefront.</p>
+                        </div>
+                        <div class="welcome-actions">
+                            <button class="btn-admin-primary" onclick="openProductModal()">
+                                <i class="fa-solid fa-plus"></i> Add New Product
+                            </button>
+                            <button class="btn-admin-outline" onclick="openHeroSlideModal()">
+                                <i class="fa-solid fa-panorama"></i> Add Hero Look
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- METRICS GRID -->
+                    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <div class="metric-card" onclick="switchTab('orders')">
+                            <div class="metric-icon wine"><i class="fa-solid fa-receipt"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statTotalOrders">4</span>
+                                <span class="metric-label">Orders Received</span>
+                            </div>
+                        </div>
+                        <div class="metric-card" onclick="switchTab('orders')">
+                            <div class="metric-icon gold"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statTotalRevenue">₹14,595</span>
+                                <span class="metric-label">Total Revenue</span>
+                            </div>
+                        </div>
+                        <div class="metric-card" onclick="switchTab('inventory')">
+                            <div class="metric-icon espresso"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statTotalInventory">108</span>
+                                <span class="metric-label">Stock Units</span>
+                            </div>
+                        </div>
+                        <div class="metric-card" onclick="switchTab('customers')">
+                            <div class="metric-icon gold"><i class="fa-solid fa-users"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statTotalCustomers">4</span>
+                                <span class="metric-label">Active Customers</span>
+                            </div>
+                        </div>
+                        <div class="metric-card" onclick="switchTab('products')">
+                            <div class="metric-icon gold"><i class="fa-solid fa-gem"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statTotalProducts">8</span>
+                                <span class="metric-label">Catalog Designs</span>
+                            </div>
+                        </div>
+                        <div class="metric-card" onclick="switchTab('coupons')">
+                            <div class="metric-icon espresso"><i class="fa-solid fa-ticket"></i></div>
+                            <div class="metric-data">
+                                <span class="metric-num" id="statCoupons">3</span>
+                                <span class="metric-label">Promo Coupons</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK ACTIONS & SYSTEM INFO -->
+                    <div class="overview-dual-grid">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-bolt"></i> Quick Controls</h3>
+                            </div>
+                            <div class="quick-actions-list">
+                                <div class="quick-action-row">
+                                    <div class="action-info">
+                                        <h4>Free Express Shipping Threshold</h4>
+                                        <p>Cart value required for automatic free express shipping</p>
+                                    </div>
+                                    <div class="action-input-group">
+                                        <span class="currency-prefix">₹</span>
+                                        <input type="number" id="quickShippingInput" value="2499" style="width: 110px;" onchange="updateShippingThreshold(this.value)">
+                                    </div>
+                                </div>
+                                <div class="quick-action-row">
+                                    <div class="action-info">
+                                        <h4>Launch Promo Coupon (LAUNCH15)</h4>
+                                        <p>Discount applied on cart during launch celebration</p>
+                                    </div>
+                                    <div class="action-input-group">
+                                        <input type="number" id="quickLaunchDiscountInput" value="15" style="width: 70px;" onchange="updateLaunchDiscount(this.value)">
+                                        <span class="currency-prefix">%</span>
+                                    </div>
+                                </div>
+                                <div class="quick-action-row">
+                                    <div class="action-info">
+                                        <h4>Announcement Ticker Speed</h4>
+                                        <p>Cycle duration between promotional notices</p>
+                                    </div>
+                                    <div class="action-input-group">
+                                        <input type="number" id="quickTickerSpeedInput" value="4.5" step="0.5" style="width: 70px;" onchange="updateTickerSpeed(this.value)">
+                                        <span class="currency-prefix">sec</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-server"></i> System & Database Status</h3>
+                            </div>
+                            <div class="system-status-list">
+                                <div class="status-row">
+                                    <span class="status-label">Database Engine</span>
+                                    <span class="status-badge badge-green"><i class="fa-solid fa-circle-check"></i> PocketBase v0.40 (SQLite WAL)</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">SQLite Storage</span>
+                                    <span class="status-code">pb/pb_data/data.db</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">PocketBase Studio</span>
+                                    <a href="http://localhost:8090/_/" target="_blank" class="status-badge badge-gold" style="text-decoration: none;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Studio (Port 8090)
+                                    </a>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Store Server</span>
+                                    <span class="status-badge badge-green">http://localhost:8000</span>
+                                </div>
+                            </div>
+                            <div class="card-bottom-actions">
+                                <button class="btn-admin-outline btn-sm" onclick="switchTab('database')">
+                                    <i class="fa-solid fa-database"></i> Database Hub
+                                </button>
+                                <button class="btn-admin-outline btn-sm" onclick="downloadStoreBackup()">
+                                    <i class="fa-solid fa-download"></i> JSON Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: ORDERS & SALES -->
+                <section class="tab-panel" id="panel-orders">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Orders & Sales Fulfillment (<span id="ordersCountHeader">4</span>)</h3>
+                            <p>Review customer orders placed online, update shipping fulfillment statuses, and inspect receipts.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-admin-outline" onclick="fetchOrders()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="products-admin-table-wrap">
+                        <table class="admin-table" id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Items Purchased</th>
+                                    <th>Total (INR)</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Fulfill / Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TAB: STOCK & INVENTORY -->
+                <section class="tab-panel" id="panel-inventory">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Stock & Inventory Control (<span id="inventoryCountHeader">8</span> Items)</h3>
+                            <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-admin-outline" onclick="fetchInventory()"><i class="fa-solid fa-rotate"></i> Sync Stock</button>
+                        </div>
+                    </div>
+
+                    <!-- Inventory summary pills -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryTotalUnits">108</span><span class="metric-label">Total Units</span></div>
+                        </div>
+                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryInStock" style="color: #81c784;">7</span><span class="metric-label">In Stock</span></div>
+                        </div>
+                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryLowStock" style="color: #ffb74d;">1</span><span class="metric-label">Low Stock Alert</span></div>
+                        </div>
+                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryOutOfStock" style="color: #ef9a9a;">0</span><span class="metric-label">Out of Stock</span></div>
+                        </div>
+                    </div>
+
+                    <div class="products-admin-table-wrap">
+                        <table class="admin-table" id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Product / Piece</th>
+                                    <th>SKU</th>
+                                    <th>Category</th>
+                                    <th>Stock Units</th>
+                                    <th>Low Threshold</th>
+                                    <th>Availability Status</th>
+                                    <th style="text-align: right;">Adjust Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TAB: CUSTOMERS CRM -->
+                <section class="tab-panel" id="panel-customers">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Customer Directory & CRM (<span id="customersCountHeader">4</span>)</h3>
+                            <p>Track loyal patrons, shipping addresses, customer lifetime value (LTV), and purchase history.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openCustomerModal()">
+                            <i class="fa-solid fa-user-plus"></i> Add Customer
+                        </button>
+                    </div>
+
+                    <div class="products-admin-table-wrap">
+                        <table class="admin-table" id="customersTable">
+                            <thead>
+                                <tr>
+                                    <th>Client Name</th>
+                                    <th>Contact Details</th>
+                                    <th>City & Shipping Destination</th>
+                                    <th>Total Orders</th>
+                                    <th>Lifetime Spend</th>
+                                    <th>Tier</th>
+                                    <th style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TAB: POCKETBASE DATABASE HUB -->
+                <section class="tab-panel" id="panel-database">
+                    <div class="db-studio-hero">
+                        <div class="db-studio-info">
+                            <div class="db-icon-box">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <div>
+                                <div class="db-status-pill">
+                                    <span class="pulse-dot"></span> PocketBase SQLite Live • Port 8090
+                                </div>
+                                <h2 style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--admin-text); margin-bottom: 6px;">PocketBase Admin Studio</h2>
+                                <p style="color: var(--admin-text-muted); font-size: 0.9rem; max-width: 650px;">
+                                    Sorèva runs on a high-performance embedded open-source SQLite database orchestrated by PocketBase v0.40.4.
+                                    You can manage collections, inspect raw schemas, run filters, and export data in real-time.
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <a href="http://localhost:8090/_/" target="_blank" class="btn-admin-primary" style="text-decoration: none; padding: 12px 24px;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open PocketBase Studio
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="db-creds-banner" style="margin-bottom: 24px;">
+                        <span><i class="fa-solid fa-key" style="color: var(--gold);"></i> <strong>Studio Superuser:</strong> <code>admin@soreva.in</code></span>
+                        <span><i class="fa-solid fa-lock" style="color: var(--gold);"></i> <strong>Password:</strong> <code>soreva@2026</code></span>
+                        <span><i class="fa-solid fa-server" style="color: var(--gold);"></i> <strong>Local API:</strong> <code>http://127.0.0.1:8090/api/</code></span>
+                    </div>
+
+                    <div class="overview-dual-grid">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-table-cells"></i> Database Collections</h3>
+                            </div>
+                            <div class="system-status-list">
+                                <div class="status-row">
+                                    <span class="status-label">📦 Products Collection</span>
+                                    <span class="status-badge badge-green" id="dbProdCount">8 Records</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">🏷️ Inventory Collection</span>
+                                    <span class="status-badge badge-green" id="dbInvCount">8 Records (108 units)</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">👥 Customers Collection</span>
+                                    <span class="status-badge badge-green" id="dbCustCount">4 Records</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">🧾 Orders Collection</span>
+                                    <span class="status-badge badge-green" id="dbOrdCount">4 Records</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-hard-drive"></i> Storage & Architecture</h3>
+                            </div>
+                            <div class="system-status-list">
+                                <div class="status-row">
+                                    <span class="status-label">SQLite Database Path</span>
+                                    <span class="status-code">pb/pb_data/data.db</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">SQLite Journal Mode</span>
+                                    <span class="status-badge badge-green">WAL (Write-Ahead Logging)</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Total Database Size</span>
+                                    <span class="status-badge badge-gold" id="dbSizeLabel">72.0 KB</span>
+                                </div>
+                                <div class="status-row">
+                                    <span class="status-label">Storefront Sync</span>
+                                    <span class="status-badge badge-green">Zero-Latency Concurrent Access</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: HERO SLIDER -->
+                <section class="tab-panel" id="panel-hero">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Hero Slider Looks (<span id="heroSlidesCountLabel">8</span>)</h3>
+                            <p>Manage the editorial slides that cycle through your store's full-bleed hero banner.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openHeroSlideModal()">
+                            <i class="fa-solid fa-plus"></i> Add New Slide
+                        </button>
+                    </div>
+
+                    <div class="hero-slides-grid" id="heroSlidesAdminList">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB 3: PRODUCTS CATALOG -->
+                <section class="tab-panel" id="panel-products">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Product Catalog (<span id="productsCountLabel">8</span>)</h3>
+                            <p>Create, modify, price, and organize pieces in your Sorèva jewelry collection.</p>
+                        </div>
+                        <div class="header-tools">
+                            <div class="search-input-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="productSearchFilter" placeholder="Search products..." oninput="filterAdminProducts()">
+                            </div>
+                            <select id="productCategoryFilter" onchange="filterAdminProducts()" class="admin-select">
+                                <option value="all">All Categories</option>
+                                <option value="necklace">Necklaces</option>
+                                <option value="earrings">Earrings</option>
+                                <option value="rings">Finger Rings</option>
+                                <option value="pendants">Pendants</option>
+                                <option value="bracelets">Wristwear</option>
+                            </select>
+                            <button class="btn-admin-primary" onclick="launchSyncAgent()" style="background: var(--text-dark); margin-right: 8px;">
+                                <i class="fa-solid fa-robot"></i> Launch Sync Agent
+                            </button>
+                            <button class="btn-admin-primary" onclick="openProductModal()">
+                                <i class="fa-solid fa-plus"></i> Add Piece
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="products-admin-table-wrap">
+                        <table class="admin-table" id="productsAdminTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Image</th>
+                                    <th>Piece Name</th>
+                                    <th>Category</th>
+                                    <th>Price (INR)</th>
+                                    <th>Original</th>
+                                    <th>Plating</th>
+                                    <th>Badge</th>
+                                    <th>Status</th>
+                                    <th style="width: 120px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsAdminTbody">
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TAB 4: CATEGORIES -->
+                <section class="tab-panel" id="panel-categories">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Shop Categories</h3>
+                            <p>Update category titles, item count labels, and showcase photography.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openCategoryModal()">
+                            <i class="fa-solid fa-plus"></i> Add Category
+                        </button>
+                    </div>
+
+                    <div class="categories-admin-grid" id="categoriesAdminGrid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB 5: ANNOUNCEMENTS -->
+                <section class="tab-panel" id="panel-announcements">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Header Promotional Announcement Ticker</h3>
+                            <p>Manage the rotating notices displayed at the very top of your storefront.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="addAnnouncementRow()">
+                            <i class="fa-solid fa-plus"></i> Add Notice
+                        </button>
+                    </div>
+
+                    <div class="admin-card">
+                        <div class="announcements-admin-list" id="announcementsAdminList">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: COUPONS -->
+                <section class="tab-panel" id="panel-coupons">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Promotional Coupons & Discount Codes</h3>
+                            <p>Configure promo coupons applicable in the shopping bag drawer.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openCouponModal()">
+                            <i class="fa-solid fa-plus"></i> Create Coupon
+                        </button>
+                    </div>
+
+                    <div class="coupons-admin-grid" id="couponsAdminGrid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB 7: CURRENCIES -->
+                <section class="tab-panel" id="panel-currencies">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Currencies & Exchange Rates</h3>
+                            <p>Update conversion multipliers relative to Indian Rupee (Base: ₹1.00 INR).</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openCurrencyModal()">
+                            <i class="fa-solid fa-plus"></i> Add Currency
+                        </button>
+                    </div>
+
+                    <div class="admin-card">
+                        <div class="currencies-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Symbol</th>
+                                        <th>Display Label</th>
+                                        <th>Rate vs 1 INR</th>
+                                        <th>Example (₹1,000 INR)</th>
+                                        <th style="width: 100px; text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="currenciesAdminTbody">
+                                    <!-- Rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 8: BRAND SPOTLIGHT -->
+                <section class="tab-panel" id="panel-spotlight">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Brand Story & "The Art of Brilliance" Section</h3>
+                            <p>Customize craftsmanship philosophy, quality hallmarks, and showcase images.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="saveSpotlightSettings()">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Story
+                        </button>
+                    </div>
+
+                    <div class="spotlight-editor-grid">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h4>Headlines & Narrative</h4>
+                            </div>
+                            <div class="form-group">
+                                <label>Section Tagline</label>
+                                <input type="text" id="spotlightTagInput" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Main Title (HTML tags like &lt;em&gt; allowed)</label>
+                                <input type="text" id="spotlightTitleInput" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Narrative Paragraph 1</label>
+                                <textarea id="spotlightDesc1Input" rows="4" class="admin-textarea"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Narrative Paragraph 2</label>
+                                <textarea id="spotlightDesc2Input" rows="3" class="admin-textarea"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h4>Showcase Imagery & Badges</h4>
+                            </div>
+                            <div class="form-group">
+                                <label>Primary Craftsmanship Image URL</label>
+                                <input type="text" id="spotlightImgMainInput" class="admin-input" onchange="previewImg(this.value, 'spotlightPreviewMain')" oninput="previewImg(this.value, 'spotlightPreviewMain')">
+                                <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1000 × 1200 px (5:6 Portrait)</strong> • JPG/WebP • &lt; 400 KB</div>
+                                <div class="img-preview-box">
+                                    <img id="spotlightPreviewMain" src="" alt="Main Preview">
+                                </div>
+                                <div id="meta_spotlightPreviewMain"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Secondary Detailing Image URL</label>
+                                <input type="text" id="spotlightImgSubInput" class="admin-input" onchange="previewImg(this.value, 'spotlightPreviewSub')" oninput="previewImg(this.value, 'spotlightPreviewSub')">
+                                <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 800 px (1:1 Square)</strong> • JPG/WebP • &lt; 250 KB</div>
+                                <div class="img-preview-box">
+                                    <img id="spotlightPreviewSub" src="" alt="Sub Preview">
+                                </div>
+                                <div id="meta_spotlightPreviewSub"></div>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>Floating Badge Title</label>
+                                    <input type="text" id="spotlightBadgeTitleInput" class="admin-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Floating Badge Subtitle</label>
+                                    <input type="text" id="spotlightBadgeSubInput" class="admin-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-card" style="grid-column: 1 / -1;">
+                            <div class="card-header">
+                                <h4>3 Signature Craftsmanship Pillars</h4>
+                            </div>
+                            <div class="spotlight-features-admin" id="spotlightFeaturesAdmin">
+                                <!-- Rendered by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 9: TESTIMONIALS -->
+                <section class="tab-panel" id="panel-testimonials">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Verified Customer Testimonials</h3>
+                            <p>Manage customer quotes, star ratings, and buyer details.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="openTestimonialModal()">
+                            <i class="fa-solid fa-plus"></i> Add Testimonial
+                        </button>
+                    </div>
+
+                    <div class="testimonials-admin-grid" id="testimonialsAdminGrid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB 10: INSTAGRAM -->
+                <section class="tab-panel" id="panel-instagram">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>#SorèvaMoments Instagram Gallery</h3>
+                            <p>Manage the 6 visual showcase images displayed in the social gallery.</p>
+                        </div>
+                        <button class="btn-admin-primary" onclick="saveInstagramFeed()">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Gallery
+                        </button>
+                    </div>
+
+                    <div class="instagram-admin-grid" id="instagramAdminGrid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB 11: SETTINGS & SECURITY -->
+                <section class="tab-panel" id="panel-settings">
+                    <div class="settings-grid">
+                        
+                        <!-- GENERAL SETTINGS -->
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h4><i class="fa-solid fa-store"></i> General Boutique Settings</h4>
+                            </div>
+                            <div class="form-group">
+                                <label>Store Name</label>
+                                <input type="text" id="settingStoreName" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label>Tagline / Motto</label>
+                                <input type="text" id="settingTagline" class="admin-input">
+                            </div>
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>Primary Logo (Black Text - Light Header)</label>
+                                    <input type="text" id="settingLogoUrl" class="admin-input" onchange="previewImg(this.value, 'logoPreview')" oninput="previewImg(this.value, 'logoPreview')">
+                                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 200 px (4:1 Wide Strip)</strong> • Transparent PNG • &lt; 150 KB</div>
+                                    <div class="img-preview-box" style="height: 60px; background: #ffffff; border: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: center; padding: 6px;">
+                                        <img id="logoPreview" src="assets/logo-black.png" alt="Logo Black" style="object-fit: contain; max-height: 44px;">
+                                    </div>
+                                    <div id="meta_logoPreview"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Inverted Logo (White Text - Dark Footer & Sidebar)</label>
+                                    <input type="text" id="settingLogoWhiteUrl" class="admin-input" onchange="previewImg(this.value, 'logoWhitePreview')" oninput="previewImg(this.value, 'logoWhitePreview')">
+                                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 200 px (4:1 Wide Strip)</strong> • Transparent PNG • &lt; 150 KB</div>
+                                    <div class="img-preview-box" style="height: 60px; background: #1c1716; border: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: center; padding: 6px;">
+                                        <img id="logoWhitePreview" src="assets/logo-white.png" alt="Logo White" style="object-fit: contain; max-height: 44px;">
+                                    </div>
+                                    <div id="meta_logoWhitePreview"></div>
+                                </div>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>Customer Support Email</label>
+                                    <input type="email" id="settingEmail" class="admin-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Support Phone / WhatsApp</label>
+                                    <input type="text" id="settingPhone" class="admin-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Instagram Handle</label>
+                                <input type="text" id="settingInstagram" class="admin-input">
+                            </div>
+                            <button class="btn-admin-primary" onclick="saveGeneralSettings()">
+                                <i class="fa-solid fa-floppy-disk"></i> Save General Settings
+                            </button>
+                        </div>
+
+                        <!-- SECURITY: CHANGE PASSWORD -->
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h4><i class="fa-solid fa-shield-halved"></i> Administrator Security</h4>
+                            </div>
+                            <p class="card-desc">Update your administrator password. Passwords are securely hashed with SHA-256 before verification.</p>
+                            
+                            <form onsubmit="handleAdminPasswordChange(event)">
+                                <div class="form-group">
+                                    <label>Current Password</label>
+                                    <div class="input-with-icon">
+                                        <i class="fa-solid fa-lock"></i>
+                                        <input type="password" id="currentAdminPw" required placeholder="Enter current password">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password (min 6 characters)</label>
+                                    <div class="input-with-icon">
+                                        <i class="fa-solid fa-key"></i>
+                                        <input type="password" id="newAdminPw" required minlength="6" placeholder="Enter new password">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Confirm New Password</label>
+                                    <div class="input-with-icon">
+                                        <i class="fa-solid fa-key"></i>
+                                        <input type="password" id="confirmAdminPw" required minlength="6" placeholder="Confirm new password">
+                                    </div>
+                                </div>
+                                <div class="pw-change-msg" id="pwChangeMsg"></div>
+                                <button type="submit" class="btn-admin-primary">
+                                    <i class="fa-solid fa-check"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- DATA BACKUP & RESTORE -->
+                        <div class="admin-card" style="grid-column: 1 / -1;">
+                            <div class="card-header">
+                                <h4><i class="fa-solid fa-database"></i> Backup, Export & Factory Reset</h4>
+                            </div>
+                            <p class="card-desc">Export your entire store database as a standalone JSON file, import backups, or restore factory defaults.</p>
+                            
+                            <div class="backup-actions-row">
+                                <button class="btn-admin-primary" onclick="downloadStoreBackup()">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i> Export Full Store Backup (.JSON)
+                                </button>
+
+                                <label class="btn-admin-outline" style="cursor: pointer;">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Import Store Backup JSON
+                                    <input type="file" id="importJsonInput" accept=".json" style="display: none;" onchange="handleImportStoreJson(event)">
+                                </label>
+
+                                <button class="btn-danger-outline" onclick="triggerRestoreDefaultData()">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Reset to Factory Defaults
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         REUSABLE MODALS
+         ========================================== -->
+
+    <!-- PRODUCT MODAL (ADD / EDIT) -->
+    <div class="admin-modal-backdrop" id="productModalBackdrop">
+        <div class="admin-modal">
+            <div class="modal-top">
+                <h3 id="productModalTitle">Add New Jewelry Piece</h3>
+                <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="productForm" onsubmit="handleSaveProduct(event)">
+                <input type="hidden" id="editProductId" value="">
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Piece Name *</label>
+                        <input type="text" id="prodName" required class="admin-input" placeholder="e.g. Royal Traditional CZ Choker">
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="prodCategory" required class="admin-select">
+                            <option value="necklace">Necklace</option>
+                            <option value="earrings">Earrings</option>
+                            <option value="rings">Finger Rings</option>
+                            <option value="pendants">Pendants</option>
+                            <option value="bracelets">Wristwear</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Subcategory Label</label>
+                        <input type="text" id="prodSubCategory" class="admin-input" placeholder="e.g. Modern Chokers">
+                    </div>
+                    <div class="form-group">
+                        <label>Primary Metal Plating</label>
+                        <select id="prodPlating" class="admin-select">
+                            <option value="gold">18K Gold Plated</option>
+                            <option value="silver">Rhodium Silver</option>
+                            <option value="rosegold">Rose Gold Plated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Selling Price (INR ₹) *</label>
+                        <input type="number" id="prodPriceINR" required min="1" class="admin-input" placeholder="3499">
+                    </div>
+                    <div class="form-group">
+                        <label>Original / MRP Price (INR ₹)</label>
+                        <input type="number" id="prodOrigPriceINR" min="1" class="admin-input" placeholder="4499">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Product Badge</label>
+                        <input type="text" id="prodBadge" class="admin-input" placeholder="e.g. Bestseller, Royal Edition, Trending">
+                    </div>
+                    <div class="form-group">
+                        <label>Available Finishes (Comma-separated)</label>
+                        <input type="text" id="prodFinishes" class="admin-input" placeholder="18K Gold, Rhodium Silver, Rose Gold">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Primary Image URL or File *</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="prodPrimaryImg" required class="admin-input" placeholder="https://... or choose a file" onchange="previewImg(this.value, 'prodPrimaryPreview')" oninput="previewImg(this.value, 'prodPrimaryPreview')" style="flex: 1;">
+                        <label class="admin-btn admin-btn-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
+                            <input type="file" accept="image/*" style="display: none;" onchange="handleFileUpload(event, 'prodPrimaryImg', 'prodPrimaryPreview')">
+                        </label>
+                    </div>
+                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Upload any image size or aspect ratio (portrait, landscape, square) — displays naturally without cropping or awkward boxes.</div>
+                    <div class="img-preview-box" id="adminPrimaryBox">
+                        <img id="prodPrimaryPreview" src="" alt="Primary Preview">
+                    </div>
+                    <div id="meta_prodPrimaryPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Hover / Alternate Perspective Image URL or File</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="prodHoverImg" class="admin-input" placeholder="https://... or choose a file" onchange="previewImg(this.value, 'prodHoverPreview')" oninput="previewImg(this.value, 'prodHoverPreview')" style="flex: 1;">
+                        <label class="admin-btn admin-btn-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
+                            <input type="file" accept="image/*" style="display: none;" onchange="handleFileUpload(event, 'prodHoverImg', 'prodHoverPreview')">
+                        </label>
+                    </div>
+                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Any size or proportion supported — scales naturally without clipping.</div>
+                    <div class="img-preview-box" id="adminHoverBox">
+                        <img id="prodHoverPreview" src="" alt="Hover Preview">
+                    </div>
+                    <div id="meta_prodHoverPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="prodDescription" rows="3" class="admin-textarea" placeholder="Craftsmanship details, stones, finishes..."></textarea>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Customer Rating (1 - 5)</label>
+                        <input type="number" id="prodRating" min="1" max="5" step="0.1" value="5.0" class="admin-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Review Count</label>
+                        <input type="number" id="prodReviews" min="0" value="25" class="admin-input">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HERO SLIDE MODAL (ADD / EDIT) -->
+    <div class="admin-modal-backdrop" id="heroModalBackdrop">
+        <div class="admin-modal">
+            <div class="modal-top">
+                <h3 id="heroModalTitle">Add Hero Slide</h3>
+                <button class="modal-close" onclick="closeHeroSlideModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="heroSlideForm" onsubmit="handleSaveHeroSlide(event)">
+                <input type="hidden" id="editHeroSlideId" value="">
+
+                <div class="form-group">
+                    <label>Tagline / Pill Text *</label>
+                    <input type="text" id="heroSlideTag" required class="admin-input" placeholder="e.g. 01 / 08 • ROYAL CHOKER EDIT">
+                </div>
+
+                <div class="form-group">
+                    <label>Headline (HTML tags allowed) *</label>
+                    <input type="text" id="heroHeadlineInput" required class="admin-input" placeholder="Where Timeless <em>Brilliance</em> Thrives">
+                </div>
+
+                <div class="form-group">
+                    <label>Subtitle Description *</label>
+                    <textarea id="heroSubtitleInput" rows="3" required class="admin-textarea" placeholder="Handcrafted 18K Gold Plated with Austrian AAA+ Cubic Zirconia..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Full-Bleed Landscape Image URL *</label>
+                    <input type="url" id="heroImageInput" required class="admin-input" placeholder="https://images.unsplash.com/..." onchange="previewImg(this.value, 'heroPreviewImg')" oninput="previewImg(this.value, 'heroPreviewImg')">
+                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1920 × 1080 px (16:9 Widescreen)</strong> • JPG/WebP • &lt; 500 KB</div>
+                    <div class="img-preview-box" style="height: 140px;">
+                        <img id="heroPreviewImg" src="" alt="Slide Preview">
+                    </div>
+                    <div id="meta_heroPreviewImg"></div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Featured Piece Name *</label>
+                        <input type="text" id="heroPieceName" required class="admin-input" placeholder="Traditional Royal CZ Choker">
+                    </div>
+                    <div class="form-group">
+                        <label>Price (INR ₹) *</label>
+                        <input type="number" id="heroPiecePrice" required min="1" class="admin-input" placeholder="6599">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Metal Finish Label *</label>
+                        <input type="text" id="heroPieceFinish" required class="admin-input" placeholder="18K Gold Plated">
+                    </div>
+                    <div class="form-group">
+                        <label>Linked Product ID (for Quick View)</label>
+                        <select id="heroPieceProductId" class="admin-select">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeHeroSlideModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Save Hero Slide</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- COUPON MODAL -->
+    <div class="admin-modal-backdrop" id="couponModalBackdrop">
+        <div class="admin-modal" style="max-width: 480px;">
+            <div class="modal-top">
+                <h3 id="couponModalTitle">Create Promo Coupon</h3>
+                <button class="modal-close" onclick="closeCouponModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="couponForm" onsubmit="handleSaveCoupon(event)">
+                <input type="hidden" id="editCouponIndex" value="">
+
+                <div class="form-group">
+                    <label>Coupon Code *</label>
+                    <input type="text" id="couponCode" required class="admin-input" placeholder="e.g. FESTIVE20" style="text-transform: uppercase;">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Discount Percentage (%) *</label>
+                        <input type="number" id="couponPercent" required min="1" max="100" class="admin-input" placeholder="15">
+                    </div>
+                    <div class="form-group">
+                        <label>Min. Spend (INR ₹)</label>
+                        <input type="number" id="couponMinSpend" min="0" value="0" class="admin-input" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="couponActiveCheck" checked>
+                        <span>Coupon is active and redeemable</span>
+                    </label>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeCouponModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Save Coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TESTIMONIAL MODAL -->
+    <div class="admin-modal-backdrop" id="testimonialModalBackdrop">
+        <div class="admin-modal">
+            <div class="modal-top">
+                <h3 id="testimonialModalTitle">Add Customer Review</h3>
+                <button class="modal-close" onclick="closeTestimonialModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="testimonialForm" onsubmit="handleSaveTestimonial(event)">
+                <input type="hidden" id="editTestimonialId" value="">
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Customer Name *</label>
+                        <input type="text" id="reviewName" required class="admin-input" placeholder="e.g. Ananya Sharma">
+                    </div>
+                    <div class="form-group">
+                        <label>Location / City *</label>
+                        <input type="text" id="reviewCity" required class="admin-input" placeholder="e.g. Mumbai">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Rating (1 - 5 Stars) *</label>
+                        <select id="reviewRating" class="admin-select">
+                            <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                            <option value="3">⭐⭐⭐ (3 Stars)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Avatar Photo URL *</label>
+                        <input type="url" id="reviewAvatar" required class="admin-input" placeholder="https://images.unsplash.com/...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Review Text *</label>
+                    <textarea id="reviewText" rows="3" required class="admin-textarea" placeholder="Customer experience, product sparkle, packaging feedback..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeTestimonialModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Save Review</button>
+                </div>
+            </form>
+        </div>
+    <!-- STOCK ADJUSTMENT MODAL -->
+    <div class="admin-modal-backdrop" id="stockModalBackdrop">
+        <div class="admin-modal" style="max-width: 480px;">
+            <div class="modal-top">
+                <h3>Adjust Stock & Threshold</h3>
+                <button class="modal-close" onclick="closeStockModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="stockForm" onsubmit="handleSaveStock(event)">
+                <input type="hidden" id="editStockId" value="">
+                <input type="hidden" id="editStockSku" value="">
+
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="editStockProdName" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: var(--admin-text-muted);">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Stock Quantity (Units) *</label>
+                        <input type="number" id="editStockQty" required min="0" class="admin-input" placeholder="e.g. 15">
+                    </div>
+                    <div class="form-group">
+                        <label>Low Stock Alert Threshold</label>
+                        <input type="number" id="editStockThreshold" required min="1" class="admin-input" placeholder="e.g. 5">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeStockModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CUSTOMER RECORD MODAL -->
+    <div class="admin-modal-backdrop" id="customerModalBackdrop">
+        <div class="admin-modal" style="max-width: 520px;">
+            <div class="modal-top">
+                <h3 id="customerModalTitle">Add / Edit Patron Profile</h3>
+                <button class="modal-close" onclick="closeCustomerModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="customerForm" onsubmit="handleSaveCustomer(event)">
+                <input type="hidden" id="editCustId" value="">
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="custName" required class="admin-input" placeholder="e.g. Rhea Kapoor">
+                    </div>
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="custCity" required class="admin-input" placeholder="e.g. Mumbai">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="custEmail" required class="admin-input" placeholder="client@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="custPhone" class="admin-input" placeholder="+91 98200 00000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Shipping / Delivery Address</label>
+                    <textarea id="custAddress" rows="2" class="admin-textarea" placeholder="Apartment, Street, Landmark, Pincode"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-admin-outline" onclick="closeCustomerModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ORDER INSPECTION & FULFILLMENT MODAL -->
+    <div class="admin-modal-backdrop" id="orderModalBackdrop">
+        <div class="admin-modal" style="max-width: 560px;">
+            <div class="modal-top">
+                <h3 id="orderModalTitle">Order Details</h3>
+                <button class="modal-close" onclick="closeOrderModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 24px 0 10px;">
+                <input type="hidden" id="inspectOrderId" value="">
+                
+                <div style="background: var(--admin-surface-light); border: 1px solid var(--admin-border); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--gold-light);" id="inspectOrderNum">SRV-2026-1081</span>
+                        <span id="inspectOrderStatusBadge" class="order-status-badge processing">Processing</span>
+                    </div>
+                    <div style="font-size: 0.88rem; color: var(--admin-text-muted); line-height: 1.6;">
+                        <div><strong style="color: var(--admin-text);">Customer:</strong> <span id="inspectCustName">Ananya Sharma</span> (<span id="inspectCustEmail"></span>)</div>
+                        <div><strong style="color: var(--admin-text);">Phone:</strong> <span id="inspectCustPhone"></span></div>
+                        <div><strong style="color: var(--admin-text);">Shipping Destination:</strong> <span id="inspectCustAddr"></span>, <span id="inspectCustCity"></span></div>
+                        <div><strong style="color: var(--admin-text);">Payment Mode:</strong> <span id="inspectPaymentMode"></span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px;">Purchased Items</h4>
+                    <div id="inspectItemsList" style="background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); border-radius: 8px; padding: 14px; font-size: 0.9rem; line-height: 1.6;">
+                        <!-- Items rendered here -->
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(197, 160, 89, 0.1); border: 1px solid var(--gold); border-radius: 10px; margin-bottom: 24px;">
+                    <span style="font-weight: 600;">Total Amount Paid / Due:</span>
+                    <span id="inspectTotalAmt" style="font-size: 1.3rem; font-weight: 700; color: var(--gold-light);">₹3,499</span>
+                </div>
+
+                <div class="form-group">
+                    <label style="margin-bottom: 8px; display: block; font-weight: 600;">Update Fulfillment Status</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="inspectStatusSelect" class="admin-select" style="flex: 1;">
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <button type="button" class="btn-admin-primary" onclick="saveOrderStatusFromModal()">
+                            <i class="fa-solid fa-floppy-disk"></i> Update Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-admin-outline" onclick="closeOrderModal()">Close</button>
+            </div>
+        </div>
+    <!-- ==========================================
+         IMAGE RESOLUTION & QUALITY INSPECTOR MODAL
+         "automatically updated in the details section of the image which I click on"
+         ========================================== -->
+    <div class="admin-modal-backdrop" id="imageInspectorModalBackdrop" onclick="if(event.target === this) closeImageInspector()">
+        <div class="admin-modal" style="max-width: 820px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-ruler-combined" style="color: var(--gold); font-size: 1.2rem;"></i>
+                    <h3 id="inspectorModalTitle">Image Details & Resolution Inspector</h3>
+                </div>
+                <button class="modal-close" onclick="closeImageInspector()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-form" style="padding: 24px;">
+                <div class="img-inspector-container">
+                    <div class="img-inspector-view">
+                        <img id="inspectorImageEl" src="" alt="Inspected Asset">
+                    </div>
+                    <div class="img-inspector-stats">
+                        <div class="img-stat-card">
+                            <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); display: block; margin-bottom: 4px;">Slot & Location</span>
+                            <h4 id="inspectorSlotName" style="margin: 0; font-size: 1rem; color: var(--admin-text);">Product Primary Image</h4>
+                            <p id="inspectorSlotPurpose" style="margin: 4px 0 0 0; font-size: 0.8rem; color: rgba(251,248,245,0.6); line-height: 1.4;"></p>
+                        </div>
+
+                        <!-- Live Detected Dimensions -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="img-stat-card">
+                                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(251,248,245,0.6); display: block; margin-bottom: 2px;">Live Resolution</span>
+                                <div id="inspectorLiveRes" style="font-size: 1.15rem; font-weight: 700; color: var(--gold-light);">1000 × 1000 px</div>
+                                <div id="inspectorLiveRatio" style="font-size: 0.76rem; color: rgba(251,248,245,0.7); margin-top: 2px;">Ratio: 1:1 (Square)</div>
+                            </div>
+                            <div class="img-stat-card">
+                                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(251,248,245,0.6); display: block; margin-bottom: 2px;">Target Recommendation</span>
+                                <div id="inspectorTargetRes" style="font-size: 1.15rem; font-weight: 700; color: var(--admin-text);">1000 × 1000 px</div>
+                                <div id="inspectorTargetRatio" style="font-size: 0.76rem; color: rgba(251,248,245,0.7); margin-top: 2px;">Target: 1:1 Square</div>
+                            </div>
+                        </div>
+
+                        <!-- Verdict Card -->
+                        <div class="img-verdict-box optimal" id="inspectorVerdictBox">
+                            <i class="fa-solid fa-circle-check" id="inspectorVerdictIcon" style="font-size: 1.1rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong id="inspectorVerdictTitle">Optimal Fit & Resolution</strong>
+                                <div id="inspectorVerdictMsg" style="font-size: 0.8rem; margin-top: 2px; color: inherit;">This image matches the recommended dimensions and will display with pristine clarity.</div>
+                            </div>
+                        </div>
+
+                        <!-- URL & Copy Actions -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.75rem; color: rgba(251,248,245,0.6);">Image Source Link</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="inspectorUrlInput" readonly class="admin-input" style="font-size: 0.78rem; font-family: monospace;">
+                                <button type="button" class="btn-admin-outline" onclick="copyInspectorUrl()" style="white-space: nowrap; padding: 6px 14px;" title="Copy image URL">
+                                    <i class="fa-solid fa-copy"></i> Copy
+                                </button>
+                                <a id="inspectorOpenLink" href="#" target="_blank" class="btn-admin-outline" style="white-space: nowrap; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Open in new tab">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-admin-outline" onclick="openImageGuidelinesModal()">
+                    <i class="fa-solid fa-book-open"></i> View Master Guidelines
+                </button>
+                <button type="button" class="btn-admin-primary" onclick="closeImageInspector()">Close Inspector</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MASTER IMAGE GUIDELINES & SPECS MODAL
+         "give me all the technical details so that I can give this to a 3-year-old"
+         ========================================== -->
+    <div class="admin-modal-backdrop" id="imageSpecsModalBackdrop" onclick="if(event.target === this) closeImageGuidelinesModal()">
+        <div class="admin-modal" style="max-width: 860px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-ruler-combined" style="color: var(--gold); font-size: 1.25rem;"></i>
+                    <h3>Sorèva Master Image Size & Resolution Guide</h3>
+                </div>
+                <button class="modal-close" onclick="closeImageGuidelinesModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-form" style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+                
+                <!-- 3-Year-Old Golden Rules Banner -->
+                <div style="background: linear-gradient(135deg, rgba(197, 160, 89, 0.18), rgba(197, 160, 89, 0.05)); border: 1px solid var(--gold); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 1.2rem;">🧒</span>
+                        <h4 style="margin: 0; color: var(--gold-light); font-size: 1rem;">The 3-Year-Old Golden Rule (Only 3 Shapes to Remember!)</h4>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 0.84rem;">
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px 14px;">
+                            <strong style="color: #81c784;">1. Perfect Square (1000 × 1000 px)</strong>
+                            <p style="margin: 4px 0 0 0; color: rgba(251,248,245,0.7); font-size: 0.78rem;">Use for <strong>Products, Categories & Instagram</strong>. 1:1 shape always fits.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px 14px;">
+                            <strong style="color: #64b5f6;">2. Widescreen TV (1920 × 1080 px)</strong>
+                            <p style="margin: 4px 0 0 0; color: rgba(251,248,245,0.7); font-size: 0.78rem;">Use for <strong>Hero Top Carousel Banners</strong>. 16:9 full-bleed landscape.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px 14px;">
+                            <strong style="color: #ffb74d;">3. Wide Strip (800 × 200 px)</strong>
+                            <p style="margin: 4px 0 0 0; color: rgba(251,248,245,0.7); font-size: 0.78rem;">Use for <strong>Brand Logos</strong>. 4:1 wide strip with transparent PNG.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complete Reference Table -->
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 12px;">Slot-by-Slot Technical Specification Table</h4>
+                <div class="table-responsive" style="margin-bottom: 22px;">
+                    <table class="admin-table" style="font-size: 0.82rem;">
+                        <thead>
+                            <tr>
+                                <th>Section / Slot</th>
+                                <th>Target Resolution</th>
+                                <th>Aspect Ratio</th>
+                                <th>Format</th>
+                                <th>Max Size</th>
+                                <th>Where Displayed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Primary Brand Logo</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">800 × 200 px</td>
+                                <td>4:1 Wide Strip</td>
+                                <td><span class="badge badge-pending" style="background: rgba(76,175,80,0.2); color: #81c784; border-color: #4caf50;">PNG Transparent</span></td>
+                                <td>&lt; 150 KB</td>
+                                <td>Main Header & Checkout</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Inverted Brand Logo</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">800 × 200 px</td>
+                                <td>4:1 Wide Strip</td>
+                                <td><span class="badge badge-pending" style="background: rgba(76,175,80,0.2); color: #81c784; border-color: #4caf50;">PNG Transparent</span></td>
+                                <td>&lt; 150 KB</td>
+                                <td>Footer & Mobile Menu</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Product Primary Photo</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">1000 × 1000 px</td>
+                                <td>1:1 Square</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 300 KB</td>
+                                <td>Catalog Grid & Default View</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Product Hover Photo</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">1000 × 1000 px</td>
+                                <td>1:1 Square</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 300 KB</td>
+                                <td>Hover Reveal & Quick View</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hero Carousel Banner</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">1920 × 1080 px</td>
+                                <td>16:9 Widescreen</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 500 KB</td>
+                                <td>Top Storefront Hero Slider</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Craft Spotlight (Main)</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">1000 × 1200 px</td>
+                                <td>5:6 Portrait</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 400 KB</td>
+                                <td>Art of Brilliance Showcase</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Craft Spotlight (Detail)</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">800 × 800 px</td>
+                                <td>1:1 Square</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 250 KB</td>
+                                <td>Close-up Prong/Stone Inset</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Collection Categories</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">800 × 800 px</td>
+                                <td>1:1 Square</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 250 KB</td>
+                                <td>Category Grid Tiles</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Instagram Social Feed</strong></td>
+                                <td style="color: var(--gold-light); font-weight: 700;">1080 × 1080 px</td>
+                                <td>1:1 Square</td>
+                                <td>JPG / WebP</td>
+                                <td>&lt; 300 KB</td>
+                                <td>Footer Instagram Showcase</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 30-Second How-To Instructions -->
+                <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: 8px; padding: 16px; font-size: 0.85rem; line-height: 1.6;">
+                    <h4 style="color: var(--gold-light); margin-top: 0; margin-bottom: 8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> 30-Second Recipe For Anyone On Your Team</h4>
+                    <ol style="margin: 0; padding-left: 20px; color: rgba(251,248,245,0.85);">
+                        <li><strong>Resize</strong>: Open free <em>Canva.com</em> or <em>Photopea.com</em> $\rightarrow$ Set custom size (e.g. <code>1000 × 1000</code> for products, <code>1920 × 1080</code> for banners).</li>
+                        <li><strong>Save</strong>: Download as <strong>JPG</strong> (Quality: 85%) or <strong>PNG</strong> (for transparent logos).</li>
+                        <li><strong>Compress</strong>: Drop into <em>TinyPNG.com</em> to shrink file size under 300 KB without losing sharpness.</li>
+                        <li><strong>Paste Link</strong>: Enter URL in the admin field. The live inspector automatically validates the resolution!</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-admin-primary" onclick="closeImageGuidelinesModal()">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-container" id="adminToastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="admin.js?v=20260923_sync"></script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+{
+  "settings": {
+    "storeName": "Sor\u00e8va",
+    "tagline": "Exquisite Cubic Zirconia Jewellery for Every Occasion",
+    "logoUrl": "assets/logo-black.png",
+    "logoWhiteUrl": "assets/logo-white.png",
+    "contactEmail": "care@soreva.in",
+    "contactPhone": "+91 98200 12345",
+    "instagramHandle": "@soreva_jewels",
+    "freeShippingThresholdINR": 2499,
+    "tickerSpeedMs": 4500,
+    "adminPasswordHash": "3779c849af88128e466010f799175ce3344f2392947810fa4501766c0664d846"
+  },
+  "announcements": [
+    "\u2728 Launch Celebration: Use code <strong>LAUNCH15</strong> for 15% OFF your first royal order",
+    "\ud83d\ude9a Complimentary Express Shipping across India on all orders above \u20b92,499",
+    "\ud83c\udf0d Worldwide Express Delivery & Signature Soreva Velvet Gift Box Included"
+  ],
+  "heroSlides": [
+    {
+      "id": 1,
+      "tag": "01 / 08 \u2022 ROYAL CHOKER EDIT",
+      "headline": "Where Timeless <em>Brilliance</em> Thrives",
+      "subtitle": "Handcrafted 18K Gold Plated with AAA+ Austrian Cubic Zirconia crystals. Designed to make every festive occasion feel extraordinary.",
+      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1920&q=85",
+      "name": "Aurelia CZ Choker Necklace",
+      "priceINR": 3499,
+      "finish": "18K Gold Plated",
+      "productId": 1,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 2,
+      "tag": "02 / 08 \u2022 CELESTE DROPS EDIT",
+      "headline": "The Fiery <em>Brilliance</em> of Pure Light",
+      "subtitle": "Diamond-cut multi-faceted cascading teardrops in Rhodium Silver finish. Captures stage and evening lights with fiery diamond-level dispersion.",
+      "image": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1920&q=85",
+      "name": "Celeste Diamond-Cut Drop Earrings",
+      "priceINR": 2499,
+      "finish": "Rhodium Silver",
+      "productId": 4,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 3,
+      "tag": "03 / 08 \u2022 BRIDAL EMPRESS EDIT",
+      "headline": "Grandeur Reimagined for <em>Every Queen</em>",
+      "subtitle": "Clustered AAA+ Cubic Zirconia pav\u00e9 collar with heirloom anti-tarnish finish. An opulent Indian festive and wedding statement piece.",
+      "image": "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=1920&q=85",
+      "name": "Royale Empress CZ Statement Collar",
+      "priceINR": 4899,
+      "finish": "Two-Tone Rhodium",
+      "productId": 2,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 4,
+      "tag": "04 / 08 \u2022 SIGNATURE RINGS EDIT",
+      "headline": "Sculpted for <em>Unmatched Radiance</em>",
+      "subtitle": "Channel-set baguette stones and cushion-cut crown engagement rings engineered with skin-safe, triple e-coating daily durability.",
+      "image": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1920&q=85",
+      "name": "Eternity Baguette Cut CZ Band",
+      "priceINR": 1999,
+      "finish": "Rose Gold Plated",
+      "productId": 5,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 5,
+      "tag": "05 / 08 \u2022 WRISTWEAR ICON EDIT",
+      "headline": "Effortless Luxury for <em>Everyday Sparkle</em>",
+      "subtitle": "The quintessential diamond tennis bracelet crafted with seamless four-prong settings, premium safety clasp, and lifelong polish.",
+      "image": "https://images.unsplash.com/photo-1611591475819-79b8b730ab09?auto=format&fit=crop&w=1920&q=85",
+      "name": "Classic Brilliant CZ Tennis Bracelet",
+      "priceINR": 3899,
+      "finish": "18K Gold Plated",
+      "productId": 8,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 6,
+      "tag": "06 / 08 \u2022 CROWN SOLITAIRE EDIT",
+      "headline": "Majestic Craft in <em>Sterling Rhodium</em>",
+      "subtitle": "Prong-set 2.5 carat cushion-cut solitaire framed with pav\u00e9 shoulders. Unrivaled sparkle for modern engagements and celebratory milestones.",
+      "image": "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=1920&q=85",
+      "name": "Solitaire Princess Crown Ring",
+      "priceINR": 2299,
+      "finish": "Rhodium Silver",
+      "productId": 6,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 7,
+      "tag": "07 / 08 \u2022 ROYAL HERITAGE EDIT",
+      "headline": "Traditional Grandeur with <em>Modern Grace</em>",
+      "subtitle": "Intricate filigree bell jhumkas studded with micro-pav\u00e9 CZ crystals and delicate pearl drops. Lightweight festive royalty.",
+      "image": "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=1920&q=85",
+      "name": "Royal Heritage CZ Jhumkas",
+      "priceINR": 3299,
+      "finish": "Antique Gold & Pearl",
+      "productId": 3,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    },
+    {
+      "id": 8,
+      "tag": "08 / 08 \u2022 EVERYDAY HALO EDIT",
+      "headline": "Delicate Whispers of <em>Diamond Elegance</em>",
+      "subtitle": "Solitaire halo pendant suspended on an adjustable fine Venetian box chain. The epitome of subtle, luxurious everyday wear.",
+      "image": "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=1920&q=85",
+      "name": "Seraphina Solitaire Halo Pendant",
+      "priceINR": 1899,
+      "finish": "18K Gold Finish",
+      "productId": 7,
+      "ctaText": "Explore Catalog",
+      "ctaLink": "#products-catalog"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Aurelia CZ Choker Necklace",
+      "category": "necklace",
+      "subCategory": "Modern Chokers",
+      "priceINR": 3499,
+      "originalPriceINR": 4499,
+      "rating": 4.9,
+      "reviews": 48,
+      "plating": "gold",
+      "availableFinishes": [
+        "18K Gold",
+        "Rhodium Silver",
+        "Rose Gold"
+      ],
+      "badge": "Bestseller",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Exquisitely handcrafted with brilliant cut Cubic Zirconia stones in an anti-tarnish 18K gold-plated finish. An editorial statement choker that effortlessly captures festive radiance and black-tie elegance."
+    },
+    {
+      "id": 2,
+      "name": "Royale Empress CZ Statement Collar",
+      "category": "necklace",
+      "subCategory": "Statement Collars",
+      "priceINR": 4899,
+      "originalPriceINR": 5999,
+      "rating": 5.0,
+      "reviews": 32,
+      "plating": "silver",
+      "availableFinishes": [
+        "Rhodium Silver",
+        "Two-Tone"
+      ],
+      "badge": "Royal Edition",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Intricately clustered AAA+ grade Austrian Cubic Zirconia in high-polish rhodium plating. Offers the supreme brilliance of diamonds with hypoallergenic, skin-friendly demi-fine luxury."
+    },
+    {
+      "id": 3,
+      "name": "Royal Heritage CZ Jhumkas",
+      "category": "earrings",
+      "subCategory": "Royal Jhumkas",
+      "priceINR": 3299,
+      "originalPriceINR": 4200,
+      "rating": 4.9,
+      "reviews": 64,
+      "plating": "gold",
+      "availableFinishes": [
+        "Antique Gold",
+        "Two-Tone",
+        "18K Gold"
+      ],
+      "badge": "Festive Pick",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "A celebration of timeless Indian majesty. Features filigree bell detailing lined with handset micro-pave CZ crystals and delicate pearl drops. Lightweight yet show-stopping."
+    },
+    {
+      "id": 4,
+      "name": "Celeste Diamond-Cut Drop Earrings",
+      "category": "earrings",
+      "subCategory": "Elegant Drops",
+      "priceINR": 2499,
+      "originalPriceINR": 3299,
+      "rating": 4.9,
+      "reviews": 51,
+      "plating": "silver",
+      "availableFinishes": [
+        "Rhodium Silver",
+        "Rose Gold"
+      ],
+      "badge": "Trending",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1561828995-aa79a2db86dd?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1561828995-aa79a2db86dd?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Cascading teardrop silhouette studded with multi-faceted cubic zirconia stones that mirror the fiery dispersion of natural diamonds."
+    },
+    {
+      "id": 5,
+      "name": "Eternity Baguette Cut CZ Band",
+      "category": "rings",
+      "subCategory": "Signature Rings",
+      "priceINR": 1999,
+      "originalPriceINR": 2699,
+      "rating": 4.8,
+      "reviews": 42,
+      "plating": "rosegold",
+      "availableFinishes": [
+        "Rose Gold",
+        "18K Gold",
+        "Rhodium Silver"
+      ],
+      "badge": "Top Seller",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1589674781759-c21c37956a44?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1589674781759-c21c37956a44?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Channel-set baguette stones alternating with round brilliant accents. Designed with high-durability rose gold e-coating for lasting daily shine."
+    },
+    {
+      "id": 6,
+      "name": "Solitaire Princess Crown Ring",
+      "category": "rings",
+      "subCategory": "Signature Rings",
+      "priceINR": 2299,
+      "originalPriceINR": 2999,
+      "rating": 5.0,
+      "reviews": 38,
+      "plating": "silver",
+      "availableFinishes": [
+        "Rhodium Silver",
+        "18K Gold"
+      ],
+      "badge": "Popular",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1600721391689-2564bb8055de?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1600721391689-2564bb8055de?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "Crown-inspired setting cradling a 2.5-carat equivalent brilliant cushion CZ diamond. Finished with micro-pave encrusted shoulders."
+    },
+    {
+      "id": 7,
+      "name": "Seraphina Solitaire Halo Pendant",
+      "category": "pendants",
+      "subCategory": "Everyday Pendants",
+      "priceINR": 1899,
+      "originalPriceINR": 2499,
+      "rating": 4.9,
+      "reviews": 29,
+      "plating": "gold",
+      "availableFinishes": [
+        "18K Gold",
+        "Rhodium Silver"
+      ],
+      "badge": "Classic",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "A center round solitaire encircled by a halo of micro-brilliants, suspended on an adjustable fine Venetian box chain. Perfect for effortless daily luxury."
+    },
+    {
+      "id": 8,
+      "name": "Classic Brilliant CZ Tennis Bracelet",
+      "category": "wristwear",
+      "subCategory": "Signature Bracelets",
+      "priceINR": 3899,
+      "originalPriceINR": 4999,
+      "rating": 5.0,
+      "reviews": 57,
+      "plating": "silver",
+      "availableFinishes": [
+        "Rhodium Silver",
+        "18K Gold",
+        "Rose Gold"
+      ],
+      "badge": "Bestseller",
+      "launchOffer": true,
+      "primaryImg": "https://images.unsplash.com/photo-1611591475819-79b8b730ab09?auto=format&fit=crop&w=800&q=80",
+      "hoverImg": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=800&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1611591475819-79b8b730ab09?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=800&q=80"
+      ],
+      "description": "The quintessential diamond tennis bracelet crafted with seamless four-prong basket settings and double-locking safety clasp. Unmatched fire and sparkle."
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Necklaces",
+      "countLabel": "Chokers & Collars",
+      "slug": "necklace",
+      "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 2,
+      "name": "Earrings",
+      "countLabel": "Drops, Jhumkas & Studs",
+      "slug": "earrings",
+      "image": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 3,
+      "name": "Finger Rings",
+      "countLabel": "Solitaires & Eternity Bands",
+      "slug": "rings",
+      "image": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 4,
+      "name": "Pendants",
+      "countLabel": "Everyday Sets",
+      "slug": "pendants",
+      "image": "https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 5,
+      "name": "Wristwear",
+      "countLabel": "Tennis & Cuff Bangles",
+      "slug": "wristwear",
+      "image": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=600&q=80"
+    }
+  ],
+  "currencies": {
+    "INR": {
+      "symbol": "\u20b9",
+      "rate": 1.0,
+      "label": "INR (\u20b9)"
+    },
+    "USD": {
+      "symbol": "$",
+      "rate": 0.012,
+      "label": "USD ($)"
+    },
+    "AED": {
+      "symbol": "\u062f.\u0625",
+      "rate": 0.044,
+      "label": "AED (\u062f.\u0625)"
+    },
+    "GBP": {
+      "symbol": "\u00a3",
+      "rate": 0.0095,
+      "label": "GBP (\u00a3)"
+    },
+    "EUR": {
+      "symbol": "\u20ac",
+      "rate": 0.011,
+      "label": "EUR (\u20ac)"
+    }
+  },
+  "coupons": [
+    {
+      "code": "LAUNCH15",
+      "discountPercent": 15,
+      "minSpendINR": 0,
+      "active": true
+    },
+    {
+      "code": "FESTIVE20",
+      "discountPercent": 20,
+      "minSpendINR": 4000,
+      "active": true
+    },
+    {
+      "code": "ROYAL10",
+      "discountPercent": 10,
+      "minSpendINR": 1500,
+      "active": true
+    }
+  ],
+  "spotlight": {
+    "tag": "Soreva Craftsmanship",
+    "title": "The Art of <em>Brilliance</em>",
+    "desc1": "At Sor\u00e8va, we believe demi-fine jewelry should carry the breathtaking allure of mined diamonds with uncompromising durability. Every piece is sculpted using Austrian AAA+ grade Cubic Zirconia crystals, hand-set into hypoallergenic, skin-safe alloys.",
+    "desc2": "Each design is sealed with our proprietary <strong>Triple Anti-Tarnish E-Coating</strong>, preserving its radiant high-mirror luster through celebrations, gala evenings, and everyday luxury wear.",
+    "badgeTitle": "57 Facets",
+    "badgeSub": "Precision Diamond Cut",
+    "imgMain": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=900&q=80",
+    "imgSub": "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=600&q=80",
+    "features": [
+      {
+        "title": "57-Facet Precision Cut",
+        "desc": "Stones cut to ideal optical proportions for unrivaled fire and refractive sparkle."
+      },
+      {
+        "title": "Triple Anti-Tarnish Guard",
+        "desc": "Nanotech e-coating protects against humidity, sweat, and perfumes for lasting brilliance."
+      },
+      {
+        "title": "Ethical Demi-Fine Luxury",
+        "desc": "Consciously crafted demi-fine creations that make luxury accessible without compromise."
+      }
+    ]
+  },
+  "testimonials": [
+    {
+      "id": 1,
+      "name": "Ananya Sharma",
+      "city": "Mumbai",
+      "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
+      "rating": 5,
+      "verified": true,
+      "text": "The Aurelia Choker is breathtaking! The CZ stones have an unreal diamond-like fire and the 18K gold polish looks completely authentic. Wore it to a wedding and received compliments all night."
+    },
+    {
+      "id": 2,
+      "name": "Pooja Rao",
+      "city": "Bangalore",
+      "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
+      "rating": 5,
+      "verified": true,
+      "text": "The Tennis Bracelet exceeded my expectations. The clasp is super secure and the stones catch the light in the most flattering way. Fast 3-day express delivery in Bangalore!"
+    },
+    {
+      "id": 3,
+      "name": "Meera Patel",
+      "city": "Dubai, UAE",
+      "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
+      "rating": 5,
+      "verified": true,
+      "text": "Ordered international shipping to Dubai and it arrived within 5 days! The packaging is top-tier luxury velvet and the Royal Heritage Jhumkas are lightweight yet majestic."
+    }
+  ],
+  "instagram": [
+    {
+      "id": 1,
+      "title": "Editorial Look 1",
+      "image": "https://images.unsplash.com/photo-1561828995-aa79a2db86dd?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    },
+    {
+      "id": 2,
+      "title": "Royal Jhumkas",
+      "image": "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    },
+    {
+      "id": 3,
+      "title": "Diamond Drop Earrings",
+      "image": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    },
+    {
+      "id": 4,
+      "title": "Tennis Bracelet",
+      "image": "https://images.unsplash.com/photo-1611591475819-79b8b730ab09?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    },
+    {
+      "id": 5,
+      "title": "Crown Solitaire Ring",
+      "image": "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    },
+    {
+      "id": 6,
+      "title": "Fine Layered Necklace",
+      "image": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=400&q=80",
+      "link": "https://www.instagram.com/soreva_jewels"
+    }
+  ]
+}

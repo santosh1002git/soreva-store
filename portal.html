@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorèva Staff Portal • Database Management GUI</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+
+    <!-- Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Portal Stylesheet -->
+    <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         1. STAFF AUTHENTICATION & PROFILE SWITCHER
+         ========================================== -->
+    <div class="portal-login-overlay" id="portalLoginOverlay">
+        <div class="portal-login-card">
+            <div class="login-brand">
+                <img src="assets/logo-black.png" alt="Sorèva" style="height: 44px; width: auto; object-fit: contain; margin-bottom: 8px;">
+                <span class="portal-subtitle-tag">Database Management & Staff Portal</span>
+            </div>
+
+            <div class="login-instruction">
+                Select your employee profile or enter your 4-digit PIN to access the database.
+            </div>
+
+            <!-- Quick Employee Selector -->
+            <div class="quick-emp-list" id="quickEmpList">
+                <!-- Dynamically populated from /api/employees -->
+                <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading team profiles...
+                </div>
+            </div>
+
+            <div class="login-divider">
+                <span>OR SIGN IN WITH CREDENTIALS</span>
+            </div>
+
+            <!-- Custom Email / PIN Form -->
+            <form id="portalLoginForm" onsubmit="handleEmployeeLogin(event)">
+                <div class="form-group">
+                    <label>Employee Email</label>
+                    <input type="email" id="loginEmpEmail" required class="portal-input" placeholder="e.g. priya@soreva.in or sonal@soreva.in">
+                </div>
+                <div class="form-group">
+                    <label>4-Digit Staff PIN (or Owner Password)</label>
+                    <input type="password" id="loginEmpPin" required class="portal-input" placeholder="Enter PIN or Password" maxlength="32">
+                </div>
+                <div id="loginErrorMsg" class="login-error-msg" style="display: none;"></div>
+                <button type="submit" class="btn-portal-primary" id="loginSubmitBtn" style="width: 100%; justify-content: center; margin-top: 10px;">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Database
+                </button>
+            </form>
+
+            <div class="login-footer-info">
+                <span><i class="fa-solid fa-database"></i> Connected to Local PocketBase / SQLite</span>
+                <a href="admin.html" class="owner-admin-link">Master Store Admin →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         2. MAIN PORTAL WORKSPACE
+         ========================================== -->
+    <div class="portal-app" id="portalApp" style="display: none;">
+        
+        <!-- Top Navigation -->
+        <header class="portal-topbar">
+            <div class="topbar-left">
+                <a href="index.html" class="portal-logo" title="View Storefront">
+                    <img src="assets/logo-black.png" alt="Sorèva" style="height: 36px; width: auto; object-fit: contain;">
+                </a>
+                <span class="portal-badge-db"><i class="fa-solid fa-database"></i> SQLite Live</span>
+                <span class="portal-network-pill" onclick="openShareModal()" title="Click to view local Wi-Fi sharing link">
+                    <i class="fa-solid fa-wifi"></i> <span id="topbarLanIp">LAN: Detecting...</span>
+                </span>
+            </div>
+
+            <div class="topbar-center">
+                <nav class="portal-nav-tabs">
+                    <button class="nav-tab-btn active" data-tab="catalog" onclick="switchPortalTab('catalog')">
+                        <i class="fa-solid fa-gem"></i> Catalog
+                    </button>
+                    <button class="nav-tab-btn" data-tab="inventory" onclick="switchPortalTab('inventory')">
+                        <i class="fa-solid fa-boxes-stacked"></i> Stock & Inventory
+                    </button>
+                    <button class="nav-tab-btn" data-tab="orders" onclick="switchPortalTab('orders')">
+                        <i class="fa-solid fa-truck-fast"></i> Orders
+                    </button>
+                    <button class="nav-tab-btn owner-only" data-tab="team" onclick="switchPortalTab('team')">
+                        <i class="fa-solid fa-users-gear"></i> Team
+                    </button>
+                    <button class="nav-tab-btn" data-tab="audit" onclick="switchPortalTab('audit')">
+                        <i class="fa-solid fa-clock-rotate-left"></i> History
+                    </button>
+                </nav>
+            </div>
+
+            <div class="topbar-right">
+                <button class="btn-portal-outline btn-sm" onclick="openShareModal()" title="Share with team members on local Wi-Fi">
+                    <i class="fa-solid fa-share-nodes"></i> Share with Team
+                </button>
+                <div class="staff-profile-chip" id="staffProfileChip">
+                    <span class="staff-avatar" id="staffAvatar">💎</span>
+                    <div class="staff-meta">
+                        <strong id="staffName">Staff Member</strong>
+                        <span id="staffRole">Catalog Specialist</span>
+                    </div>
+                    <button class="btn-icon btn-sm" onclick="handleLogout()" title="Sign Out / Switch Employee">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Metrics Banner -->
+        <section class="portal-metrics-ribbon">
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa-solid fa-gem"></i></div>
+                <div class="metric-content">
+                    <span class="metric-label">Database Catalog</span>
+                    <h3 class="metric-value" id="kpiProdCount">--</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div class="metric-content">
+                    <span class="metric-label">Total Stock Units</span>
+                    <h3 class="metric-value" id="kpiTotalUnits">--</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="metric-content">
+                    <span class="metric-label">Low Stock Alerts</span>
+                    <h3 class="metric-value" id="kpiLowStock">--</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div class="metric-content">
+                    <span class="metric-label">Orders to Fulfill</span>
+                    <h3 class="metric-value" id="kpiPendingOrders">--</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 1: Product Catalog View -->
+        <main class="portal-tab-content active" id="tabCatalog">
+            <div class="section-header">
+                <div>
+                    <h2>Database Jewelry Catalog</h2>
+                    <p>Live inventory records from PocketBase/SQLite. Changes instantly reflect on the public store.</p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="catalogSearchInput" placeholder="Search piece, SKU, category..." oninput="filterCatalogTable()">
+                    </div>
+                    <select id="catalogCategoryFilter" class="portal-select" onchange="filterCatalogTable()">
+                        <option value="">All Categories</option>
+                        <option value="necklace">Necklaces & Chokers</option>
+                        <option value="earrings">Earrings & Jhumkas</option>
+                        <option value="rings">Rings & Bands</option>
+                        <option value="bracelets">Bracelets & Wristwear</option>
+                        <option value="pendants">Solitaire Pendants</option>
+                        <option value="silver">925 Silver Jewellery</option>
+                        <option value="accessories">Accessories & Tikkas</option>
+                    </select>
+                    <select id="catalogStatusFilter" class="portal-select" onchange="filterCatalogTable()">
+                        <option value="">All Statuses</option>
+                        <option value="disabled">Disabled (Distributor Pieces)</option>
+                        <option value="active">Active (Storefront Visible)</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                    <button class="btn-portal-primary" onclick="openAddProductModal()">
+                        <i class="fa-solid fa-plus"></i> Add Product to Database
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="portal-card">
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">Image</th>
+                                <th>Jewelry Piece</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Plating</th>
+                                <th>Price (₹)</th>
+                                <th>Stock</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogTableBody">
+                            <tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading database products...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Catalog Pagination Controls -->
+                <div id="catalogPagination" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.15);">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" id="catalogPageInfo">
+                        Showing 1 to 50 of 11,652 items
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-portal-outline btn-sm" id="btnPrevCatalogPage" onclick="changeCatalogPage(-1)" disabled>
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <span id="catalogPageBadge" style="font-size: 0.82rem; font-weight: 600; color: var(--gold-light); padding: 4px 10px; background: rgba(212,175,55,0.1); border-radius: 6px; border: 1px solid rgba(212,175,55,0.2);">
+                            Page 1
+                        </span>
+                        <button class="btn-portal-outline btn-sm" id="btnNextCatalogPage" onclick="changeCatalogPage(1)">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab 2: Stock & Inventory View -->
+        <main class="portal-tab-content" id="tabInventory">
+            <div class="section-header">
+                <div>
+                    <h2>Live Warehouse & Stock Management</h2>
+                    <p>Adjust stock quantities, thresholds, and view auto-calculated fulfillment statuses.</p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="inventorySearchInput" placeholder="Search by SKU or name..." oninput="filterInventoryTable()">
+                    </div>
+                    <select id="inventoryStatusFilter" class="portal-select" onchange="filterInventoryTable()">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active Pieces Only</option>
+                        <option value="disabled">Disabled (Distributor Pieces)</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                    <button class="btn-portal-outline" onclick="loadInventoryData()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh Stock
+                    </button>
+                </div>
+            </div>
+
+            <div class="portal-card">
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th style="text-align: center; width: 160px;">Units in Stock</th>
+                                <th style="text-align: center; width: 140px;">Low Stock Alert At</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Quick Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading stock units...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Inventory Pagination Controls -->
+                <div id="inventoryPagination" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.15);">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);" id="inventoryPageInfo">
+                        Showing 1 to 50 of items
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-portal-outline btn-sm" id="btnPrevInvPage" onclick="changeInventoryPage(-1)" disabled>
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <span id="inventoryPageBadge" style="font-size: 0.82rem; font-weight: 600; color: var(--gold-light); padding: 4px 10px; background: rgba(212,175,55,0.1); border-radius: 6px; border: 1px solid rgba(212,175,55,0.2);">
+                            Page 1
+                        </span>
+                        <button class="btn-portal-outline btn-sm" id="btnNextInvPage" onclick="changeInventoryPage(1)">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab 3: Orders & Fulfillment View -->
+        <main class="portal-tab-content" id="tabOrders">
+            <div class="section-header">
+                <div>
+                    <h2>Orders & Customer Delivery Board</h2>
+                    <p>Review real-time store orders, customer shipping addresses, and advance fulfillment stages.</p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <select id="orderStatusFilter" class="portal-select" onchange="filterOrdersTable()">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn-portal-outline" onclick="loadOrdersData()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Sync Orders
+                    </button>
+                </div>
+            </div>
+
+            <div class="portal-card">
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>City / Destination</th>
+                                <th>Items Summary</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Update Stage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab 4: Team & Permissions View (Owner Only) -->
+        <main class="portal-tab-content" id="tabTeam">
+            <div class="section-header">
+                <div>
+                    <h2>Staff & Employee Accounts</h2>
+                    <p>Grant access to your team members with custom 4-digit PINs and role-based permissions.</p>
+                </div>
+                <button class="btn-portal-primary" onclick="openAddEmployeeModal()">
+                    <i class="fa-solid fa-user-plus"></i> Add Team Member
+                </button>
+            </div>
+
+            <div class="portal-card">
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">Avatar</th>
+                                <th>Full Name</th>
+                                <th>Login Email</th>
+                                <th>Role</th>
+                                <th>Staff PIN</th>
+                                <th>Allowed Capabilities</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamTableBody">
+                            <tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading team members...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab 5: Audit History View -->
+        <main class="portal-tab-content" id="tabAudit">
+            <div class="section-header">
+                <div>
+                    <h2>Team Activity & Audit Trail</h2>
+                    <p>Chronological record of all products added, stock adjustments made, and orders updated.</p>
+                </div>
+                <button class="btn-portal-outline" onclick="loadAuditHistory()">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh Log
+                </button>
+            </div>
+
+            <div class="portal-card">
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 170px;">Timestamp</th>
+                                <th>Team Member</th>
+                                <th>Action Performed</th>
+                                <th>Module</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading audit history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ==========================================
+         3. MODALS
+         ========================================== -->
+
+    <!-- ADD / EDIT PRODUCT MODAL -->
+    <div class="portal-modal-backdrop" id="productModalBackdrop" onclick="if(event.target === this) closeProductModal()">
+        <div class="portal-modal" style="max-width: 820px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-gem" style="color: var(--gold); font-size: 1.25rem;"></i>
+                    <h3 id="productModalTitle">Add Jewelry Piece to Database</h3>
+                </div>
+                <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="productForm" onsubmit="handleSaveProduct(event)" class="modal-body">
+                <input type="hidden" id="prodEditId">
+                <input type="hidden" id="prodEditSku">
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Piece Title *</label>
+                        <input type="text" id="prodName" required class="portal-input" placeholder="e.g. Royal Traditional CZ Choker">
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="prodCategory" required class="portal-select" onchange="updateSkuSuggestion()">
+                            <option value="necklace">Necklaces & Chokers</option>
+                            <option value="earrings">Earrings & Jhumkas</option>
+                            <option value="ring">Rings & Solitaires</option>
+                            <option value="bracelet">Bracelets & Bangles</option>
+                            <option value="pendant">Solitaire Pendants</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Style / Sub-Category</label>
+                        <input type="text" id="prodSubCategory" class="portal-input" placeholder="e.g. Modern Chokers">
+                    </div>
+                    <div class="form-group">
+                        <label>Metal Plating</label>
+                        <select id="prodPlating" class="portal-select">
+                            <option value="gold">18K Yellow Gold</option>
+                            <option value="silver">Rhodium Silver</option>
+                            <option value="rose">Rose Gold</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Promotional Badge</label>
+                        <input type="text" id="prodBadge" class="portal-input" placeholder="e.g. Bestseller, Royal Edition">
+                    </div>
+                </div>
+
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Selling Price (₹ INR) *</label>
+                        <input type="number" id="prodPriceINR" required min="1" class="portal-input" placeholder="3499">
+                    </div>
+                    <div class="form-group">
+                        <label>Original MRP (₹ INR)</label>
+                        <input type="number" id="prodOrigPriceINR" min="1" class="portal-input" placeholder="4499">
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Stock Units *</label>
+                        <input type="number" id="prodStockQty" required min="0" value="15" class="portal-input">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Low Stock Alert Threshold</label>
+                        <input type="number" id="prodThreshold" min="1" value="5" class="portal-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned SKU Code</label>
+                        <input type="text" id="prodSkuPreview" readonly class="portal-input" style="font-family: monospace; background: rgba(0,0,0,0.25); color: var(--gold-light);">
+                    </div>
+                </div>
+
+                <!-- Primary Image with Live Inspector -->
+                <div class="form-group">
+                    <label>Primary Image URL or File *</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="prodPrimaryImg" required class="portal-input" placeholder="https://... or choose a file" oninput="previewPortalImg(this.value, 'prodPrimaryPreview')" style="flex: 1;">
+                        <label class="btn-portal-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
+                            <input type="file" accept="image/*" style="display: none;" onchange="handlePortalFileUpload(event, 'prodPrimaryImg', 'prodPrimaryPreview')">
+                        </label>
+                    </div>
+                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Upload any image size or aspect ratio (portrait, landscape, square) — displays naturally without cropping or awkward boxes.</div>
+                    <div class="img-preview-box">
+                        <img id="prodPrimaryPreview" src="" alt="Primary Preview">
+                    </div>
+                    <div id="meta_prodPrimaryPreview"></div>
+                </div>
+
+                <!-- Hover Image with Live Inspector -->
+                <div class="form-group">
+                    <label>Hover / Alternate Perspective Image URL or File</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="prodHoverImg" class="portal-input" placeholder="https://... or choose a file" oninput="previewPortalImg(this.value, 'prodHoverPreview')" style="flex: 1;">
+                        <label class="btn-portal-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
+                            <input type="file" accept="image/*" style="display: none;" onchange="handlePortalFileUpload(event, 'prodHoverImg', 'prodHoverPreview')">
+                        </label>
+                    </div>
+                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Any size or proportion supported — scales naturally without clipping.</div>
+                    <div class="img-preview-box">
+                        <img id="prodHoverPreview" src="" alt="Hover Preview">
+                    </div>
+                    <div id="meta_prodHoverPreview"></div>
+                </div>
+
+                <!-- Showcase Video URL -->
+                <div class="form-group">
+                    <label>Showcase Video URL (MP4)</label>
+                    <input type="url" id="prodVideoUrl" class="portal-input" placeholder="https://indian-jewellery.com/...mp4">
+                    <div class="img-spec-guide"><i class="fa-solid fa-film"></i> Distributor video showcase link (plays live)</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Product Craftsmanship & Materials Description</label>
+                    <textarea id="prodDescription" rows="3" class="portal-textarea" placeholder="Handcrafted with Austrian AAA+ Cubic Zirconia and 18K gold plating..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-portal-outline" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn-portal-primary" id="saveProductBtn">
+                        <i class="fa-solid fa-floppy-disk"></i> Save to Database
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD TEAM MEMBER MODAL -->
+    <div class="portal-modal-backdrop" id="employeeModalBackdrop" onclick="if(event.target === this) closeEmployeeModal()">
+        <div class="portal-modal" style="max-width: 520px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-user-plus" style="color: var(--gold); font-size: 1.2rem;"></i>
+                    <h3 id="employeeModalTitle">Add New Team Member</h3>
+                </div>
+                <button class="modal-close" onclick="closeEmployeeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="employeeForm" onsubmit="handleSaveEmployee(event)" class="modal-body">
+                <input type="hidden" id="empEditId">
+
+                <div class="form-group">
+                    <label>Staff Full Name *</label>
+                    <input type="text" id="empName" required class="portal-input" placeholder="e.g. Ramesh Patel">
+                </div>
+
+                <div class="form-group">
+                    <label>Staff Email (Used to Log In) *</label>
+                    <input type="email" id="empEmail" required class="portal-input" placeholder="e.g. ramesh@soreva.in">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label>Assigned Role *</label>
+                        <select id="empRole" required class="portal-select" onchange="updateRoleAvatar()">
+                            <option value="Catalog Specialist">💎 Catalog Specialist</option>
+                            <option value="Inventory Manager">📦 Inventory Manager</option>
+                            <option value="Orders & Fulfillment">🚚 Orders & Fulfillment</option>
+                            <option value="Owner">👑 Co-Owner / Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>4-Digit Login PIN *</label>
+                        <input type="text" id="empPin" required maxlength="4" pattern="[0-9]{4}" class="portal-input" placeholder="e.g. 1004" style="font-family: monospace; letter-spacing: 2px;">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-portal-outline" onclick="closeEmployeeModal()">Cancel</button>
+                    <button type="submit" class="btn-portal-primary">
+                        <i class="fa-solid fa-check"></i> Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SHARE WITH TEAM (WI-FI & LAN) MODAL -->
+    <div class="portal-modal-backdrop" id="shareModalBackdrop" onclick="if(event.target === this) closeShareModal()">
+        <div class="portal-modal" style="max-width: 680px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-share-nodes" style="color: var(--gold); font-size: 1.25rem;"></i>
+                    <h3>Share Database GUI with Employees</h3>
+                </div>
+                <button class="modal-close" onclick="closeShareModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-body" style="padding: 24px;">
+                <div style="background: rgba(197, 160, 89, 0.12); border: 1px solid var(--gold); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 6px 0; color: var(--gold-light); font-size: 0.95rem;">
+                        <i class="fa-solid fa-wifi"></i> Local Office / Home Wi-Fi Sharing
+                    </h4>
+                    <p style="margin: 0; font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">
+                        Anyone connected to the same Wi-Fi network can open this exact link on their laptop, tablet, or mobile phone to add products and manage stock in real time!
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 0.8rem; color: var(--gold-light);">Local Wi-Fi Network Link (Give this to employees):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="shareLanUrlInput" readonly class="portal-input" style="font-family: monospace; font-size: 0.85rem; color: var(--gold);">
+                        <button type="button" class="btn-portal-primary" onclick="copyShareUrl('shareLanUrlInput')" style="white-space: nowrap;">
+                            <i class="fa-solid fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Local Host Link (Only for your computer):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="shareLocalUrlInput" readonly class="portal-input" style="font-family: monospace; font-size: 0.85rem;">
+                        <button type="button" class="btn-portal-outline" onclick="copyShareUrl('shareLocalUrlInput')" style="white-space: nowrap;">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Employee Credentials Quick Reference -->
+                <div style="margin-top: 24px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 0.88rem; color: var(--text);">Active Team Credentials for Quick Sign-In</h4>
+                    <div id="shareCredentialsTable" style="max-height: 180px; overflow-y: auto; font-size: 0.8rem;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <a href="http://localhost:8090/_/" target="_blank" class="btn-portal-outline btn-sm" style="text-decoration: none;">
+                        <i class="fa-solid fa-database"></i> Open PocketBase Raw Studio
+                    </a>
+                    <button type="button" class="btn-portal-primary" onclick="closeShareModal()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE RESOLUTION & HEALTH INSPECTOR MODAL -->
+    <div class="portal-modal-backdrop" id="imageInspectorModalBackdrop" onclick="if(event.target === this) closeImageInspector()">
+        <div class="portal-modal" style="max-width: 800px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-ruler-combined" style="color: var(--gold); font-size: 1.2rem;"></i>
+                    <h3 id="inspectorModalTitle">Image Details & Resolution Inspector</h3>
+                </div>
+                <button class="modal-close" onclick="closeImageInspector()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="img-inspector-container">
+                    <div class="img-inspector-view">
+                        <img id="inspectorImageEl" src="" alt="Inspected Asset">
+                    </div>
+                    <div class="img-inspector-stats">
+                        <div class="img-stat-card">
+                            <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); display: block; margin-bottom: 4px;">Slot & Location</span>
+                            <h4 id="inspectorSlotName" style="margin: 0; font-size: 1rem; color: var(--text);">Product Primary Image</h4>
+                            <p id="inspectorSlotPurpose" style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;"></p>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="img-stat-card">
+                                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Live Resolution</span>
+                                <div id="inspectorLiveRes" style="font-size: 1.15rem; font-weight: 700; color: var(--gold-light);">1000 × 1000 px</div>
+                                <div id="inspectorLiveRatio" style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Ratio: 1:1 (Square)</div>
+                            </div>
+                            <div class="img-stat-card">
+                                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Target Recommendation</span>
+                                <div id="inspectorTargetRes" style="font-size: 1.15rem; font-weight: 700; color: var(--text);">1000 × 1000 px</div>
+                                <div id="inspectorTargetRatio" style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Target: 1:1 Square</div>
+                            </div>
+                        </div>
+
+                        <div class="img-verdict-box optimal" id="inspectorVerdictBox">
+                            <i class="fa-solid fa-circle-check" id="inspectorVerdictIcon" style="font-size: 1.1rem; margin-top: 2px;"></i>
+                            <div>
+                                <strong id="inspectorVerdictTitle">Optimal Fit & Resolution</strong>
+                                <div id="inspectorVerdictMsg" style="font-size: 0.8rem; margin-top: 2px; color: inherit;">This image matches the recommended dimensions and will display with pristine clarity.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted);">Image Source Link</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="inspectorUrlInput" readonly class="portal-input" style="font-size: 0.78rem; font-family: monospace;">
+                                <button type="button" class="btn-portal-outline" onclick="copyInspectorUrl()" style="white-space: nowrap; padding: 6px 14px;">
+                                    <i class="fa-solid fa-copy"></i> Copy
+                                </button>
+                                <a id="inspectorOpenLink" href="#" target="_blank" class="btn-portal-outline" style="white-space: nowrap; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-portal-primary" onclick="closeImageInspector()">Close Inspector</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="portal-toast-container" id="portalToastContainer"></div>
+
+    <!-- Portal JavaScript -->
+    <script src="portal.js"></script>
+</body>
+</html>
