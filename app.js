@@ -721,6 +721,7 @@ function renderProducts() {
     }
 
     
+    
     const totalMatching = items.length;
 
     // Smooth Pagination
@@ -737,26 +738,40 @@ function renderProducts() {
             </div>
         `;
     } else {
-        grid.innerHTML = paginatedItems.map(p => {
-            const badge = p.badge ? `<div class="product-badge">${p.badge}</div>` : '';
+        grid.innerHTML = paginatedItems.map(product => {
+            const hoverImg = product.hoverImg || product.primaryImg;
+            const isWishlisted = wishlist.includes(product.id) || wishlist.includes(product.sku);
             return `
-                <div class="product-card" onclick="openQuickView('${p.sku}')">
-                    ${badge}
-                    <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('${p.sku}', this)" aria-label="Add to Wishlist">
-                        <i class="${wishlist.includes(p.sku) ? 'fa-solid' : 'fa-regular'} fa-heart" style="${wishlist.includes(p.sku) ? 'color: var(--error);' : ''}"></i>
-                    </button>
-                    <div class="product-img-wrap">
-                        <img src="${p.primaryImg}" alt="${p.name}" class="product-img primary">
-                        <img src="${p.hoverImg}" alt="${p.name}" class="product-img hover">
+            <div class="product-card" data-id="${product.id}" onclick="openQuickView('${product.id}')">
+                <div class="product-thumb-wrap">
+                    <img class="product-thumb primary-img" src="${product.primaryImg}" alt="${product.name}" loading="lazy">
+                    <img class="product-thumb hover-img" src="${hoverImg}" alt="${product.name}" loading="lazy">
+                    
+                    <div class="product-badges">
+                        ${product.badge ? `<span class="product-badge badge-bestseller">${product.badge}</span>` : ''}
+                        ${product.launchOffer ? `<span class="product-badge badge-launch">15% OFF</span>` : ''}
                     </div>
-                    <div class="product-info">
-                        <h4 class="product-title">${p.name}</h4>
-                        <div class="product-price-row">
-                            <span class="price-current">${formatPrice(p.priceINR)}</span>
-                            <span class="price-original">${formatPrice(p.originalPriceINR)}</span>
-                        </div>
+
+                    <button class="btn-wishlist ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${product.id}')" title="Add to Wishlist">
+                        <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                    </button>
+
+                    <div class="product-quick-actions">
+                        <button class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}')">
+                            <i class="fa-regular fa-eye"></i> Quick View
+                        </button>
                     </div>
                 </div>
+
+                <div class="product-details">
+                    <span class="product-category-sub">${product.subCategory || product.category}</span>
+                    <h3 class="product-title">${product.name}</h3>
+                    <div class="product-price-row">
+                        <span class="price-current">${formatPrice(product.priceINR)}</span>
+                        ${product.originalPriceINR > product.priceINR ? `<span class="price-original">${formatPrice(product.originalPriceINR)}</span>` : ''}
+                    </div>
+                </div>
+            </div>
             `;
         }).join('');
         
@@ -772,6 +787,14 @@ function renderProducts() {
             `;
         }
     }
+
+    // Update product count
+    const countEl = document.getElementById('productCount');
+    if (countEl) {
+        countEl.textContent = `Showing ${paginatedItems.length} of ${totalMatching} Pieces`;
+    }
+}
+
 
     // Update product count
     const countEl = document.getElementById('productCount');
