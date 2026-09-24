@@ -236,6 +236,7 @@ let cart = [];
 
 let wishlist = [2, 8];
 let activeFilter = 'all';
+let activeSubFilter = null;
 let activePlating = 'all';
 let appliedCoupon = null;
 let FREE_SHIPPING_THRESHOLD_INR = 2499;
@@ -472,6 +473,7 @@ function applyStoreData(data) {
     }
     if (data.products && data.products.length) {
         PRODUCTS = data.products;
+        if (typeof parseUrlAndSetTitle === 'function') parseUrlAndSetTitle();
         renderProducts();
         if (typeof initProductPage === 'function') initProductPage();
     }
@@ -657,6 +659,17 @@ function initFilters() {
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             activeFilter = tab.dataset.category;
+            activeSubFilter = null;
+            
+            const pageTitle = document.getElementById('pageTitleH1');
+            if (pageTitle) {
+                if (activeFilter === 'all') {
+                    pageTitle.textContent = "The Catalog";
+                } else {
+                    const formattedCat = activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1).replace(/-/g, ' ');
+                    pageTitle.textContent = formattedCat;
+                }
+            }
             renderProducts();
         });
     });
@@ -704,6 +717,11 @@ function renderProducts() {
         });
     }
 
+    // Filter subcategory
+    if (activeSubFilter) {
+        items = items.filter(p => p.subCategory && p.subCategory.toLowerCase() === activeSubFilter.toLowerCase());
+    }
+
     // Filter plating
     if (activePlating !== 'all') {
         items = items.filter(p => p.plating === activePlating);
@@ -741,13 +759,13 @@ function renderProducts() {
         `;
     } else {
         grid.innerHTML = paginatedItems.map(product => {
-            const hoverImg = product.hoverImg || product.primaryImg;
+            const hasHover = product.hoverImg && product.hoverImg !== product.primaryImg;
             const isWishlisted = wishlist.includes(product.id) || wishlist.includes(product.sku);
             return `
             <div class="product-card" data-id="${product.id}" onclick="openQuickView('${product.id}')">
-                <div class="product-thumb-wrap">
-                    <img class="product-thumb primary-img" src="${product.primaryImg}" alt="${product.name}" loading="lazy">
-                    <img class="product-thumb hover-img" src="${hoverImg}" alt="${product.name}" loading="lazy">
+                <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
+                    <img class="product-thumb primary-img" src="${product.primaryImg}" alt="${product.name}" loading="lazy" onerror="this.src='https://indian-jewellery.com/core/thumb_images/product_images/773510AQ10CV91077.jpg';">
+                    ${hasHover ? `<img class="product-thumb hover-img" src="${product.hoverImg}" alt="${product.name}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
                         ${product.badge ? `<span class="product-badge badge-bestseller">${product.badge}</span>` : ''}
@@ -1849,3 +1867,30 @@ function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
+
+
+function parseUrlAndSetTitle() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const cat = urlParams.get('cat');
+    const sub = urlParams.get('sub');
+    
+    if (cat && cat !== 'all') {
+        activeFilter = cat;
+    }
+    if (sub) {
+        activeSubFilter = sub;
+    }
+
+    // Set page title
+    const pageTitle = document.getElementById('pageTitleH1');
+    if (pageTitle) {
+        if (sub) {
+            pageTitle.textContent = sub;
+            document.title = sub + " | Sorèva";
+        } else if (cat && cat !== 'all') {
+            const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ');
+            pageTitle.textContent = formattedCat;
+            document.title = formattedCat + " | Sorèva";
+        }
+    }
+}
