@@ -297,15 +297,16 @@ function renderCategories(categories) {
     const container = document.getElementById('categoryGrid');
     if (!container || !categories || !categories.length) return;
     container.innerHTML = categories.map(cat => `
-        <div class="category-card" onclick="filterByCategory('${cat.slug}')">
+        <a href="catalog.html?cat=${cat.slug}" class="category-card" style="text-decoration: none; color: inherit; display: block;">
             <div class="category-img-wrap">
                 <img class="category-img" src="${cat.image}" alt="${cat.name}">
             </div>
             <div class="category-info">
                 <h3 class="category-name">${cat.name}</h3>
                 <span class="category-item-count">${cat.countLabel || ''}</span>
+                <div class="btn-secondary" style="margin-top: 15px; width: 100%; padding: 8px 0; font-size: 0.85rem;">Explore Category</div>
             </div>
-        </div>
+        </a>
     `).join('');
 }
 
