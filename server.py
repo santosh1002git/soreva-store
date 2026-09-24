@@ -1165,24 +1165,34 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 
                 if not msg_lower:
                     reply = "How can I assist you with your jewelry selection today?"
-                elif any(greet in msg_lower for greet in ['hello', 'hi', 'hey']):
+                elif msg_lower in ['hello', 'hi', 'hey', 'hello!', 'hi!', 'hey!']:
                     reply = "Hello! I am the Sorèva Concierge. What kind of jewelry are you looking for?"
                 else:
-                    keywords = [w for w in msg_lower.replace('?', '').replace('!', '').replace('.', '').split() if len(w) > 2 and w not in ['want', 'need', 'looking', 'show', 'some', 'the', 'for']]
+                    stopwords = ['want', 'need', 'looking', 'show', 'some', 'the', 'for', 'can', 'you', 'please', 'give', 'me', 'find', 'have', 'any', 'that', 'with', 'like', 'this', 'and', 'are']
+                    keywords = [w for w in msg_lower.replace('?', '').replace('!', '').replace('.', '').replace(',', '').split() if len(w) > 2 and w not in stopwords]
                     
                     matches = []
-                    for p in products:
-                        if not p.get('active', True) or p.get('disabled', False):
-                            continue
-                        score = 0
-                        search_text = f"{p.get('name', '')} {p.get('category', '')} {p.get('subCategory', '')} {p.get('description', '')}".lower()
-                        for kw in keywords:
-                            if kw in search_text:
-                                score += 1
-                        if score > 0:
-                            matches.append((score, p))
+                    if not keywords:
+                         reply = "I'm not quite sure what you're looking for. Try mentioning a style like 'choker', 'jhumkas', or 'green necklace'!"
+                    else:
+                        for p in products:
+                            if not p.get('active', True) or p.get('disabled', False):
+                                continue
+                            score = 0
+                            search_text = f"{p.get('name', '')} {p.get('category', '')} {p.get('subCategory', '')}".lower()
+                            desc_text = p.get('description', '').lower()
                             
-                    if matches:
+                            for kw in keywords:
+                                # Heavily weight title/category matches
+                                if kw in search_text:
+                                    score += 3
+                                elif kw in desc_text:
+                                    score += 1
+                                    
+                            if score > 0:
+                                matches.append((score, p))
+                                
+                        if matches:
                         matches.sort(key=lambda x: x[0], reverse=True)
                         top_product = matches[0][1]
                         link = f"<a href='product.html?id={top_product['id']}' style='color: #c5a059; font-weight: bold; text-decoration: underline;'>{top_product.get('name', 'This piece')}</a>"
