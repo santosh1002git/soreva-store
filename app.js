@@ -743,7 +743,7 @@ function renderProducts() {
             const hasHover = product.hoverImg && product.hoverImg !== product.primaryImg;
             const isWishlisted = wishlist.includes(product.id) || wishlist.includes(product.sku);
             return `
-            <div class="product-card" data-id="${product.id}" onclick="openQuickView('${product.id}')">
+            <div class="product-card" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
                     <img class="product-thumb primary-img" src="${product.primaryImg}" alt="${product.name}" loading="lazy" onerror="this.src='https://indian-jewellery.com/core/thumb_images/product_images/773510AQ10CV91077.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" src="${product.hoverImg}" alt="${product.name}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
