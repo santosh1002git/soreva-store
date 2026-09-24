@@ -878,7 +878,7 @@ ul {
     object-fit: contain;
 }
 
-.product-card:hover .product-thumb.primary-img {
+.product-card:hover .product-thumb-wrap:not(.scale-hover-only) .primary-img {
     opacity: 0;
 }
 
