@@ -17,7 +17,7 @@ let CURRENCIES = {
 
 let currentCurrency = 'INR';
 
-// Initial Canonical Catalog from CZ Makers Distributor Catalog
+// Initial Canonical Catalog from CZ Makers Sorèva Exclusive
 let PRODUCTS = [
     {
         id: "czm_41673",
@@ -44,7 +44,7 @@ let PRODUCTS = [
             "https://indian-jewellery.com/core/thumb_images/product_images/412512AQ10CV92119.jpg",
             "https://indian-jewellery.com/core/thumb_images/product_images/412512AQ10CV92119A.jpg"
         ],
-        description: "Exquisitely handcrafted royal CZ choker necklace from distributor catalog. Features premium AAA+ cubic zirconia crystals in an anti-tarnish micro-plated finish."
+        description: "Exquisitely handcrafted royal CZ choker necklace from Sorèva collection. Features premium AAA+ cubic zirconia crystals in an anti-tarnish micro-plated finish."
     },
     {
         id: "czm_51860",
