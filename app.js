@@ -1366,9 +1366,7 @@ function initChatbot() {
                 <button onclick="toggleChatbot()" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 1.2rem; font-weight: bold;">X</button>
             </div>
             <div id="chatbot-messages" style="flex: 1; padding: 16px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 12px;">
-                <div style="align-self: flex-start; background: #e0e0e0; padding: 12px; border-radius: 12px; border-bottom-left-radius: 4px; color: #000; font-weight: 500; font-size: 0.95rem; border: 1px solid #ccc; max-width: 85%;">
-                    Hello! I am your AI jewelry assistant. How can I help you today?
-                </div>
+                <!-- History loaded here -->
             </div>
             <div style="padding: 12px; background: #fff; border-top: 2px solid #000; display: flex; gap: 8px;">
                 <input type="text" id="chatbot-input" placeholder="Type your message..." style="flex: 1; padding: 12px; border: 2px solid #000; border-radius: 8px; font-size: 1rem; color: #000; background: #fff;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
@@ -1382,6 +1380,19 @@ function initChatbot() {
     `;
     
     document.body.insertAdjacentHTML('beforeend', html);
+    
+    const messagesDiv = document.getElementById('chatbot-messages');
+    const savedHistory = sessionStorage.getItem('soreva_chat_history');
+    if (savedHistory) {
+        messagesDiv.innerHTML = savedHistory;
+        setTimeout(() => { messagesDiv.scrollTop = messagesDiv.scrollHeight; }, 100);
+    } else {
+        messagesDiv.innerHTML = `
+            <div style="align-self: flex-start; background: #e0e0e0; padding: 12px; border-radius: 12px; border-bottom-left-radius: 4px; color: #000; font-weight: 500; font-size: 0.95rem; border: 1px solid #ccc; max-width: 85%;">
+                Hello! I am your AI jewelry assistant. How can I help you today?
+            </div>
+        `;
+    }
     
     window.toggleChatbot = function() {
         const win = document.getElementById('chatbot-window');
@@ -1407,6 +1418,7 @@ function initChatbot() {
                 ${msg}
             </div>
         `;
+        sessionStorage.setItem('soreva_chat_history', messagesDiv.innerHTML);
         input.value = '';
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         
@@ -1432,6 +1444,7 @@ function initChatbot() {
                 </div>
             `;
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            sessionStorage.setItem('soreva_chat_history', messagesDiv.innerHTML);
         } catch (e) {
             document.getElementById(typingId).remove();
             messagesDiv.innerHTML += `
