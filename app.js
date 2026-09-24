@@ -503,7 +503,7 @@ function applyStoreData(data) {
     }
     if (data.instagram && data.instagram.length) {
         INSTAGRAM = data.instagram;
-        renderSocialFeed(data.instagram);
+        // renderSocialFeed(data.instagram);
     }
 }
 
