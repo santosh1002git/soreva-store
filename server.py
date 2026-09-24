@@ -1168,7 +1168,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 elif msg_lower in ['hello', 'hi', 'hey', 'hello!', 'hi!', 'hey!']:
                     reply = "Hello! I am the Sorèva Concierge. What kind of jewelry are you looking for?"
                 else:
-                    stopwords = ['want', 'need', 'looking', 'show', 'some', 'the', 'for', 'can', 'you', 'please', 'give', 'me', 'find', 'have', 'any', 'that', 'with', 'like', 'this', 'and', 'are', 'color']
+                    stopwords = ['want', 'need', 'looking', 'show', 'some', 'the', 'for', 'can', 'you', 'please', 'give', 'me', 'find', 'have', 'any', 'that', 'with', 'like', 'this', 'and', 'are', 'color', 'what', 'about', 'how', 'does', 'would', 'could', 'should', 'then', 'there', 'here', 'we', 'they', 'them', 'their', 'our', 'my', 'mine', 'yours', 'from', 'where', 'when', 'who', 'why', 'which', 'those', 'these']
                     raw_keywords = [w for w in msg_lower.replace('?', '').replace('!', '').replace('.', '').replace(',', '').split() if len(w) > 2 and w not in stopwords]
                     
                     if not raw_keywords:
@@ -1212,22 +1212,14 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         expanded_keywords = []
                         for kw in raw_keywords:
                             if kw in semantic_map:
-                                if semantic_map[kw]: # If it maps to actual traits
-                                    expanded_keywords.append(semantic_map[kw]) # Add the list of synonyms
-                                # If it maps to [], we just drop it entirely (generic adjective)
+                                if semantic_map[kw]:
+                                    expanded_keywords.append((kw, semantic_map[kw]))
                             else:
-                                expanded_keywords.append([kw]) # Just the word itself
+                                expanded_keywords.append((kw, [kw]))
                                 
-                        for synonym_list in expanded_keywords:
-                            # If ANY synonym in the list exists in the DB, it's valid!
+                        for original_word, synonym_list in expanded_keywords:
                             found_valid = False
                             for syn in synonym_list:
-                                # Multi-word synonyms like 'rose gold' need special checking
-                                if ' ' in syn:
-                                    if any(syn in text for text in global_words): # Wait, global_words is single words.
-                                        pass # Handled below
-                                
-                                # Check if synonym exists in any product's full text
                                 syn_exists = False
                                 for p in products:
                                     pt = f"{p.get('name', '')} {p.get('category', '')} {p.get('subCategory', '')} {p.get('plating', '')} {' '.join(p.get('availableFinishes', []))} {p.get('description', '')}".lower()
@@ -1237,11 +1229,10 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 if syn_exists:
                                     valid_keywords.append(syn)
                                     found_valid = True
-                                    break # Only need one valid synonym per intent
+                                    break
                                     
                             if not found_valid:
-                                # We couldn't find the word or any of its synonyms in the DB
-                                missing_keywords.append(synonym_list[0])
+                                missing_keywords.append(original_word)
                                 
                         if missing_keywords:
                             if valid_keywords:
