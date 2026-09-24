@@ -2742,3 +2742,143 @@ html.skip-intro .logo-intro-experience {
 }
 
 .price-original { text-decoration: line-through; opacity: 0.7; }
+
+
+/* ==========================================
+   SORÈVA PROMISE SECTION
+   ========================================== */
+.promise-section {
+    background: linear-gradient(135deg, #fbf9f6 0%, #f4eee7 100%);
+    padding: 100px 20px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+.promise-header {
+    margin-bottom: 60px;
+}
+.promise-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--gold-accent);
+}
+.promise-ornament::before,
+.promise-ornament::after {
+    content: '';
+    height: 1px;
+    width: 60px;
+    background-color: var(--gold-accent);
+    opacity: 0.5;
+}
+.promise-title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+}
+.promise-subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.promise-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 30px;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+.promise-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 10px;
+    border-right: 1px solid rgba(199, 179, 153, 0.2);
+}
+.promise-item:last-child {
+    border-right: none;
+}
+.promise-icon-wrap {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 1px solid var(--gold-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: var(--gold-accent);
+    font-size: 1.5rem;
+    background: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+}
+.promise-item-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+.promise-item-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+    .promise-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px 20px;
+    }
+    .promise-item:nth-child(3) {
+        border-right: none;
+    }
+}
+@media (max-width: 768px) {
+    .promise-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .promise-item {
+        border-right: none;
+        border-bottom: 1px solid rgba(199, 179, 153, 0.2);
+        padding-bottom: 40px;
+    }
+    .promise-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .promise-title {
+        font-size: 2.5rem;
+    }
+}
+
+
+.promise-bottom-bar {
+    background-color: #7b6357;
+    color: #f4eee7;
+    padding: 15px 0;
+    margin-top: 80px;
+    margin-bottom: -100px; /* Offset the section's bottom padding */
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+.promise-bottom-bar span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.promise-bottom-bar span i {
+    font-size: 0.5rem;
+}
