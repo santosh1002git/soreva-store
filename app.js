@@ -17,7 +17,7 @@ let CURRENCIES = {
 
 let currentCurrency = 'INR';
 
-// Initial Canonical Catalog from CZ Makers Sorèva Exclusive
+// Initial Canonical Catalog from Sorèva Sorèva Exclusive
 let PRODUCTS = [
     {
         id: "czm_41673",
