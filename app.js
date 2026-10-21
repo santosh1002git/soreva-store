@@ -765,32 +765,179 @@ function renderCategories(categories) {
     initCategoryMarquee();
 }
 
+// State for Category Showcase Marquee & Manual Navigation
+let categoryMarqueeState = {
+    rafId: null,
+    currentX: 0,
+    targetX: 0,
+    speed: 0.75, // pixels per frame at ~60fps
+    isHovered: false,
+    isDragging: false,
+    isInteracting: false,
+    setWidth: 0
+};
+
+let manualShiftPauseTimer = null;
+
+function getCategoryCardShiftAmount() {
+    const firstCard = document.querySelector('.category-card');
+    if (firstCard) {
+        const parent = firstCard.parentElement;
+        const gap = parent ? (parseFloat(window.getComputedStyle(parent).gap) || 22) : 22;
+        return (firstCard.offsetWidth || 260) + gap;
+    }
+    return 282;
+}
+
+function shiftCategoryCarousel(direction) {
+    const shiftDist = getCategoryCardShiftAmount();
+    // direction > 0: shift right (show previous cards)
+    // direction < 0: shift left (show next cards)
+    categoryMarqueeState.targetX += direction * shiftDist;
+    categoryMarqueeState.isInteracting = true;
+
+    if (manualShiftPauseTimer) clearTimeout(manualShiftPauseTimer);
+    manualShiftPauseTimer = setTimeout(() => {
+        categoryMarqueeState.isInteracting = false;
+    }, 2500);
+
+    if (!categoryMarqueeState.rafId) {
+        initCategoryMarquee();
+    }
+}
+window.shiftCategoryCarousel = shiftCategoryCarousel;
+
 function initCategoryMarquee() {
+    const wrapper = document.getElementById('categoryCarouselWrapper');
     const container = document.getElementById('categoryGrid');
     const track = document.getElementById('categoryTrack');
     if (!container || !track) return;
 
-    // Desktop hover pause & resume
-    container.addEventListener('mouseenter', () => {
-        track.style.animationPlayState = 'paused';
-    });
-    container.addEventListener('mouseleave', () => {
-        track.style.animationPlayState = 'running';
-    });
+    // Switch from pure CSS animation to smooth JS RAF engine
+    track.classList.add('is-raf-controlled');
+    track.style.animation = 'none';
 
-    // Touch devices: pause when user touches, resume smoothly after touch ends
-    let touchTimeout = null;
-    container.addEventListener('touchstart', () => {
-        if (touchTimeout) clearTimeout(touchTimeout);
-        track.style.animationPlayState = 'paused';
-    }, { passive: true });
+    const measureSetWidth = () => {
+        const firstSet = track.querySelector('.category-cards-set');
+        if (firstSet && firstSet.offsetWidth > 50) {
+            categoryMarqueeState.setWidth = firstSet.offsetWidth;
+        }
+    };
+    measureSetWidth();
 
-    container.addEventListener('touchend', () => {
-        if (touchTimeout) clearTimeout(touchTimeout);
-        touchTimeout = setTimeout(() => {
-            track.style.animationPlayState = 'running';
-        }, 2200);
-    }, { passive: true });
+    // Cancel existing RAF to prevent multiple parallel loops
+    if (categoryMarqueeState.rafId) {
+        cancelAnimationFrame(categoryMarqueeState.rafId);
+        categoryMarqueeState.rafId = null;
+    }
+
+    function step() {
+        const currentTrack = document.getElementById('categoryTrack');
+        if (!currentTrack) {
+            categoryMarqueeState.rafId = null;
+            return;
+        }
+
+        if (!categoryMarqueeState.setWidth || categoryMarqueeState.setWidth < 50) {
+            measureSetWidth();
+        }
+
+        // Auto-scroll when not hovered, dragging, or actively interacting with manual controls
+        if (!categoryMarqueeState.isHovered && !categoryMarqueeState.isDragging && !categoryMarqueeState.isInteracting) {
+            categoryMarqueeState.targetX -= categoryMarqueeState.speed;
+        }
+
+        // Smooth easing interpolation
+        const diff = categoryMarqueeState.targetX - categoryMarqueeState.currentX;
+        if (Math.abs(diff) < 0.05) {
+            categoryMarqueeState.currentX = categoryMarqueeState.targetX;
+        } else {
+            categoryMarqueeState.currentX += diff * 0.14;
+        }
+
+        // Seamless infinite wrap in both directions
+        const sw = categoryMarqueeState.setWidth;
+        if (sw > 50) {
+            while (categoryMarqueeState.currentX <= -sw) {
+                categoryMarqueeState.currentX += sw;
+                categoryMarqueeState.targetX += sw;
+            }
+            while (categoryMarqueeState.currentX > 0) {
+                categoryMarqueeState.currentX -= sw;
+                categoryMarqueeState.targetX -= sw;
+            }
+        }
+
+        currentTrack.style.transform = `translate3d(${categoryMarqueeState.currentX.toFixed(2)}px, 0, 0)`;
+        categoryMarqueeState.rafId = requestAnimationFrame(step);
+    }
+
+    categoryMarqueeState.rafId = requestAnimationFrame(step);
+
+    // Event listeners
+    const hoverTarget = wrapper || container;
+    if (!hoverTarget.dataset.marqueeEventsBound) {
+        hoverTarget.dataset.marqueeEventsBound = 'true';
+
+        hoverTarget.addEventListener('mouseenter', () => {
+            categoryMarqueeState.isHovered = true;
+        });
+
+        hoverTarget.addEventListener('mouseleave', () => {
+            categoryMarqueeState.isHovered = false;
+        });
+
+        // Touch gestures
+        let lastTouchX = 0;
+        let touchResumeTimer = null;
+
+        hoverTarget.addEventListener('touchstart', (e) => {
+            if (!e.touches || !e.touches[0]) return;
+            if (touchResumeTimer) clearTimeout(touchResumeTimer);
+            categoryMarqueeState.isDragging = true;
+            categoryMarqueeState.isHovered = true;
+            lastTouchX = e.touches[0].clientX;
+        }, { passive: true });
+
+        hoverTarget.addEventListener('touchmove', (e) => {
+            if (!categoryMarqueeState.isDragging || !e.touches || !e.touches[0]) return;
+            const clientX = e.touches[0].clientX;
+            const deltaX = clientX - lastTouchX;
+            lastTouchX = clientX;
+            categoryMarqueeState.targetX += deltaX;
+            categoryMarqueeState.currentX += deltaX;
+        }, { passive: true });
+
+        hoverTarget.addEventListener('touchend', () => {
+            categoryMarqueeState.isDragging = false;
+            if (touchResumeTimer) clearTimeout(touchResumeTimer);
+            touchResumeTimer = setTimeout(() => {
+                categoryMarqueeState.isHovered = false;
+            }, 2000);
+        }, { passive: true });
+
+        window.addEventListener('resize', () => {
+            measureSetWidth();
+        });
+    }
+
+    // Attach click listeners to buttons directly
+    const prevBtn = document.getElementById('categoryNavPrev');
+    const nextBtn = document.getElementById('categoryNavNext');
+    if (prevBtn && !prevBtn.dataset.navBound) {
+        prevBtn.dataset.navBound = 'true';
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            shiftCategoryCarousel(1);
+        });
+    }
+    if (nextBtn && !nextBtn.dataset.navBound) {
+        nextBtn.dataset.navBound = 'true';
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            shiftCategoryCarousel(-1);
+        });
+    }
 }
 
 // Category filter helper (for card clicks)
@@ -7120,6 +7267,7 @@ window.initProductPage = initProductPage;
 function initApp() {
     if (typeof initAuth === 'function') initAuth();
     if (typeof initAnnouncementTicker === 'function') initAnnouncementTicker();
+    if (typeof initCategoryMarquee === 'function') initCategoryMarquee();
     if (typeof initCurrencySwitcher === 'function') initCurrencySwitcher();
     if (typeof initNavigation === 'function') initNavigation();
     if (typeof initPatreonHero === 'function') initPatreonHero();
