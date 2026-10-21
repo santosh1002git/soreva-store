@@ -19,12 +19,23 @@ let currentCurrency = 'INR';
 
 function getOptimizedImgUrl(url) {
     if (!url || typeof url !== 'string') return '';
-    if (url.startsWith('/api/img/') || url.startsWith('assets/')) return url;
+    if (url.startsWith('/api/img/')) return url;
+    if (url.startsWith('assets/')) return '/' + url;
+    if (url.startsWith('/assets/')) return url;
+    if (url.includes('/api/img/')) {
+        return url.substring(url.indexOf('/api/img/'));
+    }
     if (url.includes('indian-jewellery.com/core/thumb_images/product_images/')) {
         const fn = url.split('/').pop().split('?')[0];
         if (fn) return `/api/img/${fn}`;
     }
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('indian-jewellery.com')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn && /\.(jpg|jpeg|png|webp)$/i.test(fn)) {
+            return `/api/img/${fn}`;
+        }
+    }
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
         return `/api/img?url=${encodeURIComponent(url)}`;
     }
     return url;
@@ -601,7 +612,7 @@ let selectedStoneColors = new Set();
 let selectedStoneSizes = new Set();
 let catalogSort = 'featured';
 let catalogCurrentPage = 1;
-const CATALOG_PAGE_SIZE = 48;
+const CATALOG_PAGE_SIZE = 24;
 
 const CATEGORY_OPTIONS = [
     { key: 'all', label: 'All Jewellery' },
@@ -707,10 +718,21 @@ function renderAnnouncements(announcements) {
 function renderCategories(categories) {
     const container = document.getElementById('categoryGrid');
     if (!container || !categories || !categories.length) return;
-    container.innerHTML = categories.map((cat, idx) => `
+    const fallbackMap = {
+        'necklace': '/assets/categories/necklaces.jpg',
+        'earrings': '/assets/categories/earrings.jpg',
+        'rings': '/assets/categories/rings.jpg',
+        'pendants': '/assets/categories/pendants.jpg',
+        'wristwear': '/assets/categories/wristwear.jpg',
+        'silver': '/assets/categories/silver.jpg',
+        'accessories': '/assets/categories/accessories.jpg'
+    };
+    container.innerHTML = categories.map((cat, idx) => {
+        const fallback = fallbackMap[cat.slug] || '/assets/categories/necklaces.jpg';
+        return `
         <a href="catalog.html?cat=${cat.slug}" class="category-card" aria-label="${cat.name}">
             <div class="category-img-wrap">
-                <img class="category-img" src="${cat.image}" alt="${cat.name}" loading="lazy">
+                <img class="category-img" src="${getOptimizedImgUrl(cat.image)}" alt="${cat.name}" onerror="this.onerror=null; this.src='${fallback}';">
                 <div class="category-overlay-gradient"></div>
                 <span class="category-number-badge">${String(idx + 1).padStart(2, '0')}</span>
             </div>
@@ -723,7 +745,8 @@ function renderCategories(categories) {
                 </div>
             </div>
         </a>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // Category filter helper (for card clicks)
@@ -755,8 +778,14 @@ function renderSpotlight(spotlight) {
     if (titleEl && spotlight.title) titleEl.innerHTML = spotlight.title;
     if (desc1El && spotlight.desc1) desc1El.textContent = spotlight.desc1;
     if (desc2El && spotlight.desc2) desc2El.innerHTML = spotlight.desc2;
-    if (imgMainEl && spotlight.imgMain) imgMainEl.src = spotlight.imgMain;
-    if (imgSubEl && spotlight.imgSub) imgSubEl.src = spotlight.imgSub;
+    if (imgMainEl && spotlight.imgMain) {
+        imgMainEl.src = getOptimizedImgUrl(spotlight.imgMain);
+        imgMainEl.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
+    if (imgSubEl && spotlight.imgSub) {
+        imgSubEl.src = getOptimizedImgUrl(spotlight.imgSub);
+        imgSubEl.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-2.jpg'; };
+    }
     if (featEl && spotlight.features && spotlight.features.length) {
         const icons = [
             'fa-gem',
@@ -1097,6 +1126,11 @@ function applyStoreData(data) {
         renderCurrencyDropdown();
     }
     if (data.products && data.products.length) {
+        // Defensive check: NEVER overwrite larger in-memory catalog with a smaller slice
+        if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS) && PRODUCTS.length > data.products.length) {
+            console.warn(`[applyStoreData] Ignored smaller incoming catalog: existing (${PRODUCTS.length}) > incoming (${data.products.length})`);
+            return;
+        }
         data.products.forEach(p => {
             if (p.primaryImg) p.primaryImg = getOptimizedImgUrl(p.primaryImg);
             if (p.hoverImg) p.hoverImg = getOptimizedImgUrl(p.hoverImg);
@@ -1163,76 +1197,99 @@ function applyStoreData(data) {
     }
 }
 
-// Load Store Data from API / Local Storage with live synchronization
-async function loadStoreDataAndInit() {
-    // 1. Check cached data; if it has legacy fake placeholder products (unsplash or numeric IDs), purge it!
-    const cached = localStorage.getItem('soreva_store_data');
-    if (cached) {
-        try {
-            const parsed = JSON.parse(cached);
-            const hasLegacyDummy = parsed && parsed.products && parsed.products.some(p => typeof p.id === 'number' || (p.primaryImg && p.primaryImg.includes('unsplash')));
-            if (hasLegacyDummy) {
-                console.log("Purging stale placeholder cache from localStorage...");
-                localStorage.removeItem('soreva_store_data');
-            } else if (parsed && parsed.products && parsed.products.length > 0) {
-                applyStoreData(parsed);
-            }
-        } catch (e) {
-            localStorage.removeItem('soreva_store_data');
-        }
-    }
+// IndexedDB Full Catalog Cache for instant page transitions without 5MB localStorage limits
+const CATALOG_IDB_NAME = 'SorevaCatalogDB';
+const CATALOG_IDB_STORE = 'storeData';
 
-    // 2. Fetch latest canonical store-data from backend server
+function openCatalogIdb() {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+        try {
+            const req = indexedDB.open(CATALOG_IDB_NAME, 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(CATALOG_IDB_STORE)) {
+                    db.createObjectStore(CATALOG_IDB_STORE);
+                }
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = () => resolve(null);
+        } catch (e) {
+            resolve(null);
+        }
+    });
+}
+
+async function getIdbCachedStoreData() {
+    try {
+        const db = await openCatalogIdb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            const tx = db.transaction(CATALOG_IDB_STORE, 'readonly');
+            const store = tx.objectStore(CATALOG_IDB_STORE);
+            const req = store.get('latest');
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+async function setIdbCachedStoreData(data) {
+    try {
+        const db = await openCatalogIdb();
+        if (!db) return;
+        const tx = db.transaction(CATALOG_IDB_STORE, 'readwrite');
+        const store = tx.objectStore(CATALOG_IDB_STORE);
+        store.put(data, 'latest');
+    } catch (e) {}
+}
+
+// Load Store Data from API with IndexedDB instant fallback and live synchronization
+async function loadStoreDataAndInit() {
+    // 1. Immediately purge any legacy truncated soreva_store_data from localStorage
+    try {
+        localStorage.removeItem('soreva_store_data');
+    } catch (e) {}
+
+    // 2. Instant-render from IndexedDB cache if available
+    try {
+        const cached = await getIdbCachedStoreData();
+        if (cached && cached.products && cached.products.length > 500) {
+            applyStoreData(cached);
+        }
+    } catch (e) {}
+
+    // 3. Fetch latest canonical store-data from backend server (gzipped ~760KB, instant)
     try {
         const resp = await fetch('/api/store-data');
         if (resp.ok) {
             const serverData = await resp.json();
-            try {
-                // Cache top 50 products in localStorage to stay comfortably under the 5MB browser quota
-                const cacheable = { ...serverData, products: (serverData.products || []).slice(0, 50) };
-                localStorage.setItem('soreva_store_data', JSON.stringify(cacheable));
-            } catch (e) {
-                // In-memory data store used for catalogs exceeding localStorage quota
+            if (serverData && serverData.products && serverData.products.length > 0) {
+                applyStoreData(serverData);
+                setIdbCachedStoreData(serverData);
+                return;
             }
-            applyStoreData(serverData);
-            return;
         }
     } catch (err) {
         console.warn("API /api/store-data fetch failed:", err);
     }
 
-    // 3. Fallback to static store-data.json
+    // 4. Fallback to static store-data.json
     try {
         const staticResp = await fetch('/data/store-data.json');
         if (staticResp.ok) {
             const staticData = await staticResp.json();
-            applyStoreData(staticData);
+            if (staticData && staticData.products && staticData.products.length > 0) {
+                applyStoreData(staticData);
+                setIdbCachedStoreData(staticData);
+            }
         }
     } catch (e) {
         console.warn("Static store-data.json fallback failed:", e);
     }
 }
-
-    // 3. Multi-tab live sync: whenever Admin updates data, update storefront immediately
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'soreva_store_data' && e.newValue) {
-            try {
-                const freshData = JSON.parse(e.newValue);
-                applyStoreData(freshData);
-                showToast("Storefront updated with latest catalog changes!");
-            } catch (err) {}
-        }
-    });
-
-    // 4. Also reload on focus in case admin edited in separate window
-    window.addEventListener('focus', () => {
-        const freshCache = localStorage.getItem('soreva_store_data');
-        if (freshCache) {
-            try {
-                applyStoreData(JSON.parse(freshCache));
-            } catch (err) {}
-        }
-    });
 
 // Currency Switcher
 function initCurrencySwitcher() {
@@ -1271,8 +1328,288 @@ function initCurrencySwitcher() {
     });
 }
 
+function switchCurrency(currencyCode) {
+    if (CURRENCIES && CURRENCIES[currencyCode]) {
+        currentCurrency = currencyCode;
+        const label = document.getElementById('currentCurrencyLabel');
+        if (label) label.textContent = currencyCode;
+        document.querySelectorAll('.currency-option').forEach(o => {
+            o.classList.toggle('active', o.dataset.currency === currencyCode);
+        });
+        document.querySelectorAll('.mobile-currency-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.currency === currencyCode);
+        });
+        if (typeof renderProducts === 'function') renderProducts();
+        if (typeof updateCartUI === 'function') updateCartUI();
+        if (typeof updateHeroUI === 'function') updateHeroUI();
+        if (typeof renderCuratedBadges === 'function') renderCuratedBadges();
+        if (typeof initProductPage === 'function') initProductPage();
+        if (typeof showToast === 'function') showToast(`Currency set to ${CURRENCIES[currencyCode].label}`);
+    }
+}
+window.switchCurrency = switchCurrency;
+
+// Mobile Navigation Drawer System
+function initMobileNav() {
+    let backdrop = document.getElementById('mobileNavBackdrop');
+    let drawer = document.getElementById('mobileNavDrawer');
+
+    if (!drawer) {
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'mobileNavBackdrop';
+            backdrop.className = 'mobile-nav-backdrop';
+            backdrop.onclick = closeMobileNavDrawer;
+            document.body.appendChild(backdrop);
+        }
+
+        drawer = document.createElement('aside');
+        drawer.id = 'mobileNavDrawer';
+        drawer.className = 'mobile-nav-drawer';
+        drawer.setAttribute('aria-label', 'Mobile Navigation');
+
+        drawer.innerHTML = `
+            <div class="mobile-drawer-header">
+                <div class="mobile-drawer-brand">
+                    <img src="assets/logo-white.png" alt="Sorèva" class="mobile-drawer-logo" onerror="this.onerror=null; this.src='assets/logo-black.png';">
+                    <span class="mobile-drawer-tagline">Haute Joaillerie</span>
+                </div>
+                <button type="button" class="mobile-drawer-close" id="mobileNavClose" onclick="closeMobileNavDrawer()" aria-label="Close Navigation">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="mobile-drawer-body">
+                <div class="mobile-nav-section-title">Jewellery Collections</div>
+
+                <!-- 1. Necklaces -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-gem"></i> Necklaces
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">5,000+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=necklace" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Choker%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Choker Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Collar%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Collar Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Classic%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Classic Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Bridal%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Bridal Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Aurous%20Collection" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Aurous Collection</a>
+                        <a href="catalog.html?cat=necklace&sub=Traditional%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Traditional Sets</a>
+                    </div>
+                </div>
+
+                <!-- 2. Earrings -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-sparkles"></i> Earrings
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">2,500+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Earrings</a>
+                        <a href="catalog.html?cat=earrings&sub=Jhumka%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Royal Jhumkas</a>
+                        <a href="catalog.html?cat=earrings&sub=Big%20Size%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Statement Earrings</a>
+                        <a href="catalog.html?cat=earrings&sub=Medium%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Elegant Drops</a>
+                        <a href="catalog.html?cat=earrings&sub=Tops%20%26%20Studs" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Tops &amp; Studs</a>
+                        <a href="catalog.html?cat=earrings&sub=Small%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Minimal Earrings</a>
+                    </div>
+                </div>
+
+                <!-- 3. Finger Rings -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-ring"></i> Finger Rings
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">1,100+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Finger Rings</a>
+                        <a href="catalog.html?cat=rings&sub=CZ%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Statement Rings</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
+                    </div>
+                </div>
+
+                <!-- 4. Pendants -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-certificate"></i> Pendants
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">800+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Pendants</a>
+                        <a href="catalog.html?cat=pendants&sub=CZ%20Pendant%20Sets" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Pendant Sets</a>
+                        <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Medium%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Medium Chain</a>
+                        <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Broad%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Broad Chain</a>
+                        <a href="catalog.html?cat=pendants&sub=CZ%20Mangalsutra" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Mangalsutra</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
+                    </div>
+                </div>
+
+                <!-- 5. Wristwear -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-circle-notch"></i> Wristwear
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">1,700+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=wristwear" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Wristwear</a>
+                        <a href="catalog.html?cat=wristwear&sub=CZ%20Bangles" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Bangles</a>
+                        <a href="catalog.html?cat=wristwear&sub=CZ%20Bracelets" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Bracelets</a>
+                        <a href="catalog.html?cat=wristwear&sub=Bracelets%20%26%20Rings%20Combo" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Hathphool &amp; Ring Combos</a>
+                    </div>
+                </div>
+
+                <!-- 6. Silver Jewellery -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-shield-halved"></i> Silver Jewellery
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">925 Pure</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=silver" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">925 Sterling Masterpieces</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Earrings</a>
+                    </div>
+                </div>
+
+                <!-- 7. Accessories -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-crown"></i> Accessories
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">300+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Accessories</a>
+                        <a href="catalog.html?cat=accessories&sub=Mangtika" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Royal Maang Tikka</a>
+                        <a href="catalog.html?cat=accessories&sub=CZ%20Brooches" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Artisanal Brooches</a>
+                        <a href="catalog.html?cat=accessories&sub=CZ%20Accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Hair &amp; Couture Accessories</a>
+                    </div>
+                </div>
+
+                <div class="mobile-nav-section-title">Discover Sorèva</div>
+                <a href="catalog.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-gem"></i> All Products Catalog</a>
+                <a href="about-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-landmark"></i> The Maison</a>
+                <a href="contact-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-headset"></i> Customer Concierge</a>
+                <a href="shipping-delivery-policy.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-truck-fast"></i> Shipping &amp; Delivery</a>
+                <a href="return-exchange-policy.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-rotate-left"></i> Returns &amp; Exchanges</a>
+            </div>
+
+            <!-- Currency Selection -->
+            <div class="mobile-drawer-currency-wrap">
+                <span class="mobile-drawer-currency-label">Select Currency</span>
+                <div class="mobile-drawer-currency-grid">
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'INR' ? 'active' : ''}" data-currency="INR" onclick="switchCurrency('INR')">INR (₹)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'USD' ? 'active' : ''}" data-currency="USD" onclick="switchCurrency('USD')">USD ($)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'AED' ? 'active' : ''}" data-currency="AED" onclick="switchCurrency('AED')">AED (د.إ)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'GBP' ? 'active' : ''}" data-currency="GBP" onclick="switchCurrency('GBP')">GBP (£)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'EUR' ? 'active' : ''}" data-currency="EUR" onclick="switchCurrency('EUR')">EUR (€)</button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mobile-drawer-footer">
+                <button type="button" class="btn-luxury-primary" onclick="closeMobileNavDrawer(); handleHeaderAuthClick(event);" style="width: 100%; justify-content: center; font-size: 0.88rem; padding: 11px;">
+                    <i class="fa-regular fa-user"></i> <span id="mobileDrawerAuthText">Client Sign In / Portal</span>
+                </button>
+                <div class="mobile-drawer-contact-row">
+                    <span>Care: <a href="tel:+919741118940"><i class="fa-solid fa-phone"></i> +91 97411 18940</a></span>
+                    <a href="mailto:support@soreva.in"><i class="fa-solid fa-envelope"></i> support@soreva.in</a>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(drawer);
+    }
+
+    // Touch swipe left on drawer to close
+    let touchStartX = 0;
+    drawer.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    drawer.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        if (touchStartX - touchEndX > 70) {
+            closeMobileNavDrawer();
+        }
+    }, { passive: true });
+}
+window.initMobileNav = initMobileNav;
+
+function openMobileNavDrawer() {
+    initMobileNav();
+    const backdrop = document.getElementById('mobileNavBackdrop');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (backdrop) backdrop.classList.add('active');
+    if (drawer) drawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+window.openMobileNavDrawer = openMobileNavDrawer;
+
+function closeMobileNavDrawer() {
+    const backdrop = document.getElementById('mobileNavBackdrop');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (backdrop) backdrop.classList.remove('active');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = '';
+}
+window.closeMobileNavDrawer = closeMobileNavDrawer;
+
+function toggleMobileNavDrawer() {
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (drawer && drawer.classList.contains('active')) {
+        closeMobileNavDrawer();
+    } else {
+        openMobileNavDrawer();
+    }
+}
+window.toggleMobileNavDrawer = toggleMobileNavDrawer;
+
+function toggleMobileNavAccordion(button) {
+    const item = button.closest('.mobile-nav-acc-item');
+    if (item) {
+        item.classList.toggle('open');
+    }
+}
+window.toggleMobileNavAccordion = toggleMobileNavAccordion;
+
 // Header & Sticky behavior
 function initNavigation() {
+    initMobileNav();
     const header = document.querySelector('.site-header');
     if (header) {
         window.addEventListener('scroll', () => {
@@ -1419,30 +1756,99 @@ window.isProductOutOfStock = isProductOutOfStock;
 
 function matchCategory(p, catKey) {
     if (!catKey || catKey === 'all') return true;
-    if (catKey === 'wristwear' || catKey === 'bracelets') {
-        return p.category === 'wristwear' || p.category === 'bracelets';
+    const normCat = String(catKey).toLowerCase().trim();
+    const pCat = String(p.category || '').toLowerCase().trim();
+    const pSub = String(p.subCategory || '').toLowerCase().trim();
+    const pName = String(p.name || '').toLowerCase();
+
+    if (normCat === 'wristwear' || normCat === 'bracelets') {
+        return pCat === 'wristwear' || pCat === 'bracelets' || pSub.includes('bangle') || pSub.includes('bracelet');
     }
-    if (catKey === 'necklace' || catKey === 'necklaces') {
-        return p.category === 'necklace';
+    if (normCat === 'necklace' || normCat === 'necklaces') {
+        return pCat === 'necklace' || pSub.includes('necklace') || pSub.includes('choker') || pSub.includes('collar');
     }
-    if (catKey === 'earrings') {
-        return p.category === 'earrings';
+    if (normCat === 'earrings') {
+        return pCat === 'earrings' || pSub.includes('earring') || pSub.includes('jhumka') || pSub.includes('stud') || pSub.includes('tops');
     }
-    if (catKey === 'rings' || catKey === 'finger-rings') {
-        return p.category === 'rings';
+    if (normCat === 'rings' || normCat === 'finger-rings') {
+        return pCat === 'rings' || pSub.includes('ring') || pName.includes('ring');
     }
-    if (catKey === 'pendants') {
-        return p.category === 'pendants';
+    if (normCat === 'pendants') {
+        return pCat === 'pendants' || pSub.includes('pendant') || pName.includes('mangalsutra');
     }
-    if (catKey === 'silver' || catKey === 'silver-jewellery') {
-        return p.category === 'silver' || (p.subCategory && p.subCategory.toLowerCase().includes('silver'));
+    if (normCat === 'silver' || normCat === 'silver-jewellery') {
+        return pCat === 'silver' || pSub.includes('silver') || pName.includes('silver') || (p.plating && p.plating.toLowerCase().includes('silver'));
     }
-    if (catKey === 'accessories') {
-        return p.category === 'accessories';
+    if (normCat === 'accessories') {
+        return pCat === 'accessories' || pSub.includes('brooch') || pSub.includes('mangtika') || pSub.includes('tikka') || pSub.includes('accessory');
     }
-    return p.category === catKey;
+    return pCat === normCat;
 }
 window.matchCategory = matchCategory;
+
+function normalizeSubCategoryName(text) {
+    if (!text) return '';
+    let s = String(text).toLowerCase().replace(/&/g, ' and ');
+    s = s.replace(/[^a-z0-9]+/g, ' ');
+    const words = s.split(/\s+/).filter(Boolean).map(w => {
+        if (w.endsWith('es') && w.length > 4) return w.slice(0, -2);
+        if (w.endsWith('s') && !w.endsWith('ss') && w.length > 3) return w.slice(0, -1);
+        return w;
+    });
+    return words.join(' ');
+}
+
+const SUBCATEGORY_SYNONYMS = {
+    'mangtika': ['cz maang tikka', 'maang tikka', 'royal maang tikka', 'mangtika', 'tikka', 'tika'],
+    'cz brooch': ['cz brooch', 'cz brooches', 'artisanal brooches', 'brooch', 'brooches'],
+    'finger ring': ['finger ring', 'cz finger ring', 'statement ring', 'ring'],
+    'cz finger ring': ['finger ring', 'cz finger ring', 'statement ring', 'ring'],
+    '925 sterling finger ring': ['925 sterling silver ring', 'sterling silver ring', '925 sterling finger ring', 'silver ring'],
+    '925 sterling silver pendant': ['925 sterling silver pendant', 'sterling silver pendant', 'silver pendant'],
+    '925 sterling silver earring': ['925 sterling silver earring', 'sterling silver earring', 'silver earring'],
+    'tops and stud': ['essential stud', 'tops and stud', 'tops stud', 'stud', 'tops'],
+    'big size earring': ['big size earring', 'statement earring'],
+    'medium earring': ['medium earring', 'elegant drop'],
+    'small earring': ['small earring', 'minimal earring'],
+    'jhumka earring': ['jhumka earring', 'royal jhumka', 'jhumka'],
+    'traditional necklace': ['traditional necklace', 'traditional set'],
+    'choker necklace': ['choker necklace', 'choker', 'chokers', 'royal choker'],
+    'cz accessory': ['cz accessory', 'cz accessories', 'hair and couture accessories', 'hair accessories', 'couture accessories', 'accessories'],
+    'bracelet and ring combo': ['bracelet and ring combo', 'bracelet ring combo', 'bracelets rings combo', 'hathphool'],
+    'pendant with broad chain': ['pendant with broad chain', 'pendants with broad chain'],
+    'pendant with medium chain': ['pendant with medium chain', 'pendants with medium chain'],
+    'cz mangalsutra': ['cz mangalsutra', 'mangalsutra']
+};
+
+function matchProductSubCategory(prodSub, targetSub, prodName = '') {
+    if (!targetSub) return true;
+    if (prodSub && prodSub === targetSub) return true;
+
+    const pNorm = normalizeSubCategoryName(prodSub);
+    const tNorm = normalizeSubCategoryName(targetSub);
+    const nNorm = normalizeSubCategoryName(prodName);
+
+    if (pNorm && tNorm && (pNorm === tNorm || pNorm.includes(tNorm) || tNorm.includes(pNorm))) {
+        return true;
+    }
+
+    if (tNorm.includes('mangalsutra') && nNorm.includes('mangalsutra')) {
+        return true;
+    }
+
+    for (const [canon, syns] of Object.entries(SUBCATEGORY_SYNONYMS)) {
+        const cNorm = normalizeSubCategoryName(canon);
+        const allNorms = [cNorm, ...syns.map(normalizeSubCategoryName)];
+        const targetMatches = allNorms.some(s => s === tNorm || tNorm.includes(s));
+        if (targetMatches) {
+            const prodMatches = allNorms.some(s => s === pNorm || pNorm.includes(s));
+            if (prodMatches) return true;
+            if (tNorm.includes('mangalsutra') && nNorm.includes('mangalsutra')) return true;
+        }
+    }
+    return false;
+}
+window.matchProductSubCategory = matchProductSubCategory;
 
 function getAvailableSubCategories(catKey) {
     const subCounts = new Map();
@@ -1507,7 +1913,7 @@ function renderFilterSidebar() {
             subListEl.innerHTML = `<div style="padding: 6px 8px; font-size: 0.8rem; color: #a09890;">No sub categories</div>`;
         } else {
             subListEl.innerHTML = availableSubs.map(sub => {
-                const isSelected = selectedSubCategories.has(sub.name);
+                const isSelected = Array.from(selectedSubCategories).some(target => sub.name === target || matchProductSubCategory(sub.name, target));
                 return `
                     <div class="filter-option-item ${isSelected ? 'selected' : ''}" onclick="toggleSubCategoryFilter('${escapeJs(sub.name)}')">
                         <div class="filter-option-main">
@@ -1742,8 +2148,18 @@ function selectCategoryFilter(catKey) {
 window.selectCategoryFilter = selectCategoryFilter;
 
 function toggleSubCategoryFilter(sub) {
-    if (selectedSubCategories.has(sub)) selectedSubCategories.delete(sub);
-    else selectedSubCategories.add(sub);
+    let matchedExisting = null;
+    for (const existing of selectedSubCategories) {
+        if (existing === sub || matchProductSubCategory(existing, sub)) {
+            matchedExisting = existing;
+            break;
+        }
+    }
+    if (matchedExisting) {
+        selectedSubCategories.delete(matchedExisting);
+    } else {
+        selectedSubCategories.add(sub);
+    }
     catalogCurrentPage = 1;
     renderProducts();
     updateFilterUrl();
@@ -1972,7 +2388,12 @@ function renderProducts(isLoadMore = false) {
 
     // 4. Sub Category Multi-Select Filter
     if (selectedSubCategories.size > 0) {
-        items = items.filter(p => p.subCategory && selectedSubCategories.has(p.subCategory));
+        items = items.filter(p => {
+            for (const sub of selectedSubCategories) {
+                if (matchProductSubCategory(p.subCategory, sub, p.name)) return true;
+            }
+            return false;
+        });
     }
 
     // 5. Plating Colour Multi-Select Filter
@@ -2030,14 +2451,14 @@ function renderProducts(isLoadMore = false) {
         grid.innerHTML = paginatedItems.map((product, idx) => {
             const hasHover = product.hoverImg && product.hoverImg !== product.primaryImg;
             const isWishlisted = (typeof wishlist !== 'undefined' && Array.isArray(wishlist)) && (wishlist.includes(product.id) || wishlist.includes(String(product.id)) || wishlist.includes(product.sku));
-            const isTop = idx < 4;
+            const isTop = idx < 6;
             const priorityAttrs = isTop ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
             const primaryUrl = getOptimizedImgUrl(product.primaryImg);
             const hoverUrl = getOptimizedImgUrl(product.hoverImg);
             return `
             <div class="product-card ${isProductOutOfStock(product) ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -2740,7 +3161,7 @@ function openCheckoutModal() {
         return `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${prod.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img src="${getOptimizedImgUrl(prod.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">${(prod.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</div>
                         <div style="font-size: 0.75rem; color: rgba(251,248,245,0.6);">${item.qty || 1} × ${formatPrice(price)} • ${(item.finish || '24K Gold').replace(/</g, '&lt;')}</div>
@@ -3905,6 +4326,11 @@ async function fetchProductData(pid) {
             const data = await resp.json();
             if (data && data.success && data.product) {
                 const prod = data.product;
+                if (prod.primaryImg) prod.primaryImg = getOptimizedImgUrl(prod.primaryImg);
+                if (prod.hoverImg) prod.hoverImg = getOptimizedImgUrl(prod.hoverImg);
+                if (Array.isArray(prod.gallery)) {
+                    prod.gallery = prod.gallery.map(g => getOptimizedImgUrl(g));
+                }
                 if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) {
                     const idx = PRODUCTS.findIndex(p => String(p.id).trim() === String(prod.id).trim() || String(p.id).replace(/^czm_/, '') === cleanNum);
                     if (idx >= 0) {
@@ -4108,7 +4534,7 @@ function updateCartUI() {
 
         return `
             <div class="cart-item" data-index="${idx}" data-product-id="${item.productId}">
-                <img class="cart-item-thumb" src="${product.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img class="cart-item-thumb" src="${getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                 <div class="cart-item-info">
                     <h4 class="cart-item-title">${(product.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</h4>
                     <p class="cart-item-variant">Finish: <strong>${(item.finish || '24K Gold').replace(/</g, '&lt;')}</strong></p>
@@ -4321,14 +4747,14 @@ function renderWishlistItems() {
 
         const priceFormatted = formatPrice(prod.priceINR);
         const originalPriceFormatted = prod.originalPriceINR ? formatPrice(prod.originalPriceINR) : '';
-        const img = prod.primaryImg || 'assets/categories/wristwear.jpg';
+        const img = getOptimizedImgUrl(prod.primaryImg) || 'assets/categories/wristwear.jpg';
         const finish = (prod.availableFinishes && prod.availableFinishes[0]) || (prod.plating || '24K Gold');
         const inStock = prod.stockQty === undefined || prod.stockQty > 0;
 
         return `
             <div class="cart-item wishlist-item" id="wishlist-item-${prod.id}" style="display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); align-items: center;">
                 <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="display: block; width: 72px; height: 72px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #fff;">
-                    <img src="${img}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/categories/wristwear.jpg'">
+                    <img src="${img}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
                 </a>
                 <div class="cart-item-details" style="flex: 1; min-width: 0;">
                     <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="text-decoration: none; color: inherit;">
@@ -4680,7 +5106,10 @@ function populateQuickViewModal(product) {
         fullDetailsBtn.href = `product.html?id=${encodeURIComponent(product.id)}`;
     }
 
-    if (modalImg) modalImg.src = product.primaryImg || '';
+    if (modalImg) {
+        modalImg.src = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
+        modalImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
     if (modalCat) modalCat.textContent = `${product.category || 'Jewellery'} • ${product.subCategory || 'Collection'}`;
     if (modalTitle) modalTitle.textContent = product.name || 'Jewellery Piece';
 
@@ -4762,9 +5191,12 @@ function populateQuickViewModal(product) {
     // Gallery Thumbs
     if (modalThumbs) {
         const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
-        modalThumbs.innerHTML = gallery.map((img, i) => `
-            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${img}" alt="Thumbnail" onclick="switchModalImage(this, '${img}')">
-        `).join('');
+        modalThumbs.innerHTML = gallery.map((rawImg, i) => {
+            const optImg = getOptimizedImgUrl(rawImg);
+            return `
+            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${optImg}" alt="Thumbnail" onclick="switchModalImage(this, '${optImg}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+        `;
+        }).join('');
     }
 
     const qtyInput = document.getElementById('modalQtyInput');
@@ -4782,7 +5214,10 @@ function switchModalImage(thumbEl, src) {
     });
     if (thumbEl && thumbEl.classList) thumbEl.classList.add('active');
     const mainImg = document.getElementById('modalMainImg');
-    if (mainImg && src) mainImg.src = src;
+    if (mainImg && src) {
+        mainImg.src = getOptimizedImgUrl(src);
+        mainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
 }
 
 function selectModalFinish(pillEl, finish) {
@@ -4996,7 +5431,7 @@ function renderSearchSuggestions(query, results, totalCount) {
         const priceStr = (typeof formatPrice === 'function') ? formatPrice(p.priceINR || 0) : `₹${p.priceINR}`;
         const subText = p.subCategory || (p.category ? (p.category.charAt(0).toUpperCase() + p.category.slice(1)) : 'Demi-Fine Jewellery');
         const finishText = formatPlating(p.plating || p.finish);
-        const img = p.primaryImg || 'assets/hero/hero-slide-1.jpg';
+        const img = getOptimizedImgUrl(p.primaryImg) || 'assets/hero/hero-slide-1.jpg';
 
         html += `
             <div class="search-item-match" onclick="handleSearchResultClick('${escapeHtml(p.id)}')" role="button" tabindex="0">
@@ -5455,6 +5890,29 @@ function initPatreonHero() {
         heroSection.addEventListener('mouseleave', () => {
             startHeroAutoSlide();
         });
+
+        // Touch swipe for mobile and tablet devices
+        let heroTouchStartX = 0;
+        let heroTouchStartY = 0;
+        heroSection.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
+                heroTouchStartX = e.touches[0].clientX;
+                heroTouchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+        heroSection.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches[0]) {
+                const diffX = heroTouchStartX - e.changedTouches[0].clientX;
+                const diffY = heroTouchStartY - e.changedTouches[0].clientY;
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                    if (diffX > 0) {
+                        handleNext();
+                    } else {
+                        handlePrev();
+                    }
+                }
+            }
+        }, { passive: true });
         
         heroListenersBound = true;
     }
@@ -5540,31 +5998,38 @@ function renderProductPageContent(product) {
     if (pdpTitle) pdpTitle.textContent = product.name || 'Jewellery Piece';
 
     const pdpMainImg = document.getElementById('pdpMainImg');
+    const optPrimary = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
     if (pdpMainImg) {
+        pdpMainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
         if (pdpMainImg.tagName && pdpMainImg.tagName.toLowerCase() === 'video') {
             const newImg = document.createElement('img');
             newImg.id = 'pdpMainImg';
-            newImg.src = product.primaryImg || '';
+            newImg.src = optPrimary;
             newImg.style.cssText = pdpMainImg.style ? pdpMainImg.style.cssText : '';
             newImg.alt = product.name || 'Product Image';
+            newImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
             if (typeof pdpMainImg.replaceWith === 'function') {
                 pdpMainImg.replaceWith(newImg);
             } else {
-                pdpMainImg.src = product.primaryImg || '';
+                pdpMainImg.src = optPrimary;
             }
         } else {
-            pdpMainImg.src = product.primaryImg || '';
+            pdpMainImg.src = optPrimary;
         }
     }
 
     const pdpThumbs = document.getElementById('pdpThumbs');
     if (pdpThumbs) {
         const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
-        let galleryHtml = gallery.map((img, idx) => `
-            <img src="${img}" class="pdp-thumb-img ${idx === 0 ? 'active' : ''}" 
-                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${img}'; imgEl.style=main.getAttribute('style'); main.replaceWith(imgEl); } else { main.src='${img}'; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
+        let galleryHtml = gallery.map((rawImg, idx) => {
+            const optImg = getOptimizedImgUrl(rawImg);
+            return `
+            <img src="${optImg}" class="pdp-thumb-img ${idx === 0 ? 'active' : ''}" 
+                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${optImg}'; imgEl.style=main.getAttribute('style'); imgEl.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; main.replaceWith(imgEl); } else { main.src='${optImg}'; main.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
+                 onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';"
                  style="width: 80px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${idx === 0 ? 'var(--gold-accent)' : 'transparent'};">
-        `).join('');
+            `;
+        }).join('');
 
         if (product.videoUrl) {
             galleryHtml += `
@@ -5923,7 +6388,7 @@ function renderSimilarProducts(currentProduct) {
         return `
             <div class="product-card ${oos ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -5985,6 +6450,11 @@ async function initProductPage() {
                 const data = await resp.json();
                 if (data && data.success && data.product) {
                     product = data.product;
+                    if (product.primaryImg) product.primaryImg = getOptimizedImgUrl(product.primaryImg);
+                    if (product.hoverImg) product.hoverImg = getOptimizedImgUrl(product.hoverImg);
+                    if (Array.isArray(product.gallery)) {
+                        product.gallery = product.gallery.map(g => getOptimizedImgUrl(g));
+                    }
                     if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) {
                         PRODUCTS.push(product);
                     }
@@ -6198,7 +6668,7 @@ function renderCuratedBadges() {
             return `
                 <div class="curation-card" onclick="window.location.href='product.html?id=${p.id}'" role="button" tabindex="0" aria-label="${p.name}">
                     <div class="curation-media-wrap">
-                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                         <div class="product-badges">
                             <span class="product-badge ${badgeClass}">${badgeIcon}${badgeLabel}</span>
                         </div>
@@ -6282,6 +6752,7 @@ window.addEventListener('keydown', (e) => {
         if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
         if (typeof closeCartDrawer === 'function') closeCartDrawer();
         if (typeof closeWishlistDrawer === 'function') closeWishlistDrawer();
+        if (typeof closeMobileNavDrawer === 'function') closeMobileNavDrawer();
     }
 });
 

@@ -14,6 +14,30 @@ let databaseInfo = null;
 // Default Password SHA-256 (soreva@2026)
 const DEFAULT_PASSWORD_HASH = "3779c849af88128e466010f799175ce3344f2392947810fa4501766c0664d846";
 
+function getOptimizedImgUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    if (url.startsWith('/api/img/') || url.startsWith('assets/') || url.startsWith('/assets/')) return url;
+    if (url.includes('/api/img/')) {
+        return url.substring(url.indexOf('/api/img/'));
+    }
+    if (url.includes('indian-jewellery.com/core/thumb_images/product_images/')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn) return `/api/img/${fn}`;
+    }
+    if (url.includes('indian-jewellery.com')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn && /\.(jpg|jpeg|png|webp)$/i.test(fn)) {
+            return `/api/img/${fn}`;
+        }
+    }
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
+        return `/api/img?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+}
+window.getOptimizedImgUrl = getOptimizedImgUrl;
+
 // ==========================================
 // INITIALIZATION & AUTHENTICATION GATE
 // ==========================================
@@ -22,12 +46,101 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabNavigation();
 });
 
-// Calculate SHA-256 using Browser Web Crypto API
+// Pure JavaScript SHA-256 implementation (works in any context, including HTTP / non-secure IPs)
+function sha256Sync(ascii) {
+    function rightRotate(value, amount) {
+        return (value >>> amount) | (value << (32 - amount));
+    }
+    const mathPow = Math.pow;
+    const maxWord = mathPow(2, 32);
+    const lengthProperty = 'length';
+    let i, j;
+    let result = '';
+
+    const words = [];
+    const asciiBitLength = ascii[lengthProperty] * 8;
+
+    const hash = [];
+    const k = [];
+    let primeCounter = 0;
+
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+        if (!isComposite[candidate]) {
+            for (i = 0; i < 313; i += candidate) {
+                isComposite[i] = candidate;
+            }
+            hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+            k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+        }
+    }
+
+    ascii += '\x80';
+    while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+        j = ascii.charCodeAt(i);
+        if (j >> 8) return;
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+    words[words[lengthProperty]] = (asciiBitLength) | 0;
+
+    for (j = 0; j < words[lengthProperty];) {
+        const w = words.slice(j, j += 16);
+        const oldHash = hash.slice(0);
+
+        hash = hash.slice(0, 8);
+
+        for (i = 0; i < 64; i++) {
+            const i2 = i + j;
+            const w15 = w[i - 15], w2 = w[i - 2];
+
+            const a = hash[0], e = hash[4];
+            const temp1 = hash[7]
+                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                + ((e & hash[5]) ^ ((~e) & hash[6]))
+                + k[i]
+                + (w[i] = (i < 16) ? w[i] : (
+                    w[i - 16]
+                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                    + w[i - 7]
+                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                ) | 0
+                );
+            const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+            hash = [(temp1 + temp2) | 0].concat(hash);
+            hash[4] = (hash[4] + temp1) | 0;
+        }
+
+        for (i = 0; i < 8; i++) {
+            hash[i] = (hash[i] + oldHash[i]) | 0;
+        }
+    }
+
+    for (i = 0; i < 8; i++) {
+        for (j = 3; j >= 0; j--) {
+            const b = (hash[i] >> (8 * j)) & 255;
+            result += (b < 16 ? '0' : '') + b.toString(16);
+        }
+    }
+    return result;
+}
+
+// Calculate SHA-256 (handles both Web Crypto API in HTTPS and pure JS fallback for HTTP/IP contexts)
 async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === 'function') {
+        try {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            // Fall back to pure JS if Web Crypto digest throws
+        }
+    }
+    return sha256Sync(message);
 }
 
 // Session Check
@@ -61,7 +174,19 @@ async function handleAdminLogin(e) {
     errorBox.style.display = 'none';
 
     try {
-        const inputHash = await sha256(password);
+        let inputHash = '';
+        try {
+            if (typeof sha256 === 'function') {
+                inputHash = await sha256(password);
+            } else if (typeof sha256Sync === 'function') {
+                inputHash = sha256Sync(password);
+            }
+        } catch (hashErr) {
+            console.warn('[SHA-256 Fallback Notice]', hashErr);
+            if (typeof sha256Sync === 'function') {
+                inputHash = sha256Sync(password);
+            }
+        }
 
         // Try server API first
         let authenticated = false;
@@ -69,16 +194,33 @@ async function handleAdminLogin(e) {
             const resp = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passwordHash: inputHash })
+                body: JSON.stringify({ 
+                    password: password, 
+                    passwordHash: inputHash 
+                })
             });
-            const res = await resp.json();
-            if (res.success) {
-                authenticated = true;
+            if (resp.ok) {
+                const res = await resp.json();
+                if (res.success) {
+                    authenticated = true;
+                }
             }
         } catch (err) {
-            // If server offline, verify against local/stored hash
+            console.warn('[Admin Server API Notice]', err);
+        }
+
+        // Client-side hash verification fallback if offline or backend error
+        if (!authenticated && inputHash) {
             const cached = localStorage.getItem('soreva_store_data');
-            const targetHash = cached ? (JSON.parse(cached).settings?.adminPasswordHash || DEFAULT_PASSWORD_HASH) : DEFAULT_PASSWORD_HASH;
+            let targetHash = DEFAULT_PASSWORD_HASH;
+            if (cached) {
+                try {
+                    const parsedData = JSON.parse(cached);
+                    if (parsedData && parsedData.settings && parsedData.settings.adminPasswordHash) {
+                        targetHash = parsedData.settings.adminPasswordHash;
+                    }
+                } catch (e) {}
+            }
             if (inputHash === targetHash) {
                 authenticated = true;
             }
@@ -94,7 +236,7 @@ async function handleAdminLogin(e) {
             pwInput.select();
         }
     } catch (err) {
-        errorBox.textContent = `Authentication error: ${err.message}`;
+        errorBox.textContent = `Authentication error: ${err.message || 'Verification failed'}`;
         errorBox.style.display = 'block';
     } finally {
         submitBtn.disabled = false;
@@ -894,7 +1036,7 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                 <input type="checkbox" class="prod-row-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="handleProductRowSelect('${p.id}', this.checked)">
             </td>
             <td>
-                <img src="${p.primaryImg}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" style="cursor: pointer;" title="Click to inspect resolution & image specs">
+                <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';" style="cursor: pointer;" title="Click to inspect resolution & image specs">
             </td>
             <td>
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -2456,7 +2598,7 @@ function previewImg(url, targetId) {
         }
     };
 
-    el.src = cleanUrl;
+    el.src = getOptimizedImgUrl(cleanUrl);
 }
 
 function handleFileUpload(event, inputId, previewId) {

@@ -17,7 +17,7 @@ export NEEDRESTART_MODE=a
 
 # 2. Update OS and install prerequisites
 sudo apt-get update -y
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" python3 python3-pip git nginx curl ufw unzip certbot python3-certbot-nginx
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" python3 python3-pip python3-pil git nginx curl ufw unzip certbot python3-certbot-nginx
 
 # 2. Setup Directories
 sudo mkdir -p /var/www/soreva-production
@@ -91,57 +91,119 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/var/www/soreva-development
-    ExecStart=/usr/bin/python3 /var/www/soreva-development/server.py 8002
-    Restart=always
-    RestartSec=3
-    Environment=APP_ENV=development
+ExecStart=/usr/bin/python3 /var/www/soreva-development/server.py 8002
+Restart=always
+RestartSec=3
+Environment=APP_ENV=development
 
-    [Install]
-    WantedBy=multi-user.target
-    EOF
+[Install]
+WantedBy=multi-user.target
+EOF
 
-    # 10. Configure Nginx Reverse Proxy
-    sudo tee /etc/nginx/sites-available/soreva > /dev/null << 'EOF'
-    # Production Server (Default HTTP on Port 80)
-    server {
-        listen 80 default_server;
-        listen [::]:80 default_server;
-        server_name soreva.in www.soreva.in _;
+# 10. Configure Nginx Reverse Proxy & Edge Caching
+sudo mkdir -p /var/cache/nginx/soreva
+sudo chown -R www-data:www-data /var/cache/nginx/soreva
+sudo chmod 755 /var/cache/nginx/soreva
 
-        client_max_body_size 50M;
+sudo tee /etc/nginx/conf.d/soreva_cache.conf > /dev/null << 'EOF'
+proxy_cache_path /var/cache/nginx/soreva levels=1:2 keys_zone=soreva_img_cache:20m max_size=4g inactive=60d use_temp_path=off;
+EOF
 
-        location / {
-            proxy_pass http://127.0.0.1:8000;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+sudo tee /etc/nginx/sites-available/soreva > /dev/null << 'EOF'
+# Production Server (Default HTTP on Port 80)
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name soreva.in www.soreva.in _;
+
+    client_max_body_size 50M;
+
+    location /assets/ {
+        alias /var/www/soreva-store/assets/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
     }
 
-    # Development Server (Accessible on Port 8001 or dev.soreva.in)
-    server {
-        listen 8001;
-        listen [::]:8001;
-        server_name dev.soreva.in _;
+    location /api/img/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
-        client_max_body_size 50M;
-
-        location / {
-            proxy_pass http://127.0.0.1:8002;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+        proxy_cache soreva_img_cache;
+        proxy_cache_key "$scheme$request_method$host$request_uri$http_accept";
+        proxy_cache_valid 200 304 60d;
+        proxy_cache_valid 404 1m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+        add_header X-Cache-Status $upstream_cache_status;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
     }
-    EOF
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Development Server (Accessible on Port 8001 or dev.soreva.in)
+server {
+    listen 8001;
+    listen [::]:8001;
+    server_name dev.soreva.in _;
+
+    client_max_body_size 50M;
+
+    location /assets/ {
+        alias /var/www/soreva-development/assets/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
+
+    location /api/img/ {
+        proxy_pass http://127.0.0.1:8002;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache soreva_img_cache;
+        proxy_cache_key "$scheme$request_method$host$request_uri$http_accept";
+        proxy_cache_valid 200 304 60d;
+        proxy_cache_valid 404 1m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+        add_header X-Cache-Status $upstream_cache_status;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
 
 sudo ln -sf /etc/nginx/sites-available/soreva /etc/nginx/sites-enabled/default
 sudo nginx -t

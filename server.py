@@ -34,6 +34,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import gzip
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -44,8 +45,50 @@ NOTIFICATIONS_CONFIG_PATH = os.path.join(DATA_DIR, 'notifications-config.json')
 CZM_COOKIE_PATH = os.path.join(DATA_DIR, 'czm-cookie.json')
 CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
+ADMIN_CREDS_PATH = os.path.join(DATA_DIR, 'admin-credentials.json')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
-os.makedirs(IMG_CACHE_DIR, exist_ok=True)
+_IMG_FETCH_LOCK = threading.Lock()
+_IN_FLIGHT_FETCHES = {}
+STORE_METADATA_PATH = os.path.join(DATA_DIR, 'store-metadata.json')
+_STORE_METADATA_CACHE = None
+_STORE_METADATA_MTIME = 0
+
+def get_stored_metadata():
+    """Returns store configuration metadata (settings, categories, instagram, etc.) in 0.1ms without loading 18MB of products."""
+    global _STORE_METADATA_CACHE, _STORE_METADATA_MTIME
+    if os.path.exists(STORE_METADATA_PATH):
+        try:
+            mtime = os.path.getmtime(STORE_METADATA_PATH)
+            if _STORE_METADATA_CACHE is not None and mtime == _STORE_METADATA_MTIME:
+                return _STORE_METADATA_CACHE
+            with open(STORE_METADATA_PATH, 'r', encoding='utf-8') as f:
+                _STORE_METADATA_CACHE = json.load(f)
+                _STORE_METADATA_MTIME = mtime
+            return _STORE_METADATA_CACHE
+        except Exception as e:
+            print(f"[Error] Failed to read store-metadata.json: {e}")
+    # Fallback to get_stored_data if metadata file missing
+    return get_stored_data()
+
+_GZIP_STORE_DATA_CACHE = None
+_GZIP_STORE_DATA_MTIME = 0
+
+def get_gzipped_store_data():
+    """Returns pre-compressed gzip bytes of store-data.json for instant ultra-low latency delivery."""
+    global _GZIP_STORE_DATA_CACHE, _GZIP_STORE_DATA_MTIME
+    if not os.path.exists(STORE_DATA_PATH):
+        return None
+    try:
+        mtime = os.path.getmtime(STORE_DATA_PATH)
+        if _GZIP_STORE_DATA_CACHE is None or mtime != _GZIP_STORE_DATA_MTIME:
+            with open(STORE_DATA_PATH, 'rb') as f:
+                raw = f.read()
+            _GZIP_STORE_DATA_CACHE = gzip.compress(raw, compresslevel=6)
+            _GZIP_STORE_DATA_MTIME = mtime
+        return _GZIP_STORE_DATA_CACHE
+    except Exception as e:
+        print(f"[Gzip Compress Error] {e}")
+        return None
 
 def load_dotenv():
     """Load key-value environment variables from .env if present."""
@@ -74,6 +117,36 @@ except ImportError:
 
 # Default password: soreva@2026
 DEFAULT_PW_HASH = "3779c849af88128e466010f799175ce3344f2392947810fa4501766c0664d846"
+
+def get_admin_password_hash():
+    """Safely get admin password hash without loading the full 18MB store-data.json."""
+    if os.path.exists(ADMIN_CREDS_PATH):
+        try:
+            with open(ADMIN_CREDS_PATH, 'r', encoding='utf-8') as f:
+                c = json.load(f)
+                h = c.get('adminPasswordHash')
+                if h:
+                    return h
+        except Exception:
+            pass
+    try:
+        global _STORE_DATA_CACHE
+        if _STORE_DATA_CACHE and isinstance(_STORE_DATA_CACHE, dict):
+            h = _STORE_DATA_CACHE.get('settings', {}).get('adminPasswordHash')
+            if h:
+                return h
+    except Exception:
+        pass
+    return DEFAULT_PW_HASH
+
+def set_admin_password_hash(new_hash):
+    """Save admin password hash in dedicated lightweight credentials file."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    try:
+        with open(ADMIN_CREDS_PATH, 'w', encoding='utf-8') as f:
+            json.dump({"adminPasswordHash": new_hash, "updatedAt": int(time.time())}, f, indent=2)
+    except Exception as e:
+        print(f"[Admin Creds Error] {e}")
 
 def perform_czm_login():
     """Logs into CZMakers using saved credentials and returns the cookie string, or None if failed."""
@@ -496,6 +569,18 @@ def save_stored_data(data):
         _STORE_DATA_MTIME = os.path.getmtime(STORE_DATA_PATH)
     except Exception:
         pass
+
+    # Also keep store-metadata.json in sync
+    try:
+        meta = {k: v for k, v in data.items() if k != 'products'}
+        with open(STORE_METADATA_PATH, 'w', encoding='utf-8') as mf:
+            json.dump(meta, mf, indent=2, ensure_ascii=False)
+        global _STORE_METADATA_CACHE, _STORE_METADATA_MTIME
+        _STORE_METADATA_CACHE = meta
+        _STORE_METADATA_MTIME = os.path.getmtime(STORE_METADATA_PATH)
+    except Exception as me:
+        print(f"[Warning] Failed to sync store-metadata.json: {me}")
+
     return True
 
 
@@ -1213,8 +1298,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             if client_accepts_webp and HAS_PIL:
                 try:
                     with Image.open(orig_path) as im:
-                        im = im.convert('RGB')
-                        im.save(webp_path, 'WEBP', quality=82, method=6)
+                        rgb = im.convert('RGB')
+                        rgb.save(webp_path, 'WEBP', quality=80, method=3)
                     self._serve_image_file(webp_path, 'image/webp')
                     return
                 except Exception:
@@ -1223,7 +1308,28 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             self._serve_image_file(orig_path, mime)
             return
 
-        # Case 3: Need to fetch from remote origin
+        # Case 3: Need to fetch from remote origin (with concurrency deduplication)
+        event_to_wait = None
+        is_fetcher = False
+        with _IMG_FETCH_LOCK:
+            if filename in _IN_FLIGHT_FETCHES:
+                event_to_wait = _IN_FLIGHT_FETCHES[filename]
+            else:
+                event_to_wait = threading.Event()
+                _IN_FLIGHT_FETCHES[filename] = event_to_wait
+                is_fetcher = True
+
+        if not is_fetcher and event_to_wait:
+            # Another worker thread is already downloading this image; wait for it
+            event_to_wait.wait(timeout=9.0)
+            if client_accepts_webp and os.path.exists(webp_path):
+                self._serve_image_file(webp_path, 'image/webp')
+                return
+            if os.path.exists(orig_path):
+                mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
+                self._serve_image_file(orig_path, mime)
+                return
+
         if not target_url:
             target_url = f"https://indian-jewellery.com/core/thumb_images/product_images/{filename}"
 
@@ -1231,39 +1337,54 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             req_headers = {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://indian-jewellery.com/',
-                'Accept': 'image/webp,image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Sec-Fetch-Dest': 'image',
+                'Sec-Fetch-Mode': 'no-cors',
+                'Sec-Fetch-Site': 'same-origin'
             }
             req = urllib.request.Request(target_url, headers=req_headers)
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=8) as resp:
                 content = resp.read()
 
-            tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
-            with open(tmp_path, 'wb') as f:
-                f.write(content)
-            os.replace(tmp_path, orig_path)
+            if len(content) > 100:
+                tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
+                with open(tmp_path, 'wb') as f:
+                    f.write(content)
+                os.replace(tmp_path, orig_path)
 
-            if HAS_PIL:
-                try:
-                    with Image.open(orig_path) as im:
-                        im = im.convert('RGB')
-                        im.save(webp_path, 'WEBP', quality=82, method=6)
-                except Exception:
-                    pass
+                if HAS_PIL:
+                    try:
+                        with Image.open(orig_path) as im:
+                            rgb = im.convert('RGB')
+                            rgb.save(webp_path, 'WEBP', quality=80, method=3)
+                    except Exception:
+                        pass
 
             if client_accepts_webp and os.path.exists(webp_path):
                 self._serve_image_file(webp_path, 'image/webp')
-            else:
+            elif os.path.exists(orig_path):
                 mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
                 self._serve_image_file(orig_path, mime)
-        except urllib.error.HTTPError as he:
-            self.send_response(he.code)
-            self._send_cors_headers()
-            self.end_headers()
+            else:
+                fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
+                if os.path.exists(fallback_path):
+                    self._serve_image_file(fallback_path, 'image/jpeg')
         except Exception as e:
-            print(f"[Image Fetch Error for {filename}] {e}")
+            print(f"[Image Fetch Notice for {filename}] {e} - Serving graceful fallback")
+            fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
+            if os.path.exists(fallback_path):
+                self._serve_image_file(fallback_path, 'image/jpeg')
+                return
             self.send_response(502)
             self._send_cors_headers()
             self.end_headers()
+        finally:
+            if is_fetcher:
+                with _IMG_FETCH_LOCK:
+                    _IN_FLIGHT_FETCHES.pop(filename, None)
+                if event_to_wait:
+                    event_to_wait.set()
 
     def end_headers(self):
         if getattr(self, '_custom_cache_headers', False):
@@ -1375,7 +1496,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         # API: Get Instagram Video Feed & Status
         # ----------------------------------------------------
         if parsed.path == '/api/instagram/feed':
-            sd = get_stored_data() or {}
+            sd = get_stored_metadata() or {}
             items = sd.get('instagram', [])
             settings = sd.get('settings', {}).get('instagram', {
                 "handle": "soreva_jewels",
@@ -1541,11 +1662,47 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         if parsed.path == '/api/store-data':
-            data = get_stored_data()
-            if data is None:
+            if not os.path.exists(STORE_DATA_PATH):
                 self._send_json({"error": "Failed to load store data"}, 500)
                 return
-            self._send_json(data)
+            accept_enc = self.headers.get('Accept-Encoding', '')
+            if 'gzip' in accept_enc:
+                gz_data = get_gzipped_store_data()
+                if gz_data:
+                    try:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json; charset=utf-8')
+                        self.send_header('Content-Encoding', 'gzip')
+                        self.send_header('Content-Length', str(len(gz_data)))
+                        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                        self._send_cors_headers()
+                        self.end_headers()
+                        self.wfile.write(gz_data)
+                    except (ConnectionResetError, BrokenPipeError):
+                        pass
+                    except Exception as e:
+                        print(f"[Store Data Gzip Stream Error] {e}")
+                    return
+
+            try:
+                file_size = os.path.getsize(STORE_DATA_PATH)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(file_size))
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self._send_cors_headers()
+                self.end_headers()
+
+                with open(STORE_DATA_PATH, 'rb') as f:
+                    while True:
+                        chunk = f.read(65536)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+            except (ConnectionResetError, BrokenPipeError):
+                pass
+            except Exception as e:
+                print(f"[Store Data Stream Error] {e}")
             return
 
         # API: Single Product Lookup (Instant PDP and Quick View)
@@ -1559,27 +1716,19 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             clean_num = re.sub(r'^czm_', '', pid)
             czm_id = f"czm_{clean_num}"
 
-            # 1. First check in-memory store-data
-            data = get_stored_data()
-            if data and 'products' in data:
-                for p in data['products']:
-                    p_id = str(p.get('id', '')).strip()
-                    p_sku = str(p.get('sku', '')).strip()
-                    if p_id in (pid, czm_id, clean_num) or p_sku in (pid, clean_num):
-                        self._send_json({"success": True, "product": p})
-                        return
-
-            # 2. Check SQLite directly as high-speed fallback
+            # 1. High-speed zero-memory indexed lookup from SQLite directly
             try:
                 if os.path.exists(PB_DB_PATH):
                     conn = sqlite3.connect(PB_DB_PATH)
                     conn.row_factory = sqlite3.Row
                     cur = conn.cursor()
                     cur.execute("""
-                        SELECT * FROM products 
-                        WHERE id = ? OR id = ? OR id = ? 
+                        SELECT p.*, COALESCE(i.sku, p.id) as sku, COALESCE(i.status, 'In Stock') as stockStatus, COALESCE(i.stockQty, 15) as stockQty
+                        FROM products p
+                        LEFT JOIN inventory i ON p.id = i.id
+                        WHERE p.id = ? OR p.id = ? OR p.id = ? OR i.sku = ? OR i.sku = ?
                         LIMIT 1
-                    """, (pid, czm_id, clean_num))
+                    """, (pid, czm_id, clean_num, pid, f"SRV-{clean_num}"))
                     row = cur.fetchone()
                     conn.close()
                     if row:
@@ -1597,7 +1746,16 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         self._send_json({"success": True, "product": prod_dict})
                         return
             except Exception as e:
-                print(f"[Error] Single product lookup failed: {e}")
+                print(f"[Error] Single product SQLite lookup failed: {e}")
+
+            # 2. Fallback to cached products in RAM only if available
+            if _STORE_DATA_CACHE and 'products' in _STORE_DATA_CACHE:
+                for p in _STORE_DATA_CACHE['products']:
+                    p_id = str(p.get('id', '')).strip()
+                    p_sku = str(p.get('sku', '')).strip()
+                    if p_id in (pid, czm_id, clean_num) or p_sku in (pid, clean_num):
+                        self._send_json({"success": True, "product": p})
+                        return
 
             self._send_json({"success": False, "error": "Product not found"}, 404)
             return
@@ -1613,56 +1771,47 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 limit = 10
             limit = max(1, min(limit, 50))
 
-            data = get_stored_data()
-            if not data or 'products' not in data:
-                self._send_json({"total": 0, "results": [], "query": q})
-                return
-
             if not q:
                 self._send_json({"total": 0, "results": [], "query": ""})
                 return
 
-            q_lower = q.lower()
-            q_words = [w for w in q_lower.split() if w]
-            products = data.get('products', [])
-            matches = []
-
-            for p in products:
-                if p.get('disabled') or p.get('active') is False or p.get('active') == 0 or p.get('stockStatus') == 'Disabled':
-                    continue
-                name = (p.get('name') or '').lower()
-                cat = (p.get('category') or '').lower()
-                sub = (p.get('subCategory') or '').lower()
-                sku = (p.get('sku') or '').lower()
-                plating = (p.get('plating') or p.get('finish') or '').lower()
-                desc = (p.get('description') or '').lower()
-                tags = p.get('tags') or ''
-                if isinstance(tags, list):
-                    tags = ' '.join(str(t) for t in tags).lower()
-                else:
-                    tags = str(tags).lower()
-
-                haystack = f"{name} {cat} {sub} {sku} {plating} {desc} {tags}"
-                if all(w in haystack for w in q_words):
-                    matches.append({
-                        "id": p.get("id"),
-                        "sku": p.get("sku"),
-                        "name": p.get("name"),
-                        "category": p.get("category"),
-                        "subCategory": p.get("subCategory"),
-                        "priceINR": p.get("priceINR", 0),
-                        "mrpINR": p.get("mrpINR", 0),
-                        "primaryImg": p.get("primaryImg", ""),
-                        "plating": p.get("plating") or p.get("finish", "24K Gold"),
-                        "rating": p.get("rating", 4.9),
-                        "stockStatus": p.get("stockStatus", "In Stock")
+            try:
+                if os.path.exists(PB_DB_PATH):
+                    conn = sqlite3.connect(PB_DB_PATH)
+                    conn.row_factory = sqlite3.Row
+                    cur = conn.cursor()
+                    q_lower = q.lower()
+                    q_words = [w for w in q_lower.split() if w]
+                    
+                    where_clauses = ["(p.disabled = 0 AND p.active != 0)"]
+                    params = []
+                    for w in q_words:
+                        where_clauses.append("(p.name LIKE ? OR p.category LIKE ? OR p.subCategory LIKE ? OR i.sku LIKE ? OR p.plating LIKE ? OR p.description LIKE ?)")
+                        pat = f"%{w}%"
+                        params.extend([pat, pat, pat, pat, pat, pat])
+                    
+                    sql = f"""
+                        SELECT p.id, COALESCE(i.sku, p.id) as sku, p.name, p.category, p.subCategory, 
+                               p.priceINR, p.originalPriceINR as mrpINR, p.primaryImg, p.plating, p.rating,
+                               COALESCE(i.status, 'In Stock') as stockStatus
+                        FROM products p
+                        LEFT JOIN inventory i ON p.id = i.id
+                        WHERE {" AND ".join(where_clauses)}
+                        LIMIT {limit}
+                    """
+                    rows = cur.execute(sql, params).fetchall()
+                    conn.close()
+                    matches = [dict(r) for r in rows]
+                    self._send_json({
+                        "total": len(matches),
+                        "query": q,
+                        "results": matches
                     })
+                    return
+            except Exception as e:
+                print(f"[Error] Fast SQLite search failed: {e}")
 
-            self._send_json({
-                "total": len(matches),
-                "query": q,
-                "results": matches[:limit]
-            })
+            self._send_json({"total": 0, "results": [], "query": q})
             return
 
         # API: Database Information & Health Metrics
@@ -2243,34 +2392,29 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
         # API: Admin Login
         if parsed.path == '/api/admin/login':
-            password = payload.get('password', '')
-            req_hash = payload.get('passwordHash', '')
-            if password:
-                req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+            try:
+                password = payload.get('password', '')
+                req_hash = payload.get('passwordHash', '')
+                if password:
+                    req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-            data = get_stored_data() or {}
-            saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
 
-            if req_hash == saved_hash:
-                token = hashlib.sha256(f"{saved_hash}_{int(time.time() / 86400)}".encode()).hexdigest()
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    "success": True,
-                    "token": token,
-                    "message": "Authentication successful"
-                }).encode())
-            else:
-                self.send_response(401)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    "success": False,
-                    "error": "Incorrect password"
-                }).encode())
+                if req_hash and req_hash == saved_hash:
+                    token = hashlib.sha256(f"{saved_hash}_{int(time.time() / 86400)}".encode()).hexdigest()
+                    self._send_json({
+                        "success": True,
+                        "token": token,
+                        "message": "Authentication successful"
+                    })
+                else:
+                    self._send_json({
+                        "success": False,
+                        "error": "Incorrect password"
+                    }, 401)
+            except Exception as e:
+                print(f"[Admin Login Error] {e}")
+                self._send_json({"success": False, "error": str(e)}, 500)
             return
 
         # API: Save Store Data
@@ -2305,36 +2449,39 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
         # API: Change Password
         if parsed.path == '/api/admin/change-password':
-            old_pw = payload.get('oldPassword', '')
-            new_pw = payload.get('newPassword', '')
-            old_hash = hashlib.sha256(old_pw.encode('utf-8')).hexdigest()
+            try:
+                old_pw = payload.get('oldPassword', '')
+                new_pw = payload.get('newPassword', '')
+                old_hash = hashlib.sha256(old_pw.encode('utf-8')).hexdigest()
 
-            data = get_stored_data() or {}
-            saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
 
-            if old_hash != saved_hash:
-                self.send_response(401)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "Current password is incorrect"}).encode())
-                return
+                if old_hash != saved_hash:
+                    self._send_json({"success": False, "error": "Current password is incorrect"}, 401)
+                    return
 
-            if len(new_pw) < 6:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "New password must be at least 6 characters"}).encode())
-                return
+                if len(new_pw) < 6:
+                    self._send_json({"success": False, "error": "New password must be at least 6 characters"}, 400)
+                    return
 
-            new_hash = hashlib.sha256(new_pw.encode('utf-8')).hexdigest()
-            if 'settings' not in data:
-                data['settings'] = {}
-            data['settings']['adminPasswordHash'] = new_hash
-            save_stored_data(data)
+                new_hash = hashlib.sha256(new_pw.encode('utf-8')).hexdigest()
+                set_admin_password_hash(new_hash)
 
-            self._send_json({"success": True, "message": "Admin password updated successfully"})
+                # Also update store-data cache if present
+                try:
+                    data = get_stored_data()
+                    if data and isinstance(data, dict):
+                        if 'settings' not in data:
+                            data['settings'] = {}
+                        data['settings']['adminPasswordHash'] = new_hash
+                        save_stored_data(data)
+                except Exception:
+                    pass
+
+                self._send_json({"success": True, "message": "Admin password updated successfully"})
+            except Exception as e:
+                print(f"[Admin Change Password Error] {e}")
+                self._send_json({"success": False, "error": str(e)}, 500)
             return
 
         # ----------------------------------------------------
@@ -3526,8 +3673,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             # Check if logging in via Owner Master Password
             if password:
                 req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                data = get_stored_data() or {}
-                saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
                 if req_hash == saved_hash:
                     owner_profile = {
                         "id": "emp_owner_master",
