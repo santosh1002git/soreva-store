@@ -648,16 +648,29 @@ function renderAnnouncements(announcements) {
     initAnnouncementTicker();
 }
 
-// Dynamic Categories Showcase Renderer
+// Dynamic Categories Showcase Renderer with Infinite Auto-Scroll Loop & Hover Pause
 function renderCategories(categories) {
     const container = document.getElementById('categoryGrid');
     if (!container || !categories || !categories.length) return;
-    container.innerHTML = categories.map((cat, idx) => `
-        <a href="catalog.html?cat=${cat.slug}" class="category-card" aria-label="${cat.name}">
+    const fallbackMap = {
+        'wristwear': 'assets/uploads/category_focus_1792570221.jpeg',
+        'necklace': 'assets/uploads/category_Gemini_Generated_Image_9lfkoo9lfkoo9lfk_1792569510.jpeg',
+        'earrings': 'assets/uploads/category_ear_1792569584.jpeg',
+        'rings': 'assets/uploads/category_ring_1792568855.jpeg',
+        'pendants': 'assets/uploads/category_Gemini_Generated_Image_clctxdclctxdclct_1792568195.jpeg',
+        'silver': 'assets/uploads/category_Gemini_Generated_Image_ovsom7ovsom7ovso_1792567578.jpeg',
+        'accessories': 'assets/uploads/category_Bindya2_1792567880.jpeg'
+    };
+
+    const generateCardsHtml = (isClone = false) => categories.map((cat, idx) => {
+        const fallback = fallbackMap[cat.slug] || '/assets/categories/necklaces.jpg';
+        const imgUrl = cat.image || fallback;
+        return `
+        <a href="catalog.html?cat=${encodeURIComponent(cat.slug)}" class="category-card" aria-label="${cat.name}" ${isClone ? 'tabindex="-1" aria-hidden="true"' : ''}>
             <div class="category-img-wrap">
-                <img class="category-img" src="${cat.image}" alt="${cat.name}" loading="lazy">
+                <img class="category-img" src="${imgUrl}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.src='${fallback}';">
                 <div class="category-overlay-gradient"></div>
-                <span class="category-number-badge">${String(idx + 1).padStart(2, '0')}</span>
+                <span class="category-number-badge">${String((idx % categories.length) + 1).padStart(2, '0')}</span>
             </div>
             <div class="category-content-overlay">
                 <span class="category-meta-tag">${cat.countLabel || 'Curated Pieces'}</span>
@@ -668,7 +681,48 @@ function renderCategories(categories) {
                 </div>
             </div>
         </a>
-    `).join('');
+        `;
+    }).join('');
+
+    const set1 = generateCardsHtml(false);
+    const set2 = generateCardsHtml(true);
+
+    container.innerHTML = `
+        <div class="category-marquee-track" id="categoryTrack">
+            <div class="category-cards-set">${set1}</div>
+            <div class="category-cards-set" aria-hidden="true">${set2}</div>
+        </div>
+    `;
+
+    initCategoryMarquee();
+}
+
+function initCategoryMarquee() {
+    const container = document.getElementById('categoryGrid');
+    const track = document.getElementById('categoryTrack');
+    if (!container || !track) return;
+
+    // Desktop hover pause & resume
+    container.addEventListener('mouseenter', () => {
+        track.style.animationPlayState = 'paused';
+    });
+    container.addEventListener('mouseleave', () => {
+        track.style.animationPlayState = 'running';
+    });
+
+    // Touch devices: pause when user touches, resume smoothly after touch ends
+    let touchTimeout = null;
+    container.addEventListener('touchstart', () => {
+        if (touchTimeout) clearTimeout(touchTimeout);
+        track.style.animationPlayState = 'paused';
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+        if (touchTimeout) clearTimeout(touchTimeout);
+        touchTimeout = setTimeout(() => {
+            track.style.animationPlayState = 'running';
+        }, 2200);
+    }, { passive: true });
 }
 
 // Category filter helper (for card clicks)
