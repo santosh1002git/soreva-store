@@ -17,18 +17,25 @@ sudo mkdir -p /var/www/soreva-development
 sudo chown -R $USER:$USER /var/www/soreva-production
 sudo chown -R $USER:$USER /var/www/soreva-development
 
-# 3. Clone Production Codebase
+# 3. Setup Git Repository URL (supports private repo via token or public)
+if [ -n "$GITHUB_TOKEN" ]; then
+    GIT_REMOTE="https://${GITHUB_TOKEN}@github.com/santosh1002git/soreva-store.git"
+else
+    GIT_REMOTE="https://github.com/santosh1002git/soreva-store.git"
+fi
+
+# 4. Clone Production Codebase
 echo "📦 Deploying Production environment (branch: production)..."
 if [ ! -d "/var/www/soreva-production/.git" ]; then
-    git clone -b production https://github.com/santosh1002git/soreva-store.git /var/www/soreva-production
+    git clone -b production "$GIT_REMOTE" /var/www/soreva-production
 else
     cd /var/www/soreva-production && git fetch origin && git checkout production && git pull origin production
 fi
 
-# 4. Clone Development Codebase
+# 5. Clone Development Codebase
 echo "📦 Deploying Development environment (branch: development)..."
 if [ ! -d "/var/www/soreva-development/.git" ]; then
-    git clone -b development https://github.com/santosh1002git/soreva-store.git /var/www/soreva-development
+    git clone -b development "$GIT_REMOTE" /var/www/soreva-development
 else
     cd /var/www/soreva-development && git fetch origin && git checkout development && git pull origin development
 fi
