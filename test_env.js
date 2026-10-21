@@ -777,98 +777,177 @@ window.scrollToReviewsSection = scrollToReviewsSection;
 
 
 // ==========================================
-// Instagram Reels Video Gallery
+// Instagram Reels Video Gallery (Compact & Hover Autoplay)
 // ==========================================
 let currentInstagramReels = [];
 
-function triggerInstagramEmbedProcess() {
-    let attempts = 0;
-    const checkInterval = setInterval(() => {
-        attempts++;
-        if (window.instgrm && window.instgrm.Embeds) {
-            clearInterval(checkInterval);
-            try {
-                window.instgrm.Embeds.process();
-            } catch (e) {
-                console.warn('[Instagram] Embeds.process error:', e);
-            }
-        } else if (attempts > 30) {
-            clearInterval(checkInterval);
-        }
-    }, 200);
-
-    let script = document.querySelector('script[src*="instagram.com/embed.js"]');
-    if (!script) {
-        script = document.createElement('script');
-        script.async = true;
-        script.defer = true;
-        script.src = 'https://www.instagram.com/embed.js';
-        document.head.appendChild(script);
+const SOREVA_LOCAL_REELS = [
+    {
+        id: 'reel_1',
+        videoUrl: 'assets/reels/reel_1.mp4',
+        thumbnail: 'assets/reels/reel_1_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DdqS_DcTt5z/',
+        title: 'Ruby Radiance Choker',
+        caption: 'A little drama never hurt — especially when it looks this good. A flash of red & unmatched brilliance.',
+        views: '18.4K',
+        likes: '1.4K',
+        date: 'Recent'
+    },
+    {
+        id: 'reel_2',
+        videoUrl: 'assets/reels/reel_2.mp4',
+        thumbnail: 'assets/reels/reel_2_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DdnZyRnzf-M/',
+        title: 'The Brilliance That Lingers',
+        caption: 'It starts with the sparkle. But that touch of red is what you remember. Pure cubic zirconia perfection.',
+        views: '24.1K',
+        likes: '2.1K',
+        date: 'Recent'
+    },
+    {
+        id: 'reel_3',
+        videoUrl: 'assets/reels/reel_3.mp4',
+        thumbnail: 'assets/reels/reel_3_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DdgR2vnzK8i/',
+        title: 'Cascading Diamond Collar',
+        caption: 'A little colour. A lot of presence. Handcrafted for evenings where only the finest jewellery speaks.',
+        views: '15.9K',
+        likes: '1.2K',
+        date: 'Recent'
+    },
+    {
+        id: 'reel_4',
+        videoUrl: 'assets/reels/reel_4.mp4',
+        thumbnail: 'assets/reels/reel_4_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DddeqOWpiSR/',
+        title: 'Bespoke Atelier Creation',
+        caption: 'Some pieces don’t need an occasion. You see them, love them, and wear them forever.',
+        views: '19.8K',
+        likes: '1.8K',
+        date: 'Recent'
+    },
+    {
+        id: 'reel_5',
+        videoUrl: 'assets/reels/reel_5.mp4',
+        thumbnail: 'assets/reels/reel_5_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DdalJxwT2lh/',
+        title: 'Ruby Radiance Bold Drops',
+        caption: 'Ruby Radiance — bold, passionate & unforgettable. Crafted with AAA+ grade cubic zirconia.',
+        views: '28.3K',
+        likes: '3.2K',
+        date: 'Recent'
+    },
+    {
+        id: 'reel_6',
+        videoUrl: 'assets/reels/reel_6.mp4',
+        thumbnail: 'assets/reels/reel_6_poster.jpg',
+        permalink: 'https://www.instagram.com/reel/DdTjaQ0z5SR/',
+        title: 'Timeless Atelier Glamour',
+        caption: 'Designed to turn heads without uttering a single word. Unmatched fire in every facet.',
+        views: '16.7K',
+        likes: '1.6K',
+        date: 'Recent'
     }
-}
+];
 
 function renderSocialFeed(instagram, handle = 'soreva_jewels') {
     const container = document.getElementById('socialGrid');
     if (!container) return;
 
-    const items = (instagram && instagram.length) ? instagram : (typeof INSTAGRAM !== 'undefined' ? INSTAGRAM : []);
-    if (!items || !items.length) return;
-    currentInstagramReels = items;
+    currentInstagramReels = SOREVA_LOCAL_REELS;
 
-    // Verified official reels from @soreva_jewels
-    const fallbackPermalinks = [
-        'https://www.instagram.com/reel/DdqS_DcTt5z/',
-        'https://www.instagram.com/reel/DdnZyRnzf-M/',
-        'https://www.instagram.com/reel/DdgR2vnzK8i/',
-        'https://www.instagram.com/reel/DddeqOWpiSR/',
-        'https://www.instagram.com/reel/DdalJxwT2lh/',
-        'https://www.instagram.com/reel/DdX5hpdzqF4/'
-    ];
-
-    container.innerHTML = items.slice(0, 6).map((item, idx) => {
-        const rawLink = item.permalink || item.link || '';
-        const permalink = (rawLink && rawLink.includes('/reel/'))
-            ? rawLink
-            : (fallbackPermalinks[idx % fallbackPermalinks.length]);
-        
-        const caption = item.caption || item.title || 'Handcrafted cubic zirconia jewellery in motion.';
-        const cleanCaption = caption.replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 80);
+    container.innerHTML = SOREVA_LOCAL_REELS.map((item, idx) => {
+        const videoSrc = item.videoUrl;
+        const posterSrc = item.thumbnail;
+        const permalink = item.permalink || `https://www.instagram.com/${handle}`;
+        const caption = item.caption || item.title || 'Sorèva Reel';
+        const likes = item.likes || '1.2K';
 
         return `
-        <div class="insta-embed-card" data-reel-id="${item.id || idx}">
-            <blockquote class="instagram-media" 
-                        data-instgrm-permalink="${permalink}" 
-                        data-instgrm-version="14">
-                <div style="padding: 24px 16px; text-align: center;">
-                    <a href="${permalink}" target="_blank" rel="noopener" style="text-decoration: none; color: #14100f; display: block;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 4px 12px rgba(220, 39, 67, 0.3);">
-                            <i class="fa-brands fa-instagram" style="font-size: 1.25rem;"></i>
-                        </div>
-                        <div style="font-family: Georgia, serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; color: #14100f;">@${handle}</div>
-                        <p style="font-size: 0.82rem; color: #777; margin-bottom: 12px; line-height: 1.4;">${cleanCaption}...</p>
-                        <span class="btn-insta-follow" style="font-size: 0.76rem; padding: 6px 16px;">Watch on Instagram</span>
+        <div class="reel-card is-paused" 
+             data-reel-id="${item.id || idx}" 
+             onmouseenter="handleReelCardEnter(this)" 
+             onmouseleave="handleReelCardLeave(this)" 
+             onclick="openReelModal('${item.id || idx}')">
+            
+            <video class="reel-video" 
+                   id="reel_vid_${idx}"
+                   src="${videoSrc}" 
+                   poster="${posterSrc}" 
+                   loop 
+                   muted 
+                   playsinline 
+                   preload="metadata">
+            </video>
+            
+            <div class="reel-top-bar">
+                <span class="reel-badge"><i class="fa-brands fa-instagram"></i> Reel</span>
+                <button type="button" class="reel-audio-btn" onclick="toggleReelAudio(event, this, 'reel_vid_${idx}')" title="Toggle Sound">
+                    <i class="fa-solid fa-volume-xmark"></i>
+                </button>
+            </div>
+
+            <div class="reel-center-play">
+                <i class="fa-solid fa-play"></i>
+            </div>
+
+            <div class="reel-bottom-info">
+                <div class="reel-user-tag">
+                    <i class="fa-brands fa-instagram"></i> @${handle}
+                </div>
+                <p class="reel-caption-text">${(caption || '').replace(/</g, '&lt;')}</p>
+                <div class="reel-meta-row">
+                    <span><i class="fa-solid fa-heart" style="color: #e4405f; font-size: 0.65rem;"></i> ${likes}</span>
+                    <a href="${permalink}" target="_blank" rel="noopener" class="reel-insta-link" onclick="event.stopPropagation();">
+                        Watch on IG <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.62rem;"></i>
                     </a>
                 </div>
-            </blockquote>
+            </div>
         </div>
         `;
     }).join('');
 
-    triggerInstagramEmbedProcess();
+    initReelIntersectionAutoplay();
+}
+
+function handleReelCardEnter(cardEl) {
+    if (!cardEl) return;
+    const vid = cardEl.querySelector('video');
+    if (vid) {
+        vid.play().catch(() => {});
+    }
+    cardEl.classList.remove('is-paused');
+    cardEl.classList.add('is-playing');
+}
+
+function handleReelCardLeave(cardEl) {
+    if (!cardEl) return;
+    const vid = cardEl.querySelector('video');
+    if (vid) {
+        vid.pause();
+    }
+    cardEl.classList.add('is-paused');
+    cardEl.classList.remove('is-playing');
 }
 
 function handleReelHoverPlay(videoEl) {
     if (!videoEl) return;
     videoEl.play().catch(() => {});
     const card = videoEl.closest('.reel-card');
-    if (card) card.classList.remove('is-paused');
+    if (card) {
+        card.classList.remove('is-paused');
+        card.classList.add('is-playing');
+    }
 }
 
 function handleReelHoverPause(videoEl) {
     if (!videoEl) return;
     videoEl.pause();
     const card = videoEl.closest('.reel-card');
-    if (card) card.classList.add('is-paused');
+    if (card) {
+        card.classList.add('is-paused');
+        card.classList.remove('is-playing');
+    }
 }
 
 function toggleReelAudio(e, btnEl, videoId) {
@@ -897,9 +976,11 @@ function initReelIntersectionAutoplay() {
             if (entry.isIntersecting) {
                 vid.play().catch(() => {});
                 entry.target.classList.remove('is-paused');
+                entry.target.classList.add('is-playing');
             } else {
                 vid.pause();
                 entry.target.classList.add('is-paused');
+                entry.target.classList.remove('is-playing');
             }
         });
     }, { threshold: 0.35 });

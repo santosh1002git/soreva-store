@@ -4396,83 +4396,49 @@ html.skip-intro .logo-intro-experience {
 
 .reels-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 28px;
-    align-items: start;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+    .reels-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 640px) {
     .reels-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px;
+        gap: 12px;
     }
-}
-
-@media (max-width: 680px) {
-    .reels-grid {
-        grid-template-columns: minmax(0, 1fr);
-        max-width: 440px;
-        margin: 0 auto;
-        gap: 24px;
-    }
-}
-
-.insta-embed-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(20, 16, 15, 0.06);
-    border: 1px solid rgba(197, 160, 89, 0.25);
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    min-height: 480px;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
-}
-
-.insta-embed-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 36px rgba(197, 160, 89, 0.2);
-    border-color: #c5a059;
-}
-
-.insta-embed-card blockquote.instagram-media {
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
-    border: none !important;
-    margin: 0 auto !important;
-    box-shadow: none !important;
-    border-radius: 16px !important;
-}
-
-.insta-embed-card iframe.instagram-media {
-    border-radius: 16px !important;
-    border: none !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    max-width: 100% !important;
 }
 
 .reel-card {
     position: relative;
-    aspect-ratio: 9 / 16;
+    aspect-ratio: 9 / 15.5;
+    max-height: 380px;
     border-radius: 14px;
     overflow: hidden;
     background: #14100f;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     cursor: pointer;
-    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-fast);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
     border: 1px solid rgba(197, 160, 89, 0.25);
+    display: flex;
+    flex-direction: column;
 }
 
 .reel-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
-    border-color: var(--gold-accent);
+    box-shadow: 0 16px 36px rgba(197, 160, 89, 0.22);
+    border-color: #c5a059;
 }
 
 .reel-video {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -4539,26 +4505,33 @@ html.skip-intro .logo-intro-experience {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 48px;
-    height: 48px;
+    transform: translate(-50%, -50%) scale(1);
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1.5px solid rgba(255, 255, 255, 0.7);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    opacity: 0;
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    font-size: 1rem;
+    opacity: 0.9;
+    transition: opacity 0.25s ease, transform 0.25s ease;
     z-index: 2;
     pointer-events: none;
 }
 
+.reel-card.is-playing .reel-center-play {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+}
+
 .reel-card.is-paused .reel-center-play {
-    opacity: 1;
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .reel-bottom-info {
