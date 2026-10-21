@@ -689,23 +689,60 @@ ul {
     margin: 0 auto;
 }
 
-/* CATEGORY CARDS (HIGH-JEWELLERY EDITORIAL REDESIGN) */
-.categories-section {
-    padding: 60px 0 70px;
-    background: linear-gradient(180deg, #fcfaf7 0%, #f6f1ea 100%);
-    border-top: 1px solid rgba(197, 160, 89, 0.2);
-    border-bottom: 1px solid rgba(197, 160, 89, 0.15);
-    position: relative;
-}
-
 /* ==========================================================================
    CATEGORIES SHOWCASE - LUXURY AUTO-SCROLL LOOP & ENLARGED CARDS
    ========================================================================== */
 .categories-section {
     position: relative;
-    padding: 70px 0 80px;
-    background: radial-gradient(circle at 50% 20%, rgba(197, 160, 89, 0.04) 0%, transparent 70%), var(--bg-primary, #0c0a09);
+    padding: 70px 0 85px;
+    background: radial-gradient(circle at 50% 20%, rgba(197, 160, 89, 0.08) 0%, transparent 70%), var(--bg-primary, #0c0a09);
+    border-top: 1px solid rgba(197, 160, 89, 0.18);
+    border-bottom: 1px solid rgba(197, 160, 89, 0.14);
     overflow: hidden;
+}
+
+.categories-section .section-header {
+    text-align: center;
+    margin-bottom: 42px;
+}
+
+.categories-section .section-tag {
+    color: #f3cf85 !important;
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 3.2px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 10px;
+    text-shadow: 0 0 16px rgba(243, 207, 133, 0.45);
+}
+
+.categories-section .section-title {
+    color: #ffffff !important;
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 2.65rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 3px 18px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.categories-section .section-title em {
+    color: #f5d89f !important;
+    font-style: italic;
+    font-weight: 400;
+    text-shadow: 0 0 24px rgba(245, 216, 159, 0.5);
+}
+
+.categories-section .section-desc {
+    color: #e4dfda !important;
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0 auto;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
 .category-grid,
