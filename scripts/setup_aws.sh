@@ -100,7 +100,15 @@ Environment=APP_ENV=development
 WantedBy=multi-user.target
 EOF
 
-# 10. Configure Nginx Reverse Proxy
+# 10. Configure Nginx Reverse Proxy & Edge Caching
+sudo mkdir -p /var/cache/nginx/soreva
+sudo chown -R www-data:www-data /var/cache/nginx/soreva
+sudo chmod 755 /var/cache/nginx/soreva
+
+sudo tee /etc/nginx/conf.d/soreva_cache.conf > /dev/null << 'EOF'
+proxy_cache_path /var/cache/nginx/soreva levels=1:2 keys_zone=soreva_img_cache:20m max_size=4g inactive=60d use_temp_path=off;
+EOF
+
 sudo tee /etc/nginx/sites-available/soreva > /dev/null << 'EOF'
 # Production Server (Default HTTP on Port 80)
 server {
@@ -109,6 +117,33 @@ server {
     server_name soreva.in www.soreva.in _;
 
     client_max_body_size 50M;
+
+    location /assets/ {
+        alias /var/www/soreva-store/assets/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
+
+    location /api/img/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache soreva_img_cache;
+        proxy_cache_key "$scheme$request_method$host$request_uri$http_accept";
+        proxy_cache_valid 200 304 60d;
+        proxy_cache_valid 404 1m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+        add_header X-Cache-Status $upstream_cache_status;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -129,6 +164,33 @@ server {
     server_name dev.soreva.in _;
 
     client_max_body_size 50M;
+
+    location /assets/ {
+        alias /var/www/soreva-development/assets/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
+
+    location /api/img/ {
+        proxy_pass http://127.0.0.1:8002;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache soreva_img_cache;
+        proxy_cache_key "$scheme$request_method$host$request_uri$http_accept";
+        proxy_cache_valid 200 304 60d;
+        proxy_cache_valid 404 1m;
+        proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+        add_header X-Cache-Status $upstream_cache_status;
+        expires 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8002;

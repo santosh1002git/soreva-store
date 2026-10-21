@@ -47,6 +47,8 @@ CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
 ADMIN_CREDS_PATH = os.path.join(DATA_DIR, 'admin-credentials.json')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
+_IMG_FETCH_LOCK = threading.Lock()
+_IN_FLIGHT_FETCHES = {}
 STORE_METADATA_PATH = os.path.join(DATA_DIR, 'store-metadata.json')
 _STORE_METADATA_CACHE = None
 _STORE_METADATA_MTIME = 0
@@ -1296,8 +1298,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             if client_accepts_webp and HAS_PIL:
                 try:
                     with Image.open(orig_path) as im:
-                        im = im.convert('RGB')
-                        im.save(webp_path, 'WEBP', quality=82, method=6)
+                        rgb = im.convert('RGB')
+                        rgb.save(webp_path, 'WEBP', quality=80, method=3)
                     self._serve_image_file(webp_path, 'image/webp')
                     return
                 except Exception:
@@ -1306,7 +1308,28 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             self._serve_image_file(orig_path, mime)
             return
 
-        # Case 3: Need to fetch from remote origin
+        # Case 3: Need to fetch from remote origin (with concurrency deduplication)
+        event_to_wait = None
+        is_fetcher = False
+        with _IMG_FETCH_LOCK:
+            if filename in _IN_FLIGHT_FETCHES:
+                event_to_wait = _IN_FLIGHT_FETCHES[filename]
+            else:
+                event_to_wait = threading.Event()
+                _IN_FLIGHT_FETCHES[filename] = event_to_wait
+                is_fetcher = True
+
+        if not is_fetcher and event_to_wait:
+            # Another worker thread is already downloading this image; wait for it
+            event_to_wait.wait(timeout=9.0)
+            if client_accepts_webp and os.path.exists(webp_path):
+                self._serve_image_file(webp_path, 'image/webp')
+                return
+            if os.path.exists(orig_path):
+                mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
+                self._serve_image_file(orig_path, mime)
+                return
+
         if not target_url:
             target_url = f"https://indian-jewellery.com/core/thumb_images/product_images/{filename}"
 
@@ -1321,27 +1344,32 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 'Sec-Fetch-Site': 'same-origin'
             }
             req = urllib.request.Request(target_url, headers=req_headers)
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=8) as resp:
                 content = resp.read()
 
-            tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
-            with open(tmp_path, 'wb') as f:
-                f.write(content)
-            os.replace(tmp_path, orig_path)
+            if len(content) > 100:
+                tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
+                with open(tmp_path, 'wb') as f:
+                    f.write(content)
+                os.replace(tmp_path, orig_path)
 
-            if HAS_PIL:
-                try:
-                    with Image.open(orig_path) as im:
-                        im = im.convert('RGB')
-                        im.save(webp_path, 'WEBP', quality=82, method=6)
-                except Exception:
-                    pass
+                if HAS_PIL:
+                    try:
+                        with Image.open(orig_path) as im:
+                            rgb = im.convert('RGB')
+                            rgb.save(webp_path, 'WEBP', quality=80, method=3)
+                    except Exception:
+                        pass
 
             if client_accepts_webp and os.path.exists(webp_path):
                 self._serve_image_file(webp_path, 'image/webp')
-            else:
+            elif os.path.exists(orig_path):
                 mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
                 self._serve_image_file(orig_path, mime)
+            else:
+                fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
+                if os.path.exists(fallback_path):
+                    self._serve_image_file(fallback_path, 'image/jpeg')
         except Exception as e:
             print(f"[Image Fetch Notice for {filename}] {e} - Serving graceful fallback")
             fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
@@ -1351,6 +1379,12 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             self.send_response(502)
             self._send_cors_headers()
             self.end_headers()
+        finally:
+            if is_fetcher:
+                with _IMG_FETCH_LOCK:
+                    _IN_FLIGHT_FETCHES.pop(filename, None)
+                if event_to_wait:
+                    event_to_wait.set()
 
     def end_headers(self):
         if getattr(self, '_custom_cache_headers', False):

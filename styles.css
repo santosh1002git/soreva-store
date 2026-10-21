@@ -969,7 +969,8 @@ ul {
     width: 100%;
     min-height: 280px;
     height: 330px;
-    background-color: #ffffff;
+    background: #faf8f5;
+    background: linear-gradient(135deg, #fdfcfb 0%, #f5f2ee 100%);
     overflow: hidden;
     display: flex;
     align-items: center;

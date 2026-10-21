@@ -612,7 +612,7 @@ let selectedStoneColors = new Set();
 let selectedStoneSizes = new Set();
 let catalogSort = 'featured';
 let catalogCurrentPage = 1;
-const CATALOG_PAGE_SIZE = 48;
+const CATALOG_PAGE_SIZE = 24;
 
 const CATEGORY_OPTIONS = [
     { key: 'all', label: 'All Jewellery' },
@@ -2169,7 +2169,7 @@ function renderProducts(isLoadMore = false) {
         grid.innerHTML = paginatedItems.map((product, idx) => {
             const hasHover = product.hoverImg && product.hoverImg !== product.primaryImg;
             const isWishlisted = (typeof wishlist !== 'undefined' && Array.isArray(wishlist)) && (wishlist.includes(product.id) || wishlist.includes(String(product.id)) || wishlist.includes(product.sku));
-            const isTop = idx < 4;
+            const isTop = idx < 6;
             const priorityAttrs = isTop ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
             const primaryUrl = getOptimizedImgUrl(product.primaryImg);
             const hoverUrl = getOptimizedImgUrl(product.hoverImg);
