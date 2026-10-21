@@ -826,7 +826,7 @@
                     </div>
                 </div>
 
-<button class="header-action-btn cart-open-btn" aria-label="Shopping Cart" title="Shopping Cart">
+                <button type="button" class="header-action-btn cart-open-btn" id="headerCartBtn" onclick="openCartDrawer()" ontouchend="event.preventDefault(); openCartDrawer();" aria-label="Shopping Cart" title="Shopping Cart">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span class="badge-count cart-count-badge" id="headerCartCount">0</span>
                 </button>
@@ -1299,7 +1299,7 @@
     </footer>
 
     <!-- CART SLIDE-OVER DRAWER -->
-    <div class="drawer-backdrop" id="cartDrawerBackdrop"></div>
+    <div class="drawer-backdrop" id="cartDrawerBackdrop" onclick="closeCartDrawer()"></div>
     <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping Cart">
         <div class="drawer-header">
             <h3 class="drawer-title">
@@ -1307,7 +1307,7 @@
                 <span>Your Cart</span>
                 <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="cart-count-badge">0</span>)</span>
             </h3>
-            <button class="drawer-close-btn" id="cartDrawerClose" aria-label="Close Cart">
+            <button type="button" class="drawer-close-btn" id="cartDrawerClose" onclick="closeCartDrawer()" aria-label="Close Cart">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
