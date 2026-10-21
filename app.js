@@ -1126,6 +1126,11 @@ function applyStoreData(data) {
         renderCurrencyDropdown();
     }
     if (data.products && data.products.length) {
+        // Defensive check: NEVER overwrite larger in-memory catalog with a smaller slice
+        if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS) && PRODUCTS.length > data.products.length) {
+            console.warn(`[applyStoreData] Ignored smaller incoming catalog: existing (${PRODUCTS.length}) > incoming (${data.products.length})`);
+            return;
+        }
         data.products.forEach(p => {
             if (p.primaryImg) p.primaryImg = getOptimizedImgUrl(p.primaryImg);
             if (p.hoverImg) p.hoverImg = getOptimizedImgUrl(p.hoverImg);
@@ -1192,76 +1197,99 @@ function applyStoreData(data) {
     }
 }
 
-// Load Store Data from API / Local Storage with live synchronization
-async function loadStoreDataAndInit() {
-    // 1. Check cached data; if it has legacy fake placeholder products (unsplash or numeric IDs), purge it!
-    const cached = localStorage.getItem('soreva_store_data');
-    if (cached) {
-        try {
-            const parsed = JSON.parse(cached);
-            const hasLegacyDummy = parsed && parsed.products && parsed.products.some(p => typeof p.id === 'number' || (p.primaryImg && p.primaryImg.includes('unsplash')));
-            if (hasLegacyDummy) {
-                console.log("Purging stale placeholder cache from localStorage...");
-                localStorage.removeItem('soreva_store_data');
-            } else if (parsed && parsed.products && parsed.products.length > 0) {
-                applyStoreData(parsed);
-            }
-        } catch (e) {
-            localStorage.removeItem('soreva_store_data');
-        }
-    }
+// IndexedDB Full Catalog Cache for instant page transitions without 5MB localStorage limits
+const CATALOG_IDB_NAME = 'SorevaCatalogDB';
+const CATALOG_IDB_STORE = 'storeData';
 
-    // 2. Fetch latest canonical store-data from backend server
+function openCatalogIdb() {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined' || !window.indexedDB) return resolve(null);
+        try {
+            const req = indexedDB.open(CATALOG_IDB_NAME, 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(CATALOG_IDB_STORE)) {
+                    db.createObjectStore(CATALOG_IDB_STORE);
+                }
+            };
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = () => resolve(null);
+        } catch (e) {
+            resolve(null);
+        }
+    });
+}
+
+async function getIdbCachedStoreData() {
+    try {
+        const db = await openCatalogIdb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            const tx = db.transaction(CATALOG_IDB_STORE, 'readonly');
+            const store = tx.objectStore(CATALOG_IDB_STORE);
+            const req = store.get('latest');
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+async function setIdbCachedStoreData(data) {
+    try {
+        const db = await openCatalogIdb();
+        if (!db) return;
+        const tx = db.transaction(CATALOG_IDB_STORE, 'readwrite');
+        const store = tx.objectStore(CATALOG_IDB_STORE);
+        store.put(data, 'latest');
+    } catch (e) {}
+}
+
+// Load Store Data from API with IndexedDB instant fallback and live synchronization
+async function loadStoreDataAndInit() {
+    // 1. Immediately purge any legacy truncated soreva_store_data from localStorage
+    try {
+        localStorage.removeItem('soreva_store_data');
+    } catch (e) {}
+
+    // 2. Instant-render from IndexedDB cache if available
+    try {
+        const cached = await getIdbCachedStoreData();
+        if (cached && cached.products && cached.products.length > 500) {
+            applyStoreData(cached);
+        }
+    } catch (e) {}
+
+    // 3. Fetch latest canonical store-data from backend server (gzipped ~760KB, instant)
     try {
         const resp = await fetch('/api/store-data');
         if (resp.ok) {
             const serverData = await resp.json();
-            try {
-                // Cache top 50 products in localStorage to stay comfortably under the 5MB browser quota
-                const cacheable = { ...serverData, products: (serverData.products || []).slice(0, 50) };
-                localStorage.setItem('soreva_store_data', JSON.stringify(cacheable));
-            } catch (e) {
-                // In-memory data store used for catalogs exceeding localStorage quota
+            if (serverData && serverData.products && serverData.products.length > 0) {
+                applyStoreData(serverData);
+                setIdbCachedStoreData(serverData);
+                return;
             }
-            applyStoreData(serverData);
-            return;
         }
     } catch (err) {
         console.warn("API /api/store-data fetch failed:", err);
     }
 
-    // 3. Fallback to static store-data.json
+    // 4. Fallback to static store-data.json
     try {
         const staticResp = await fetch('/data/store-data.json');
         if (staticResp.ok) {
             const staticData = await staticResp.json();
-            applyStoreData(staticData);
+            if (staticData && staticData.products && staticData.products.length > 0) {
+                applyStoreData(staticData);
+                setIdbCachedStoreData(staticData);
+            }
         }
     } catch (e) {
         console.warn("Static store-data.json fallback failed:", e);
     }
 }
-
-    // 3. Multi-tab live sync: whenever Admin updates data, update storefront immediately
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'soreva_store_data' && e.newValue) {
-            try {
-                const freshData = JSON.parse(e.newValue);
-                applyStoreData(freshData);
-                showToast("Storefront updated with latest catalog changes!");
-            } catch (err) {}
-        }
-    });
-
-    // 4. Also reload on focus in case admin edited in separate window
-    window.addEventListener('focus', () => {
-        const freshCache = localStorage.getItem('soreva_store_data');
-        if (freshCache) {
-            try {
-                applyStoreData(JSON.parse(freshCache));
-            } catch (err) {}
-        }
-    });
 
 // Currency Switcher
 function initCurrencySwitcher() {
@@ -1448,30 +1476,97 @@ window.isProductOutOfStock = isProductOutOfStock;
 
 function matchCategory(p, catKey) {
     if (!catKey || catKey === 'all') return true;
-    if (catKey === 'wristwear' || catKey === 'bracelets') {
-        return p.category === 'wristwear' || p.category === 'bracelets';
+    const normCat = String(catKey).toLowerCase().trim();
+    const pCat = String(p.category || '').toLowerCase().trim();
+    const pSub = String(p.subCategory || '').toLowerCase().trim();
+    const pName = String(p.name || '').toLowerCase();
+
+    if (normCat === 'wristwear' || normCat === 'bracelets') {
+        return pCat === 'wristwear' || pCat === 'bracelets' || pSub.includes('bangle') || pSub.includes('bracelet');
     }
-    if (catKey === 'necklace' || catKey === 'necklaces') {
-        return p.category === 'necklace';
+    if (normCat === 'necklace' || normCat === 'necklaces') {
+        return pCat === 'necklace' || pSub.includes('necklace') || pSub.includes('choker') || pSub.includes('collar');
     }
-    if (catKey === 'earrings') {
-        return p.category === 'earrings';
+    if (normCat === 'earrings') {
+        return pCat === 'earrings' || pSub.includes('earring') || pSub.includes('jhumka') || pSub.includes('stud') || pSub.includes('tops');
     }
-    if (catKey === 'rings' || catKey === 'finger-rings') {
-        return p.category === 'rings';
+    if (normCat === 'rings' || normCat === 'finger-rings') {
+        return pCat === 'rings' || pSub.includes('ring') || pName.includes('ring');
     }
-    if (catKey === 'pendants') {
-        return p.category === 'pendants';
+    if (normCat === 'pendants') {
+        return pCat === 'pendants' || pSub.includes('pendant') || pName.includes('mangalsutra');
     }
-    if (catKey === 'silver' || catKey === 'silver-jewellery') {
-        return p.category === 'silver' || (p.subCategory && p.subCategory.toLowerCase().includes('silver'));
+    if (normCat === 'silver' || normCat === 'silver-jewellery') {
+        return pCat === 'silver' || pSub.includes('silver') || pName.includes('silver') || (p.plating && p.plating.toLowerCase().includes('silver'));
     }
-    if (catKey === 'accessories') {
-        return p.category === 'accessories';
+    if (normCat === 'accessories') {
+        return pCat === 'accessories' || pSub.includes('brooch') || pSub.includes('mangtika') || pSub.includes('tikka') || pSub.includes('accessory');
     }
-    return p.category === catKey;
+    return pCat === normCat;
 }
 window.matchCategory = matchCategory;
+
+function normalizeSubCategoryName(text) {
+    if (!text) return '';
+    let s = String(text).toLowerCase().replace(/&/g, ' and ');
+    s = s.replace(/[^a-z0-9]+/g, ' ');
+    const words = s.split(/\s+/).filter(Boolean).map(w => {
+        if (w.endsWith('es') && w.length > 4) return w.slice(0, -2);
+        if (w.endsWith('s') && !w.endsWith('ss') && w.length > 3) return w.slice(0, -1);
+        return w;
+    });
+    return words.join(' ');
+}
+
+const SUBCATEGORY_SYNONYMS = {
+    'mangtika': ['cz maang tikka', 'maang tikka', 'royal maang tikka', 'mangtika', 'tikka', 'tika'],
+    'cz brooch': ['cz brooch', 'cz brooches', 'artisanal brooches', 'brooch', 'brooches'],
+    'finger ring': ['finger ring', 'cz finger ring', 'statement ring', 'ring'],
+    'cz finger ring': ['finger ring', 'cz finger ring', 'statement ring', 'ring'],
+    '925 sterling finger ring': ['925 sterling silver ring', 'sterling silver ring', '925 sterling finger ring', 'silver ring'],
+    '925 sterling silver pendant': ['925 sterling silver pendant', 'sterling silver pendant', 'silver pendant'],
+    '925 sterling silver earring': ['925 sterling silver earring', 'sterling silver earring', 'silver earring'],
+    'tops and stud': ['essential stud', 'tops and stud', 'tops stud', 'stud', 'tops'],
+    'big size earring': ['big size earring', 'statement earring'],
+    'medium earring': ['medium earring', 'elegant drop'],
+    'small earring': ['small earring', 'minimal earring'],
+    'jhumka earring': ['jhumka earring', 'royal jhumka', 'jhumka'],
+    'traditional necklace': ['traditional necklace', 'traditional set'],
+    'bracelet and ring combo': ['bracelet and ring combo', 'bracelet ring combo', 'bracelets rings combo'],
+    'pendant with broad chain': ['pendant with broad chain', 'pendants with broad chain'],
+    'pendant with medium chain': ['pendant with medium chain', 'pendants with medium chain'],
+    'cz mangalsutra': ['cz mangalsutra', 'mangalsutra']
+};
+
+function matchProductSubCategory(prodSub, targetSub, prodName = '') {
+    if (!targetSub) return true;
+    if (prodSub && prodSub === targetSub) return true;
+
+    const pNorm = normalizeSubCategoryName(prodSub);
+    const tNorm = normalizeSubCategoryName(targetSub);
+    const nNorm = normalizeSubCategoryName(prodName);
+
+    if (pNorm && tNorm && (pNorm === tNorm || pNorm.includes(tNorm) || tNorm.includes(pNorm))) {
+        return true;
+    }
+
+    if (tNorm.includes('mangalsutra') && nNorm.includes('mangalsutra')) {
+        return true;
+    }
+
+    for (const [canon, syns] of Object.entries(SUBCATEGORY_SYNONYMS)) {
+        const cNorm = normalizeSubCategoryName(canon);
+        const allNorms = [cNorm, ...syns.map(normalizeSubCategoryName)];
+        const targetMatches = allNorms.some(s => s === tNorm || tNorm.includes(s));
+        if (targetMatches) {
+            const prodMatches = allNorms.some(s => s === pNorm || pNorm.includes(s));
+            if (prodMatches) return true;
+            if (tNorm.includes('mangalsutra') && nNorm.includes('mangalsutra')) return true;
+        }
+    }
+    return false;
+}
+window.matchProductSubCategory = matchProductSubCategory;
 
 function getAvailableSubCategories(catKey) {
     const subCounts = new Map();
@@ -1536,7 +1631,7 @@ function renderFilterSidebar() {
             subListEl.innerHTML = `<div style="padding: 6px 8px; font-size: 0.8rem; color: #a09890;">No sub categories</div>`;
         } else {
             subListEl.innerHTML = availableSubs.map(sub => {
-                const isSelected = selectedSubCategories.has(sub.name);
+                const isSelected = Array.from(selectedSubCategories).some(target => sub.name === target || matchProductSubCategory(sub.name, target));
                 return `
                     <div class="filter-option-item ${isSelected ? 'selected' : ''}" onclick="toggleSubCategoryFilter('${escapeJs(sub.name)}')">
                         <div class="filter-option-main">
@@ -1771,8 +1866,18 @@ function selectCategoryFilter(catKey) {
 window.selectCategoryFilter = selectCategoryFilter;
 
 function toggleSubCategoryFilter(sub) {
-    if (selectedSubCategories.has(sub)) selectedSubCategories.delete(sub);
-    else selectedSubCategories.add(sub);
+    let matchedExisting = null;
+    for (const existing of selectedSubCategories) {
+        if (existing === sub || matchProductSubCategory(existing, sub)) {
+            matchedExisting = existing;
+            break;
+        }
+    }
+    if (matchedExisting) {
+        selectedSubCategories.delete(matchedExisting);
+    } else {
+        selectedSubCategories.add(sub);
+    }
     catalogCurrentPage = 1;
     renderProducts();
     updateFilterUrl();
@@ -2001,7 +2106,12 @@ function renderProducts(isLoadMore = false) {
 
     // 4. Sub Category Multi-Select Filter
     if (selectedSubCategories.size > 0) {
-        items = items.filter(p => p.subCategory && selectedSubCategories.has(p.subCategory));
+        items = items.filter(p => {
+            for (const sub of selectedSubCategories) {
+                if (matchProductSubCategory(p.subCategory, sub, p.name)) return true;
+            }
+            return false;
+        });
     }
 
     // 5. Plating Colour Multi-Select Filter

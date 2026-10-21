@@ -34,6 +34,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import gzip
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -47,6 +48,26 @@ PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
 ADMIN_CREDS_PATH = os.path.join(DATA_DIR, 'admin-credentials.json')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
 os.makedirs(IMG_CACHE_DIR, exist_ok=True)
+
+_GZIP_STORE_DATA_CACHE = None
+_GZIP_STORE_DATA_MTIME = 0
+
+def get_gzipped_store_data():
+    """Returns pre-compressed gzip bytes of store-data.json for instant ultra-low latency delivery."""
+    global _GZIP_STORE_DATA_CACHE, _GZIP_STORE_DATA_MTIME
+    if not os.path.exists(STORE_DATA_PATH):
+        return None
+    try:
+        mtime = os.path.getmtime(STORE_DATA_PATH)
+        if _GZIP_STORE_DATA_CACHE is None or mtime != _GZIP_STORE_DATA_MTIME:
+            with open(STORE_DATA_PATH, 'rb') as f:
+                raw = f.read()
+            _GZIP_STORE_DATA_CACHE = gzip.compress(raw, compresslevel=6)
+            _GZIP_STORE_DATA_MTIME = mtime
+        return _GZIP_STORE_DATA_CACHE
+    except Exception as e:
+        print(f"[Gzip Compress Error] {e}")
+        return None
 
 def load_dotenv():
     """Load key-value environment variables from .env if present."""
@@ -1579,6 +1600,25 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             if not os.path.exists(STORE_DATA_PATH):
                 self._send_json({"error": "Failed to load store data"}, 500)
                 return
+            accept_enc = self.headers.get('Accept-Encoding', '')
+            if 'gzip' in accept_enc:
+                gz_data = get_gzipped_store_data()
+                if gz_data:
+                    try:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json; charset=utf-8')
+                        self.send_header('Content-Encoding', 'gzip')
+                        self.send_header('Content-Length', str(len(gz_data)))
+                        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                        self._send_cors_headers()
+                        self.end_headers()
+                        self.wfile.write(gz_data)
+                    except (ConnectionResetError, BrokenPipeError):
+                        pass
+                    except Exception as e:
+                        print(f"[Store Data Gzip Stream Error] {e}")
+                    return
+
             try:
                 file_size = os.path.getsize(STORE_DATA_PATH)
                 self.send_response(200)
