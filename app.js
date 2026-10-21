@@ -676,8 +676,9 @@ let announcementInterval = null;
 // Currency Formatter
 // ==========================================
 function formatPrice(inrAmount) {
+    const num = (typeof inrAmount === 'number' && !isNaN(inrAmount)) ? inrAmount : (Number(inrAmount) || 0);
     const cur = (CURRENCIES && CURRENCIES[currentCurrency]) ? CURRENCIES[currentCurrency] : { symbol: '₹', rate: 1 };
-    const converted = inrAmount * cur.rate;
+    const converted = num * cur.rate;
     if (currentCurrency === 'INR') {
         return `₹${Math.round(converted).toLocaleString('en-IN')}`;
     }
@@ -1522,6 +1523,10 @@ function initMobileNav() {
                 </div>
 
                 <div class="mobile-nav-section-title">Discover Sorèva</div>
+                <button type="button" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer(); openCartDrawer();" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                    <span><i class="fa-solid fa-cart-shopping" style="color: var(--gold-accent); margin-right: 10px;"></i> Shopping Cart</span>
+                    <span class="badge-count cart-count-badge" style="position: static; transform: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 0.75rem; border-radius: 50%; background: var(--gold-accent); color: #120e0d; font-weight: 700;">0</span>
+                </button>
                 <a href="catalog.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-gem"></i> All Products Catalog</a>
                 <a href="about-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-landmark"></i> The Maison</a>
                 <a href="contact-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-headset"></i> Customer Concierge</a>
@@ -2702,26 +2707,38 @@ window.renderProducts = renderProducts;
 // Cart State & Slide-Over Drawer
 // ==========================================
 function initCartDrawer() {
-    const openBtns = document.querySelectorAll('.cart-open-btn');
+    if (typeof ensureCartDrawerInDOM === 'function') ensureCartDrawerInDOM();
+
+    const openBtns = document.querySelectorAll('.cart-open-btn, #headerCartBtn');
     const closeBtn = document.getElementById('cartDrawerClose');
     const backdrop = document.getElementById('cartDrawerBackdrop');
-    const drawer = document.getElementById('cartDrawer');
 
     openBtns.forEach(btn => {
+        let lastTouch = 0;
         btn.addEventListener('click', (e) => {
+            if (Date.now() - lastTouch < 500) return;
             e.preventDefault();
-            drawer.classList.add('active');
-            backdrop.classList.add('active');
+            openCartDrawer();
         });
+        btn.addEventListener('touchend', (e) => {
+            lastTouch = Date.now();
+            e.preventDefault();
+            openCartDrawer();
+        }, { passive: false });
     });
 
-    const closeDrawer = () => {
-        drawer.classList.remove('active');
-        backdrop.classList.remove('active');
-    };
-
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-    if (backdrop) backdrop.addEventListener('click', closeDrawer);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeCartDrawer();
+        });
+    }
+    if (backdrop) {
+        backdrop.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeCartDrawer();
+        });
+    }
 
     // Coupon Code submission
     const couponBtn = document.getElementById('applyCouponBtn');
@@ -2742,9 +2759,10 @@ function initCartDrawer() {
 
             const found = couponList.find(c => c.active && c.code.toUpperCase() === code);
             if (found) {
-                const subtotal = cart.reduce((sum, item) => {
-                    const prod = PRODUCTS.find(p => String(p.id) === String(item.productId));
-                    return sum + (prod ? prod.priceINR * item.qty : 0);
+                const subtotal = (cart || []).reduce((sum, item) => {
+                    const prod = (typeof findProductById === 'function') ? findProductById(item.productId) : null;
+                    const price = prod ? (prod.priceINR || 0) : (Number(item.priceINR) || 0);
+                    return sum + (price * (parseInt(item.qty) || 1));
                 }, 0);
 
                 if (found.minSpendINR && subtotal < found.minSpendINR) {
@@ -3019,29 +3037,43 @@ function handleCheckoutClick() {
 }
 window.handleCheckoutClick = handleCheckoutClick;
 
-function handlePdpBuyNow() {
+function handlePdpAddToCart() {
     const urlParams = (typeof URLSearchParams !== "undefined" && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
-    const productId = urlParams ? urlParams.get('id') : null;
-    if (productId) {
-        const prod = (typeof findProductById === 'function') ? findProductById(productId) : (typeof PRODUCTS !== 'undefined' ? PRODUCTS.find(p => p.id === productId || p.sku === productId) : null);
-        if (prod && isProductOutOfStock(prod)) {
-            if (typeof showToast === 'function') showToast("This piece is currently out of stock and cannot be purchased.", "warning");
-            return;
-        }
-    }
-    const addBtn = document.getElementById('pdpAddToCartBtn');
-    if (addBtn && !addBtn.disabled) {
-        addBtn.click();
-    } else {
+    const productId = (window.currentPdpProduct && window.currentPdpProduct.id) || (urlParams ? urlParams.get('id') : null);
+    if (!productId) {
+        if (typeof showToast === 'function') showToast("Product details loading, please try in a moment.", "info");
         return;
     }
-    setTimeout(() => {
-        const drawer = document.getElementById('cartDrawer');
-        const backdrop = document.getElementById('cartDrawerBackdrop');
-        if (drawer) drawer.classList.remove('active');
-        if (backdrop) backdrop.classList.remove('active');
-        openCheckoutModal();
-    }, 180);
+    const prod = (typeof findProductById === 'function') ? findProductById(productId) : (window.currentPdpProduct || null);
+    if (prod && isProductOutOfStock(prod)) {
+        if (typeof showToast === 'function') showToast("This piece is currently out of stock.", "warning");
+        return;
+    }
+    const qtyInput = document.getElementById('pdpQty');
+    const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : 1) || 1);
+    const finish = (prod && prod.plating) ? formatPlating(prod.plating) : '24K Gold';
+    addToCart(productId, finish, qty);
+}
+window.handlePdpAddToCart = handlePdpAddToCart;
+
+function handlePdpBuyNow() {
+    const urlParams = (typeof URLSearchParams !== "undefined" && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
+    const productId = (window.currentPdpProduct && window.currentPdpProduct.id) || (urlParams ? urlParams.get('id') : null);
+    if (!productId) {
+        if (typeof showToast === 'function') showToast("Product details loading, please try in a moment.", "info");
+        return;
+    }
+    const prod = (typeof findProductById === 'function') ? findProductById(productId) : (window.currentPdpProduct || null);
+    if (prod && isProductOutOfStock(prod)) {
+        if (typeof showToast === 'function') showToast("This piece is currently out of stock and cannot be purchased.", "warning");
+        return;
+    }
+    const qtyInput = document.getElementById('pdpQty');
+    const qty = Math.max(1, parseInt(qtyInput ? qtyInput.value : 1) || 1);
+    const finish = (prod && prod.plating) ? formatPlating(prod.plating) : '24K Gold';
+    addToCart(productId, finish, qty, { skipDrawer: true });
+    closeCartDrawer();
+    openCheckoutModal();
 }
 window.handlePdpBuyNow = handlePdpBuyNow;
 
@@ -3052,13 +3084,8 @@ function handleModalBuyNow() {
     }
     const qModal = document.getElementById('quickViewBackdrop');
     if (qModal) qModal.classList.remove('active');
-    setTimeout(() => {
-        const drawer = document.getElementById('cartDrawer');
-        const backdrop = document.getElementById('cartDrawerBackdrop');
-        if (drawer) drawer.classList.remove('active');
-        if (backdrop) backdrop.classList.remove('active');
-        openCheckoutModal();
-    }, 180);
+    closeCartDrawer();
+    openCheckoutModal();
 }
 window.handleModalBuyNow = handleModalBuyNow;
 
@@ -4178,12 +4205,7 @@ async function handleUserLogout() {
 function openCartDrawerFromAccount() {
     const dropdown = document.getElementById('userDropdownMenu');
     if (dropdown) dropdown.classList.remove('active');
-    const drawer = document.getElementById('cartDrawer');
-    const backdrop = document.getElementById('cartDrawerBackdrop');
-    if (drawer && backdrop) {
-        drawer.classList.add('active');
-        backdrop.classList.add('active');
-    }
+    openCartDrawer();
 }
 
 function updateCartAuthBanner() {
@@ -4492,46 +4514,100 @@ async function fetchProductData(pid) {
 }
 window.fetchProductData = fetchProductData;
 
-function openCartDrawer() {
-    const drawer = document.getElementById('cartDrawer');
-    const backdrop = document.getElementById('cartDrawerBackdrop');
-    if (drawer && backdrop) {
-        drawer.classList.add('active');
-        backdrop.classList.add('active');
+function ensureCartDrawerInDOM() {
+    let backdrop = document.getElementById('cartDrawerBackdrop');
+    let drawer = document.getElementById('cartDrawer');
+    if (backdrop && backdrop.parentElement !== document.body) {
+        document.body.appendChild(backdrop);
+    }
+    if (drawer && drawer.parentElement !== document.body) {
+        document.body.appendChild(drawer);
     }
 }
+window.ensureCartDrawerInDOM = ensureCartDrawerInDOM;
+
+function openCartDrawer() {
+    ensureCartDrawerInDOM();
+
+    // Close any conflicting drawers or modals
+    if (typeof closeWishlistDrawer === 'function') closeWishlistDrawer();
+    if (typeof closeMobileNavDrawer === 'function') closeMobileNavDrawer();
+    if (typeof closeQuickView === 'function') closeQuickView();
+    if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
+
+    // Lock page background scrolling
+    document.body.style.overflow = 'hidden';
+
+    // Refresh UI before presenting
+    if (typeof updateCartUI === 'function') updateCartUI();
+
+    const drawer = document.getElementById('cartDrawer');
+    const backdrop = document.getElementById('cartDrawerBackdrop');
+    if (drawer) drawer.classList.add('active');
+    if (backdrop) backdrop.classList.add('active');
+
+    try {
+        window.dispatchEvent(new CustomEvent('soreva:cart-opened', { detail: { count: (cart || []).length } }));
+    } catch(e) {}
+}
+
 function closeCartDrawer() {
     const drawer = document.getElementById('cartDrawer');
     const backdrop = document.getElementById('cartDrawerBackdrop');
-    if (drawer && backdrop) {
-        drawer.classList.remove('active');
-        backdrop.classList.remove('active');
+    if (drawer) drawer.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+
+    // Only restore body overflow if no other modal/drawer is active
+    const qv = document.getElementById('quickViewBackdrop');
+    const chk = document.getElementById('checkoutModalBackdrop');
+    const wl = document.getElementById('wishlistDrawer');
+    const nav = document.getElementById('mobileNavDrawer');
+    const isOtherModalOpen = (qv && qv.classList.contains('active')) ||
+                            (chk && chk.classList.contains('active')) ||
+                            (wl && wl.classList.contains('active')) ||
+                            (nav && nav.classList.contains('active'));
+    if (!isOtherModalOpen) {
+        document.body.style.overflow = '';
     }
+
+    try {
+        window.dispatchEvent(new CustomEvent('soreva:cart-closed'));
+    } catch(e) {}
 }
 window.openCartDrawer = openCartDrawer;
 window.closeCartDrawer = closeCartDrawer;
 
-function addToCart(productId, finish = "24K Gold", quantity = 1) {
+function addToCart(productId, finish = "24K Gold", quantity = 1, options = {}) {
     if (typeof finish === 'number') {
         const temp = finish;
         finish = (typeof quantity === 'string' && quantity) ? quantity : "24K Gold";
         quantity = temp;
     }
+    if (typeof quantity === 'object' && quantity !== null && (!options || Object.keys(options).length === 0)) {
+        options = quantity;
+        quantity = 1;
+    }
     if (!finish || typeof finish !== 'string') finish = "24K Gold";
     if (!quantity || isNaN(quantity) || quantity < 1) quantity = 1;
     const pid = String(productId).trim();
-    const prodCheck = (typeof findProductById === 'function') ? findProductById(pid) : (typeof PRODUCTS !== 'undefined' ? PRODUCTS.find(p => String(p.id).trim() === pid || String(p.sku).trim() === pid) : null);
+
+    // Check in memory or current PDP product
+    const prodCheck = (typeof findProductById === 'function') ? findProductById(pid) :
+        (window.currentPdpProduct && (String(window.currentPdpProduct.id) === pid || String(window.currentPdpProduct.sku) === pid) ? window.currentPdpProduct : null);
+
     if (prodCheck && isProductOutOfStock(prodCheck)) {
         if (typeof showToast === 'function') showToast("Sorry, this item is currently out of stock.", "warning");
         return;
     }
 
-    const prod = (typeof findProductById === 'function') ? findProductById(pid) : null;
+    const prod = (typeof findProductById === 'function') ? findProductById(pid) :
+        (window.currentPdpProduct && (String(window.currentPdpProduct.id) === pid || String(window.currentPdpProduct.sku) === pid) ? window.currentPdpProduct : null);
+
     if (prod && prod.plating && (!finish || finish === "24K Gold" || finish === "gold")) {
         finish = formatPlating(prod.plating);
     }
 
-    const existing = cart.find(item => {
+    const existing = (cart || []).find(item => {
         const itemClean = String(item.productId).replace(/^czm_/, '');
         const pidClean = pid.replace(/^czm_/, '');
         return (String(item.productId) === pid || itemClean === pidClean) && item.finish === finish;
@@ -4540,8 +4616,8 @@ function addToCart(productId, finish = "24K Gold", quantity = 1) {
     if (existing) {
         existing.qty = (parseInt(existing.qty) || 0) + quantity;
         if (prod) {
-            existing.name = prod.name;
-            existing.priceINR = prod.priceINR;
+            if (prod.name) existing.name = prod.name;
+            if (prod.priceINR) existing.priceINR = prod.priceINR;
             if (prod.primaryImg) existing.primaryImg = prod.primaryImg;
         }
     } else {
@@ -4549,17 +4625,19 @@ function addToCart(productId, finish = "24K Gold", quantity = 1) {
             productId: pid,
             finish,
             qty: quantity,
-            name: prod ? prod.name : '',
-            priceINR: prod ? prod.priceINR : 0,
-            primaryImg: prod ? prod.primaryImg : ''
+            name: prod ? (prod.name || 'Bespoke Jewellery Piece') : '',
+            priceINR: prod ? (Number(prod.priceINR) || 0) : 0,
+            primaryImg: prod ? (prod.primaryImg || '') : ''
         });
-        if (!prod && pid) {
+
+        if ((!prod || !prod.name || !prod.priceINR) && pid) {
             fetch(`/api/product?id=${encodeURIComponent(pid)}`).then(r => r.json()).then(data => {
                 if (data && data.success && data.product) {
                     const liveP = data.product;
                     if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) {
                         const idx = PRODUCTS.findIndex(p => String(p.id) === String(liveP.id));
                         if (idx < 0) PRODUCTS.push(liveP);
+                        else PRODUCTS[idx] = liveP;
                     }
                     const itm = cart.find(c => String(c.productId) === pid || String(c.productId).replace(/^czm_/, '') === pid.replace(/^czm_/, ''));
                     if (itm) {
@@ -4581,8 +4659,10 @@ function addToCart(productId, finish = "24K Gold", quantity = 1) {
 
     if (typeof showToast === 'function') showToast("Added to your shopping cart!");
 
-    // Open drawer automatically for smooth feedback
-    openCartDrawer();
+    // Open drawer automatically unless caller explicitly requested skipDrawer (e.g. Buy Now)
+    if (!options || !options.skipDrawer) {
+        openCartDrawer();
+    }
 }
 window.addToCart = addToCart;
 
@@ -4627,8 +4707,10 @@ function updateCartUI() {
     const subtotalEl = document.getElementById('cartSubtotal');
     const discountEl = document.getElementById('cartDiscount');
     const totalEl = document.getElementById('cartTotal');
+    const shippingMeter = document.querySelector('#cartDrawer .shipping-meter');
     const shippingMeterText = document.getElementById('shippingMeterText');
     const shippingProgressFill = document.getElementById('shippingProgressFill');
+    const drawerFooter = document.querySelector('#cartDrawer .drawer-footer');
 
     // Total Count across all items
     const totalItems = (Array.isArray(cart) ? cart : []).reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
@@ -4640,12 +4722,21 @@ function updateCartUI() {
 
     if (!cart || cart.length === 0) {
         list.innerHTML = `
-            <div class="cart-empty-state">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <h4>Your Cart is Empty</h4>
-                <p>Discover our exquisite Cubic Zirconia collections and elevate your everyday style.</p>
+            <div class="cart-empty-state" style="text-align: center; padding: 50px 20px; color: var(--text-muted);">
+                <div style="width: 76px; height: 76px; margin: 0 auto 18px; background: rgba(197, 160, 89, 0.1); border: 1px dashed var(--gold-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-cart-shopping" style="font-size: 2rem; color: var(--gold-accent);"></i>
+                </div>
+                <h4 style="font-family: var(--font-heading); color: var(--theme-color); font-size: 1.3rem; margin-bottom: 8px;">Your Cart is Empty</h4>
+                <p style="font-size: 0.88rem; line-height: 1.6; margin-bottom: 22px; color: var(--text-muted); max-width: 320px; margin-left: auto; margin-right: auto;">
+                    Discover handcrafted Austrian Cubic Zirconia collections sculpted for modern celebrations.
+                </p>
+                <a href="catalog.html" class="btn-primary" onclick="closeCartDrawer()" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; text-decoration: none; font-weight: 600; border-radius: 25px;">
+                    <i class="fa-solid fa-gem"></i> Explore Catalog
+                </a>
             </div>
         `;
+        if (shippingMeter) shippingMeter.style.display = 'none';
+        if (drawerFooter) drawerFooter.style.display = 'none';
         if (subtotalEl) subtotalEl.textContent = formatPrice(0);
         if (discountEl) discountEl.textContent = formatPrice(0);
         if (totalEl) totalEl.textContent = formatPrice(0);
@@ -4653,6 +4744,9 @@ function updateCartUI() {
         if (shippingMeterText) shippingMeterText.textContent = `Add ${formatPrice(FREE_SHIPPING_THRESHOLD_INR)} for Free Express Shipping`;
         return;
     }
+
+    if (shippingMeter) shippingMeter.style.display = 'block';
+    if (drawerFooter) drawerFooter.style.display = 'block';
 
     let subtotalINR = 0;
 
@@ -4683,12 +4777,12 @@ function updateCartUI() {
                     <p class="cart-item-variant">Finish: <strong>${(item.finish || '24K Gold').replace(/</g, '&lt;')}</strong></p>
                     <div class="cart-item-bottom">
                         <div class="cart-qty-control">
-                            <button class="qty-btn" onclick="updateCartQty(${idx}, -1)" aria-label="Decrease quantity">-</button>
+                            <button type="button" class="qty-btn" onclick="updateCartQty(${idx}, -1)" aria-label="Decrease quantity">-</button>
                             <span class="qty-val">${item.qty}</span>
-                            <button class="qty-btn" onclick="updateCartQty(${idx}, 1)" aria-label="Increase quantity">+</button>
+                            <button type="button" class="qty-btn" onclick="updateCartQty(${idx}, 1)" aria-label="Increase quantity">+</button>
                         </div>
                         <span class="cart-item-price">${formatPrice(itemTotalINR)}</span>
-                        <button class="btn-remove-item" onclick="removeFromCart(${idx})" title="Remove item" aria-label="Remove item">
+                        <button type="button" class="btn-remove-item" onclick="removeFromCart(${idx})" title="Remove item" aria-label="Remove item">
                             <i class="fa-regular fa-trash-can"></i>
                         </button>
                     </div>
@@ -6468,11 +6562,7 @@ function renderProductPageContent(product) {
             addBtn.style.color = 'var(--text-dark)';
             addBtn.style.borderColor = 'var(--gold-accent)';
             addBtn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Add to Cart';
-            addBtn.onclick = () => {
-                const qty = parseInt(document.getElementById('pdpQty')?.value) || 1;
-                const finish = formatPlating(product.plating);
-                addToCart(product.id, finish, qty);
-            };
+            addBtn.onclick = handlePdpAddToCart;
         }
         if (buyBtn) {
             buyBtn.disabled = false;

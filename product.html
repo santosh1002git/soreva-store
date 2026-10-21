@@ -273,7 +273,7 @@
                     </div>
                 </div>
 
-<button class="header-action-btn cart-open-btn" aria-label="Shopping Cart" title="Shopping Cart" style="display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.4); border-radius: 20px; transition: all 0.25s; cursor: pointer;">
+                <button type="button" class="header-action-btn cart-open-btn" id="headerCartBtn" onclick="openCartDrawer()" ontouchend="event.preventDefault(); openCartDrawer();" aria-label="Shopping Cart" title="Shopping Cart" style="display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.4); border-radius: 20px; transition: all 0.25s; cursor: pointer;">
                     <i class="fa-solid fa-cart-shopping" style="color: var(--gold-accent); font-size: 0.95rem;"></i>
                     <span style="font-size: 0.84rem; font-weight: 700; color: var(--text-dark); letter-spacing: 0.3px;">Cart</span>
                     <span class="badge-count cart-count-badge" style="position: static; transform: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 0.72rem;">0</span>
@@ -473,7 +473,7 @@
                                     <input type="number" id="pdpQty" value="1" min="1" max="10" readonly style="width:36px; text-align:center; background:none; border:none; color: var(--text-dark); font-weight:bold; font-size:1.05rem;">
                                     <button type="button" onclick="let q=document.getElementById('pdpQty'); if(q.value<10) q.value++;" style="background:none; border:none; color: var(--text-dark); font-size:1.2rem; cursor:pointer; width:34px;">+</button>
                                 </div>
-                                <button type="button" id="pdpAddToCartBtn" class="btn-primary" style="flex: 1; height: 52px; font-size: 1rem; justify-content: center; background: transparent; color: var(--text-dark); border: 2px solid var(--gold-accent);">
+                                <button type="button" id="pdpAddToCartBtn" onclick="handlePdpAddToCart()" class="btn-primary" style="flex: 1; height: 52px; font-size: 1rem; justify-content: center; background: transparent; color: var(--text-dark); border: 2px solid var(--gold-accent); cursor: pointer;">
                                     <i class="fa-solid fa-cart-shopping"></i> Add to Cart
                                 </button>
                                 <button type="button" id="pdpWishlistBtn" class="btn-wishlist-pdp" onclick="handlePdpWishlistClick()" title="Save to Favourites" aria-label="Save to Favourites">
@@ -704,15 +704,15 @@
     </aside>
 
     <!-- CART SLIDE-OVER DRAWER -->
-    <div class="drawer-backdrop" id="cartDrawerBackdrop"></div>
+    <div class="drawer-backdrop" id="cartDrawerBackdrop" onclick="closeCartDrawer()"></div>
     <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping Cart">
         <div class="drawer-header">
             <h3 class="drawer-title">
                 <i class="fa-solid fa-cart-shopping" style="color: var(--gold-accent);"></i>
                 <span>Your Cart</span>
-                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="cart-count-badge">1</span>)</span>
+                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="cart-count-badge">0</span>)</span>
             </h3>
-            <button class="drawer-close-btn" id="cartDrawerClose" aria-label="Close Cart">
+            <button type="button" class="drawer-close-btn" id="cartDrawerClose" onclick="closeCartDrawer()" aria-label="Close Cart">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
