@@ -1607,9 +1607,135 @@ function toggleMobileNavAccordion(button) {
 }
 window.toggleMobileNavAccordion = toggleMobileNavAccordion;
 
+// ==============================================================================
+// CATEGORY MENU DROPDOWNS (TABLET, MOBILE & TOUCH)
+// ==============================================================================
+function closeCategoryNavPopper() {
+    const popper = document.getElementById('categoryNavPopper');
+    const backdrop = document.getElementById('categoryNavPopperBackdrop');
+    if (popper) {
+        popper.classList.remove('active');
+        popper.removeAttribute('data-active-cat');
+    }
+    if (backdrop) backdrop.classList.remove('active');
+    document.querySelectorAll('.cat-nav-link').forEach(l => l.classList.remove('popper-active'));
+    document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('is-open'));
+}
+window.closeCategoryNavPopper = closeCategoryNavPopper;
+
+function openCategoryNavPopper(trigger, menu) {
+    let popper = document.getElementById('categoryNavPopper');
+    let backdrop = document.getElementById('categoryNavPopperBackdrop');
+    if (!popper) {
+        popper = document.createElement('div');
+        popper.id = 'categoryNavPopper';
+        popper.className = 'mobile-category-popper';
+        document.body.appendChild(popper);
+    }
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'categoryNavPopperBackdrop';
+        backdrop.className = 'mobile-category-popper-backdrop';
+        backdrop.onclick = closeCategoryNavPopper;
+        document.body.appendChild(backdrop);
+    }
+
+    const catName = trigger.innerText.trim();
+    popper.setAttribute('data-active-cat', catName);
+
+    // Extract subcategory links from the menu
+    const links = Array.from(menu.querySelectorAll('a'));
+    let linksHtml = '';
+    links.forEach(a => {
+        const href = a.getAttribute('href') || '#';
+        const text = a.innerText.trim();
+        linksHtml += `
+            <a href="${href}" onclick="closeCategoryNavPopper();">
+                <span>${text}</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        `;
+    });
+
+    popper.innerHTML = `
+        <div class="mobile-category-popper-header">
+            <span class="mobile-category-popper-title">${catName}</span>
+            <button type="button" class="mobile-category-popper-close" onclick="closeCategoryNavPopper();" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="mobile-category-popper-items">
+            ${linksHtml}
+        </div>
+    `;
+
+    // Position popper right under the tapped category trigger
+    const rect = trigger.getBoundingClientRect();
+    const popperWidth = Math.min(300, window.innerWidth - 32);
+    let top = rect.bottom + 8;
+    let left = rect.left + (rect.width / 2) - (popperWidth / 2);
+    if (left < 16) left = 16;
+    if (left + popperWidth > window.innerWidth - 16) {
+        left = window.innerWidth - popperWidth - 16;
+    }
+
+    popper.style.width = popperWidth + 'px';
+    popper.style.top = top + 'px';
+    popper.style.left = left + 'px';
+
+    popper.classList.add('active');
+    backdrop.classList.add('active');
+
+    document.querySelectorAll('.cat-nav-link').forEach(l => l.classList.remove('popper-active'));
+    trigger.classList.add('popper-active');
+}
+window.openCategoryNavPopper = openCategoryNavPopper;
+
+function initCategoryDropdowns() {
+    const dropdownItems = document.querySelectorAll('.header-category-bar .nav-dropdown-item');
+    dropdownItems.forEach(item => {
+        const trigger = item.querySelector('.cat-nav-link');
+        const menu = item.querySelector('.nav-dropdown-menu');
+        if (!trigger || !menu) return;
+
+        if (trigger.getAttribute('data-dropdown-bound') === 'true') return;
+        trigger.setAttribute('data-dropdown-bound', 'true');
+
+        trigger.addEventListener('click', (e) => {
+            const isTouchOrMobile = window.innerWidth <= 1024 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (isTouchOrMobile) {
+                const popper = document.getElementById('categoryNavPopper');
+                const catName = trigger.innerText.trim();
+
+                // If already open for this category, let second click navigate
+                if (popper && popper.classList.contains('active') && popper.getAttribute('data-active-cat') === catName) {
+                    closeCategoryNavPopper();
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+                openCategoryNavPopper(trigger, menu);
+            }
+        });
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeCategoryNavPopper();
+    });
+
+    // Close on resize to wide desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1024) closeCategoryNavPopper();
+    });
+}
+window.initCategoryDropdowns = initCategoryDropdowns;
+
 // Header & Sticky behavior
 function initNavigation() {
     initMobileNav();
+    initCategoryDropdowns();
     const header = document.querySelector('.site-header');
     if (header) {
         window.addEventListener('scroll', () => {
