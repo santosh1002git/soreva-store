@@ -2599,7 +2599,7 @@ function renderProducts(isLoadMore = false) {
             const primaryUrl = getOptimizedImgUrl(product.primaryImg);
             const hoverUrl = getOptimizedImgUrl(product.hoverImg);
             return `
-            <div class="product-card ${isProductOutOfStock(product) ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
+            <div class="product-card ${isProductOutOfStock(product) ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="handleProductCardClick(event, '${product.id}')" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
                     <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
@@ -2609,12 +2609,12 @@ function renderProducts(isLoadMore = false) {
                         ${(!isProductOutOfStock(product) && product.launchOffer) ? `<span class="product-badge badge-launch">15% OFF</span>` : ''}
                     </div>
 
-                    <button class="btn-wishlist ${isWishlisted ? 'active' : ''}" data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist('${product.id}')" title="Add to Wishlist">
+                    <button type="button" class="btn-wishlist ${isWishlisted ? 'active' : ''}" data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist('${product.id}')" title="Add to Wishlist">
                         <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                     </button>
 
                     <div class="product-quick-actions" onclick="event.stopPropagation();">
-                        <button class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}')">
+                        <button type="button" class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}', event);" ontouchend="event.stopPropagation(); openQuickView('${product.id}', event);">
                             <i class="fa-regular fa-eye"></i> Quick View
                         </button>
                     </div>
@@ -5055,6 +5055,7 @@ window.handlePdpWishlistClick = handlePdpWishlistClick;
 // ==========================================
 let currentModalProductId = null;
 let currentModalSelectedFinish = "24K Gold";
+let _lastQuickViewOpenTime = 0;
 
 function ensureQuickViewModalInDOM() {
     let modalEl = document.getElementById('quickViewBackdrop');
@@ -5100,7 +5101,7 @@ function ensureQuickViewModalInDOM() {
                             <button type="button" class="btn-buy-now" id="modalBuyNowBtn" onclick="handleModalBuyNow()" style="flex: 1.2; min-width: 170px; padding: 14px; background: linear-gradient(135deg, #c5a059, #967537); color: #120e0d; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <i class="fa-solid fa-shield-halved"></i> Buy Now
                             </button>
-                            <a id="modalFullDetailsBtn" href="#" style="padding: 14px 18px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s;">
+                            <a id="modalFullDetailsBtn" href="#" style="padding: 14px 18px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.25s;">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
                             </a>
                         </div>
@@ -5109,8 +5110,23 @@ function ensureQuickViewModalInDOM() {
             </div>
         `;
         document.body.appendChild(modalEl);
+    } else if (modalEl.parentElement && modalEl.parentElement !== document.body) {
+        // Guaranteed reparenting to document.body so modal is never trapped inside an off-screen drawer
+        document.body.appendChild(modalEl);
     }
 }
+
+function handleProductCardClick(event, productId) {
+    if (event && event.target && event.target.closest) {
+        if (event.target.closest('.curation-quick-btn, .curation-quick-overlay, .btn-quick-view, .product-quick-actions, .curation-wishlist-btn, .btn-wishlist, .curation-add-cart-btn, .btn-add-cart')) {
+            return;
+        }
+    }
+    if (productId) {
+        window.location.href = `product.html?id=${encodeURIComponent(productId)}`;
+    }
+}
+window.handleProductCardClick = handleProductCardClick;
 
 function closeQuickView() {
     const modalBackdrop = document.getElementById('quickViewBackdrop');
@@ -5154,19 +5170,31 @@ function initQuickView() {
     const closeBtn = document.getElementById('modalCloseBtn');
 
     if (closeBtn) {
-        closeBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+        const handleClose = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             closeQuickView();
         };
+        closeBtn.onclick = handleClose;
+        closeBtn.addEventListener('touchend', handleClose, { passive: false });
     }
 
     if (modalBackdrop) {
-        modalBackdrop.onclick = (e) => {
+        const modalInner = modalBackdrop.querySelector('.quickview-modal');
+        if (modalInner) {
+            modalInner.addEventListener('click', (e) => e.stopPropagation());
+            modalInner.addEventListener('touchend', (e) => e.stopPropagation());
+        }
+        const handleBackdropClick = (e) => {
             if (e.target === modalBackdrop) {
+                if (e.cancelable) e.preventDefault();
                 closeQuickView();
             }
         };
+        modalBackdrop.onclick = handleBackdropClick;
+        modalBackdrop.addEventListener('touchend', handleBackdropClick, { passive: false });
     }
 
     // Modal Add to Cart
@@ -5196,13 +5224,24 @@ function initQuickView() {
     });
 }
 
-async function openQuickView(productId) {
+async function openQuickView(productId, evt) {
+    if (evt) {
+        if (evt.stopPropagation) evt.stopPropagation();
+        if (evt.stopImmediatePropagation) evt.stopImmediatePropagation();
+    }
+    const now = Date.now();
+    if (now - _lastQuickViewOpenTime < 380) return; // Prevent double trigger from touchend + click
+    _lastQuickViewOpenTime = now;
+
     if (!productId) return;
     ensureQuickViewModalInDOM();
 
     // Immediately open modal backdrop with scroll lock for instant tactile feedback
     const modalBackdrop = document.getElementById('quickViewBackdrop');
     if (modalBackdrop) {
+        if (modalBackdrop.parentElement && modalBackdrop.parentElement !== document.body) {
+            document.body.appendChild(modalBackdrop);
+        }
         modalBackdrop.style.display = 'flex';
         modalBackdrop.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -6543,7 +6582,7 @@ function renderSimilarProducts(currentProduct) {
         const primaryUrl = getOptimizedImgUrl(product.primaryImg);
         const hoverUrl = getOptimizedImgUrl(product.hoverImg);
         return `
-            <div class="product-card ${oos ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
+            <div class="product-card ${oos ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="handleProductCardClick(event, '${product.id}')" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
                     <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
@@ -6553,12 +6592,12 @@ function renderSimilarProducts(currentProduct) {
                         ${(!oos && product.launchOffer) ? `<span class="product-badge badge-launch">15% OFF</span>` : ''}
                     </div>
 
-                    <button class="btn-wishlist ${isWishlisted ? 'active' : ''}" data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist('${product.id}')" title="Add to Wishlist">
+                    <button type="button" class="btn-wishlist ${isWishlisted ? 'active' : ''}" data-id="${product.id}" onclick="event.stopPropagation(); toggleWishlist('${product.id}')" title="Add to Wishlist">
                         <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                     </button>
 
                     <div class="product-quick-actions" onclick="event.stopPropagation();">
-                        <button class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}')">
+                        <button type="button" class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}', event);" ontouchend="event.stopPropagation(); openQuickView('${product.id}', event);">
                             <i class="fa-regular fa-eye"></i> Quick View
                         </button>
                     </div>
@@ -6824,17 +6863,17 @@ function renderCuratedBadges() {
             const isWishlisted = (typeof wishlist !== 'undefined') && (wishlist.includes(p.id) || wishlist.includes(p.sku));
 
             return `
-                <div class="curation-card" onclick="window.location.href='product.html?id=${p.id}'" role="button" tabindex="0" aria-label="${p.name}">
+                <div class="curation-card" onclick="handleProductCardClick(event, '${p.id}')" role="button" tabindex="0" aria-label="${p.name}">
                     <div class="curation-media-wrap">
                         <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                         <div class="product-badges">
                             <span class="product-badge ${badgeClass}">${badgeIcon}${badgeLabel}</span>
                         </div>
-                        <button class="curation-wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${p.id}'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                        <button type="button" class="curation-wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${p.id}'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
                             <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                         </button>
                         <div class="curation-quick-overlay" onclick="event.stopPropagation();">
-                            <button class="curation-quick-btn" onclick="event.stopPropagation(); openQuickView('${p.id}');">
+                            <button type="button" class="curation-quick-btn" onclick="event.stopPropagation(); openQuickView('${p.id}', event);" ontouchend="event.stopPropagation(); openQuickView('${p.id}', event);">
                                 <i class="fa-regular fa-eye"></i> Quick View
                             </button>
                         </div>
