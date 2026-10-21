@@ -1576,11 +1576,28 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         if parsed.path == '/api/store-data':
-            data = get_stored_data()
-            if data is None:
+            if not os.path.exists(STORE_DATA_PATH):
                 self._send_json({"error": "Failed to load store data"}, 500)
                 return
-            self._send_json(data)
+            try:
+                file_size = os.path.getsize(STORE_DATA_PATH)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(file_size))
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self._send_cors_headers()
+                self.end_headers()
+
+                with open(STORE_DATA_PATH, 'rb') as f:
+                    while True:
+                        chunk = f.read(65536)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+            except (ConnectionResetError, BrokenPipeError):
+                pass
+            except Exception as e:
+                print(f"[Store Data Stream Error] {e}")
             return
 
         # API: Single Product Lookup (Instant PDP and Quick View)

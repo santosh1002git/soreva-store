@@ -19,8 +19,9 @@ let currentCurrency = 'INR';
 
 function getOptimizedImgUrl(url) {
     if (!url || typeof url !== 'string') return '';
-    url = url.trim();
-    if (url.startsWith('/api/img/') || url.startsWith('assets/') || url.startsWith('/assets/')) return url;
+    if (url.startsWith('/api/img/')) return url;
+    if (url.startsWith('assets/')) return '/' + url;
+    if (url.startsWith('/assets/')) return url;
     if (url.includes('/api/img/')) {
         return url.substring(url.indexOf('/api/img/'));
     }
@@ -717,10 +718,21 @@ function renderAnnouncements(announcements) {
 function renderCategories(categories) {
     const container = document.getElementById('categoryGrid');
     if (!container || !categories || !categories.length) return;
-    container.innerHTML = categories.map((cat, idx) => `
+    const fallbackMap = {
+        'necklace': '/assets/categories/necklaces.jpg',
+        'earrings': '/assets/categories/earrings.jpg',
+        'rings': '/assets/categories/rings.jpg',
+        'pendants': '/assets/categories/pendants.jpg',
+        'wristwear': '/assets/categories/wristwear.jpg',
+        'silver': '/assets/categories/silver.jpg',
+        'accessories': '/assets/categories/accessories.jpg'
+    };
+    container.innerHTML = categories.map((cat, idx) => {
+        const fallback = fallbackMap[cat.slug] || '/assets/categories/necklaces.jpg';
+        return `
         <a href="catalog.html?cat=${cat.slug}" class="category-card" aria-label="${cat.name}">
             <div class="category-img-wrap">
-                <img class="category-img" src="${getOptimizedImgUrl(cat.image)}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
+                <img class="category-img" src="${getOptimizedImgUrl(cat.image)}" alt="${cat.name}" onerror="this.onerror=null; this.src='${fallback}';">
                 <div class="category-overlay-gradient"></div>
                 <span class="category-number-badge">${String(idx + 1).padStart(2, '0')}</span>
             </div>
@@ -733,7 +745,8 @@ function renderCategories(categories) {
                 </div>
             </div>
         </a>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // Category filter helper (for card clicks)

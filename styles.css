@@ -738,6 +738,9 @@ ul {
     height: 100%;
     object-fit: cover;
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+    display: block;
+    color: transparent;
+    background: #181312;
 }
 
 .category-card:hover .category-img {
