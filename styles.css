@@ -4214,16 +4214,18 @@ html.skip-intro .logo-intro-experience {
 #quickViewBackdrop {
     position: fixed !important;
     inset: 0 !important;
-    background: rgba(24, 20, 19, 0.82) !important;
+    background: rgba(20, 16, 15, 0.84) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 9999980 !important;
+    z-index: 1000020 !important;
     display: none;
     align-items: center !important;
     justify-content: center !important;
     padding: 20px !important;
     opacity: 0;
     visibility: hidden;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
     transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
@@ -4236,14 +4238,56 @@ html.skip-intro .logo-intro-experience {
 
 #quickViewBackdrop .quickview-modal {
     position: relative !important;
-    z-index: 9999985 !important;
-    background: #fbf8f5;
+    z-index: 1000025 !important;
+    background: #ffffff;
     width: 100%;
     max-width: 860px;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     border-radius: var(--radius-md);
-    overflow: hidden;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(197, 160, 89, 0.2);
     border: 1px solid rgba(197, 160, 89, 0.35);
+    margin: auto;
+}
+
+@media (max-width: 768px) {
+    #quickViewBackdrop {
+        padding: 10px 8px !important;
+        align-items: flex-end !important;
+    }
+    #quickViewBackdrop .quickview-modal {
+        max-height: 88vh !important;
+        border-radius: 20px 20px 0 0 !important;
+        padding-bottom: 24px !important;
+    }
+    .quickview-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .modal-gallery {
+        padding: 16px 16px 6px !important;
+    }
+    .modal-main-img {
+        max-height: 240px !important;
+        object-fit: contain !important;
+    }
+    .modal-details {
+        padding: 10px 16px 20px !important;
+    }
+    .modal-title {
+        font-size: 1.35rem !important;
+        line-height: 1.3 !important;
+    }
+    .modal-close-btn {
+        top: 10px !important;
+        right: 10px !important;
+        width: 36px !important;
+        height: 36px !important;
+        background: #ffffff !important;
+        color: #241e1d !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.18) !important;
+        z-index: 30 !important;
+    }
 }
 
 /* ==========================================
@@ -5743,48 +5787,231 @@ button:disabled.btn-out-of-stock {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
+    .catalog-layout {
+        gap: 0 !important;
+    }
     .catalog-sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 320px;
-        max-width: 86vw;
-        max-height: 100vh;
-        border-radius: 0;
-        z-index: 10002;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        box-shadow: 4px 0 30px rgba(0,0,0,0.25);
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 320px !important;
+        max-width: 86vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        z-index: 100005 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 6px 0 35px rgba(0,0,0,0.35) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: #ffffff !important;
+        padding: 20px 18px !important;
     }
     .catalog-sidebar.active {
-        transform: translateX(0);
+        transform: translateX(0) !important;
+    }
+    .sidebar-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding-bottom: 14px !important;
+        margin-bottom: 12px !important;
+        border-bottom: 1.5px solid #ede7df !important;
+        flex-shrink: 0 !important;
     }
     .sidebar-close-btn {
-        display: block;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 50% !important;
+        background: #f4ede4 !important;
+        border: none !important;
+        color: var(--theme-color, #241e1d) !important;
+        font-size: 1.1rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+    .sidebar-close-btn:hover {
+        background: var(--gold-accent, #c5a059) !important;
+        color: #ffffff !important;
+    }
+    .sidebar-scrollable-content {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-right: 6px !important;
+        overscroll-behavior: contain !important;
     }
     .sidebar-mobile-footer {
-        display: block;
+        display: block !important;
+        flex-shrink: 0 !important;
+        padding: 12px 0 4px !important;
+        margin-top: 8px !important;
+        border-top: 1px solid #ede7df !important;
+        background: #ffffff !important;
     }
     .catalog-sidebar-backdrop {
         display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        backdrop-filter: blur(4px);
-        z-index: 10001;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(20, 16, 15, 0.75) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        z-index: 100004 !important;
     }
     .catalog-sidebar-backdrop.active {
-        display: block;
+        display: block !important;
     }
     .mobile-filter-btn {
-        display: inline-flex;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 9px 16px !important;
+        border-radius: 24px !important;
+        background: var(--theme-color, #241e1d) !important;
+        color: #ffffff !important;
+        font-size: 0.86rem !important;
+        font-weight: 700 !important;
+        border: 1.5px solid rgba(197, 160, 89, 0.45) !important;
+        cursor: pointer !important;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15) !important;
+        transition: all 0.2s ease !important;
+    }
+    .mobile-filter-btn:hover,
+    .mobile-filter-btn:active {
+        background: #38302e !important;
+        border-color: var(--gold-accent, #c5a059) !important;
+    }
+    .mobile-filter-btn i {
+        color: var(--gold-accent, #c5a059) !important;
     }
     .catalog-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
     }
+
+    /* Quick View Always Tappable on Mobile & Tablet */
+    .product-quick-actions {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        bottom: 8px !important;
+        left: 8px !important;
+        right: 8px !important;
+        display: flex !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+        z-index: 5 !important;
+    }
+    .btn-quick-view {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 6px 12px !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.4px !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(197, 160, 89, 0.5) !important;
+        border-radius: 20px !important;
+        color: #241e1d !important;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16) !important;
+        cursor: pointer !important;
+        width: auto !important;
+    }
+    .btn-quick-view:active {
+        transform: scale(0.96);
+        background: #c5a059 !important;
+        color: #ffffff !important;
+    }
+    .btn-quick-view i {
+        color: #c5a059 !important;
+    }
+    .btn-quick-view:active i {
+        color: #ffffff !important;
+    }
+
+    .curation-quick-overlay {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        bottom: 8px !important;
+        display: flex !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+        z-index: 5 !important;
+    }
+    .curation-quick-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.4px !important;
+        background: rgba(255, 255, 255, 0.94) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(197, 160, 89, 0.5) !important;
+        border-radius: 20px !important;
+        color: #241e1d !important;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16) !important;
+        cursor: pointer !important;
+    }
+    .curation-quick-btn:active {
+        transform: scale(0.96);
+        background: #c5a059 !important;
+        color: #ffffff !important;
+    }
+}
+
+/* Mobile Quick Category Filter Pills */
+.mobile-quick-filter-pills {
+    display: none;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 14px;
+    margin-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.mobile-quick-filter-pills::-webkit-scrollbar {
+    display: none;
+}
+@media (max-width: 1024px) {
+    .mobile-quick-filter-pills {
+        display: flex;
+    }
+}
+.quick-pill {
+    flex: 0 0 auto;
+    padding: 7px 16px;
+    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid #e5ded5;
+    color: var(--theme-color, #241e1d);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.quick-pill:hover,
+.quick-pill.active {
+    background: var(--gold-accent, #c5a059);
+    border-color: var(--gold-accent, #c5a059);
+    color: #1a1615;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(197, 160, 89, 0.35);
 }
 
 @media (max-width: 580px) {
