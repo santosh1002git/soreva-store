@@ -1328,8 +1328,288 @@ function initCurrencySwitcher() {
     });
 }
 
+function switchCurrency(currencyCode) {
+    if (CURRENCIES && CURRENCIES[currencyCode]) {
+        currentCurrency = currencyCode;
+        const label = document.getElementById('currentCurrencyLabel');
+        if (label) label.textContent = currencyCode;
+        document.querySelectorAll('.currency-option').forEach(o => {
+            o.classList.toggle('active', o.dataset.currency === currencyCode);
+        });
+        document.querySelectorAll('.mobile-currency-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.currency === currencyCode);
+        });
+        if (typeof renderProducts === 'function') renderProducts();
+        if (typeof updateCartUI === 'function') updateCartUI();
+        if (typeof updateHeroUI === 'function') updateHeroUI();
+        if (typeof renderCuratedBadges === 'function') renderCuratedBadges();
+        if (typeof initProductPage === 'function') initProductPage();
+        if (typeof showToast === 'function') showToast(`Currency set to ${CURRENCIES[currencyCode].label}`);
+    }
+}
+window.switchCurrency = switchCurrency;
+
+// Mobile Navigation Drawer System
+function initMobileNav() {
+    let backdrop = document.getElementById('mobileNavBackdrop');
+    let drawer = document.getElementById('mobileNavDrawer');
+
+    if (!drawer) {
+        if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'mobileNavBackdrop';
+            backdrop.className = 'mobile-nav-backdrop';
+            backdrop.onclick = closeMobileNavDrawer;
+            document.body.appendChild(backdrop);
+        }
+
+        drawer = document.createElement('aside');
+        drawer.id = 'mobileNavDrawer';
+        drawer.className = 'mobile-nav-drawer';
+        drawer.setAttribute('aria-label', 'Mobile Navigation');
+
+        drawer.innerHTML = `
+            <div class="mobile-drawer-header">
+                <div class="mobile-drawer-brand">
+                    <img src="assets/logo-white.png" alt="Sorèva" class="mobile-drawer-logo" onerror="this.onerror=null; this.src='assets/logo-black.png';">
+                    <span class="mobile-drawer-tagline">Haute Joaillerie</span>
+                </div>
+                <button type="button" class="mobile-drawer-close" id="mobileNavClose" onclick="closeMobileNavDrawer()" aria-label="Close Navigation">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="mobile-drawer-body">
+                <div class="mobile-nav-section-title">Jewellery Collections</div>
+
+                <!-- 1. Necklaces -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-gem"></i> Necklaces
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">5,000+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=necklace" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Choker%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Choker Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Collar%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Collar Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Classic%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Classic Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Bridal%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Bridal Necklaces</a>
+                        <a href="catalog.html?cat=necklace&sub=Aurous%20Collection" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Aurous Collection</a>
+                        <a href="catalog.html?cat=necklace&sub=Traditional%20Necklaces" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Traditional Sets</a>
+                    </div>
+                </div>
+
+                <!-- 2. Earrings -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-sparkles"></i> Earrings
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">2,500+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Earrings</a>
+                        <a href="catalog.html?cat=earrings&sub=Jhumka%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Royal Jhumkas</a>
+                        <a href="catalog.html?cat=earrings&sub=Big%20Size%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Statement Earrings</a>
+                        <a href="catalog.html?cat=earrings&sub=Medium%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Elegant Drops</a>
+                        <a href="catalog.html?cat=earrings&sub=Tops%20%26%20Studs" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Tops &amp; Studs</a>
+                        <a href="catalog.html?cat=earrings&sub=Small%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Minimal Earrings</a>
+                    </div>
+                </div>
+
+                <!-- 3. Finger Rings -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-ring"></i> Finger Rings
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">1,100+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Finger Rings</a>
+                        <a href="catalog.html?cat=rings&sub=CZ%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Statement Rings</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
+                    </div>
+                </div>
+
+                <!-- 4. Pendants -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-certificate"></i> Pendants
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">800+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Pendants</a>
+                        <a href="catalog.html?cat=pendants&sub=CZ%20Pendant%20Sets" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Pendant Sets</a>
+                        <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Medium%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Medium Chain</a>
+                        <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Broad%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Broad Chain</a>
+                        <a href="catalog.html?cat=pendants&sub=CZ%20Mangalsutra" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Mangalsutra</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
+                    </div>
+                </div>
+
+                <!-- 5. Wristwear -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-circle-notch"></i> Wristwear
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">1,700+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=wristwear" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Wristwear</a>
+                        <a href="catalog.html?cat=wristwear&sub=CZ%20Bangles" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Bangles</a>
+                        <a href="catalog.html?cat=wristwear&sub=CZ%20Bracelets" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Bracelets</a>
+                        <a href="catalog.html?cat=wristwear&sub=Bracelets%20%26%20Rings%20Combo" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Hathphool &amp; Ring Combos</a>
+                    </div>
+                </div>
+
+                <!-- 6. Silver Jewellery -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-shield-halved"></i> Silver Jewellery
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">925 Pure</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=silver" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">925 Sterling Masterpieces</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
+                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Earrings</a>
+                    </div>
+                </div>
+
+                <!-- 7. Accessories -->
+                <div class="mobile-nav-acc-item">
+                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
+                        <span class="mobile-nav-acc-title">
+                            <i class="fa-solid fa-crown"></i> Accessories
+                        </span>
+                        <span class="mobile-nav-acc-meta">
+                            <span class="mobile-nav-badge">300+</span>
+                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
+                        </span>
+                    </button>
+                    <div class="mobile-nav-acc-body">
+                        <a href="catalog.html?cat=accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Accessories</a>
+                        <a href="catalog.html?cat=accessories&sub=Mangtika" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Royal Maang Tikka</a>
+                        <a href="catalog.html?cat=accessories&sub=CZ%20Brooches" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Artisanal Brooches</a>
+                        <a href="catalog.html?cat=accessories&sub=CZ%20Accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Hair &amp; Couture Accessories</a>
+                    </div>
+                </div>
+
+                <div class="mobile-nav-section-title">Discover Sorèva</div>
+                <a href="catalog.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-gem"></i> All Products Catalog</a>
+                <a href="about-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-landmark"></i> The Maison</a>
+                <a href="contact-us.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-headset"></i> Customer Concierge</a>
+                <a href="shipping-delivery-policy.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-truck-fast"></i> Shipping &amp; Delivery</a>
+                <a href="return-exchange-policy.html" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer()"><i class="fa-solid fa-rotate-left"></i> Returns &amp; Exchanges</a>
+            </div>
+
+            <!-- Currency Selection -->
+            <div class="mobile-drawer-currency-wrap">
+                <span class="mobile-drawer-currency-label">Select Currency</span>
+                <div class="mobile-drawer-currency-grid">
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'INR' ? 'active' : ''}" data-currency="INR" onclick="switchCurrency('INR')">INR (₹)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'USD' ? 'active' : ''}" data-currency="USD" onclick="switchCurrency('USD')">USD ($)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'AED' ? 'active' : ''}" data-currency="AED" onclick="switchCurrency('AED')">AED (د.إ)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'GBP' ? 'active' : ''}" data-currency="GBP" onclick="switchCurrency('GBP')">GBP (£)</button>
+                    <button type="button" class="mobile-currency-btn ${currentCurrency === 'EUR' ? 'active' : ''}" data-currency="EUR" onclick="switchCurrency('EUR')">EUR (€)</button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mobile-drawer-footer">
+                <button type="button" class="btn-luxury-primary" onclick="closeMobileNavDrawer(); handleHeaderAuthClick(event);" style="width: 100%; justify-content: center; font-size: 0.88rem; padding: 11px;">
+                    <i class="fa-regular fa-user"></i> <span id="mobileDrawerAuthText">Client Sign In / Portal</span>
+                </button>
+                <div class="mobile-drawer-contact-row">
+                    <span>Care: <a href="tel:+919741118940"><i class="fa-solid fa-phone"></i> +91 97411 18940</a></span>
+                    <a href="mailto:support@soreva.in"><i class="fa-solid fa-envelope"></i> support@soreva.in</a>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(drawer);
+    }
+
+    // Touch swipe left on drawer to close
+    let touchStartX = 0;
+    drawer.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    drawer.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        if (touchStartX - touchEndX > 70) {
+            closeMobileNavDrawer();
+        }
+    }, { passive: true });
+}
+window.initMobileNav = initMobileNav;
+
+function openMobileNavDrawer() {
+    initMobileNav();
+    const backdrop = document.getElementById('mobileNavBackdrop');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (backdrop) backdrop.classList.add('active');
+    if (drawer) drawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+window.openMobileNavDrawer = openMobileNavDrawer;
+
+function closeMobileNavDrawer() {
+    const backdrop = document.getElementById('mobileNavBackdrop');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (backdrop) backdrop.classList.remove('active');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = '';
+}
+window.closeMobileNavDrawer = closeMobileNavDrawer;
+
+function toggleMobileNavDrawer() {
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (drawer && drawer.classList.contains('active')) {
+        closeMobileNavDrawer();
+    } else {
+        openMobileNavDrawer();
+    }
+}
+window.toggleMobileNavDrawer = toggleMobileNavDrawer;
+
+function toggleMobileNavAccordion(button) {
+    const item = button.closest('.mobile-nav-acc-item');
+    if (item) {
+        item.classList.toggle('open');
+    }
+}
+window.toggleMobileNavAccordion = toggleMobileNavAccordion;
+
 // Header & Sticky behavior
 function initNavigation() {
+    initMobileNav();
     const header = document.querySelector('.site-header');
     if (header) {
         window.addEventListener('scroll', () => {
@@ -5610,6 +5890,29 @@ function initPatreonHero() {
         heroSection.addEventListener('mouseleave', () => {
             startHeroAutoSlide();
         });
+
+        // Touch swipe for mobile and tablet devices
+        let heroTouchStartX = 0;
+        let heroTouchStartY = 0;
+        heroSection.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
+                heroTouchStartX = e.touches[0].clientX;
+                heroTouchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+        heroSection.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches[0]) {
+                const diffX = heroTouchStartX - e.changedTouches[0].clientX;
+                const diffY = heroTouchStartY - e.changedTouches[0].clientY;
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                    if (diffX > 0) {
+                        handleNext();
+                    } else {
+                        handlePrev();
+                    }
+                }
+            }
+        }, { passive: true });
         
         heroListenersBound = true;
     }
@@ -6449,6 +6752,7 @@ window.addEventListener('keydown', (e) => {
         if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
         if (typeof closeCartDrawer === 'function') closeCartDrawer();
         if (typeof closeWishlistDrawer === 'function') closeWishlistDrawer();
+        if (typeof closeMobileNavDrawer === 'function') closeMobileNavDrawer();
     }
 });
 

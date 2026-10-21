@@ -5,7 +5,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Contact Us • Sorèva Luxury Jewellery Concierge</title>
     <meta name="description" content="Contact Sorèva Customer Concierge. Connect with our dedicated styling advisors, track orders, or send an inquiry to support@soreva.in. Available Monday to Saturday, 10 AM – 6 PM IST.">
 
@@ -21,7 +21,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
 
     <!-- Custom Stylesheet (Theme Core) -->
-    <link rel="stylesheet" href="styles.css?v=v11_quickview">
+    <link rel="stylesheet" href="styles.css?v=mobile_v1">
 
     <style>
         /* ==========================================================================
@@ -757,7 +757,11 @@
     <header class="site-header">
         <div class="header-main container">
             <!-- Left Navigation Menu -->
-            <nav class="header-nav-left" aria-label="Main Navigation"></nav>
+            <nav class="header-nav-left" aria-label="Main Navigation">
+                <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" onclick="toggleMobileNavDrawer()" aria-label="Open Navigation Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </nav>
 
             <!-- Brand Logo -->
             <div class="header-brand">
@@ -1464,7 +1468,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=similar_prod_v1"></script>
+    <script src="app.js?v=mobile_v1"></script>
 
     <!-- Interactive Scripts for Contact Us Page -->
     <script>

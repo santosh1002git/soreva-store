@@ -5,7 +5,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Sorèva - Exquisite Cubic Zirconia Jewellery for Every Occasion</title>
     <meta name="description" content="Discover Sorèva — premium CZ jewellery designed to make every day feel special. Shop elegant necklaces, earrings, rings, pendants and wristwear.">
 
@@ -21,7 +21,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
 
     <!-- Custom Stylesheet with Cache-Buster -->
-    <link rel="stylesheet" href="styles.css?v=v31_pdp_quickview_final">
+    <link rel="stylesheet" href="styles.css?v=mobile_v1">
 
     <!-- Inline Critical Styles for Intro Screen (Guarantees zero-delay rendering without cache issues) -->
     <style>
@@ -199,7 +199,11 @@ window.addEventListener('error', function(e) {
     <header class="site-header">
         <div class="header-main container">
             <!-- Left Navigation Menu -->
-            <nav class="header-nav-left" aria-label="Main Navigation"></nav>
+            <nav class="header-nav-left" aria-label="Main Navigation">
+                <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" onclick="toggleMobileNavDrawer()" aria-label="Open Navigation Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </nav>
 
             <!-- Brand Logo (Soreva) -->
             <div class="header-brand">
@@ -2168,11 +2172,7 @@ window.addEventListener('error', function(e) {
 
         <!-- Wishlist Items List -->
         <div class="cart-items-list" id="wishlistItemsList" style="flex: 1; overflow-y: auto;">
-            <!-- Rendered by app.js?v=similar_prod_v1 -->
-        </div>
-
-        <!-- Wishlist Drawer Footer -->
-        <div class="drawer-footer" id="wishlistDrawerFooter" style="padding: 20px 24px; border-top: 1px solid var(--border-color); background: #fff;">
+            <!-- Rendered by app.js?v=mobile_v1"drawer-footer" id="wishlistDrawerFooter" style="padding: 20px 24px; border-top: 1px solid var(--border-color); background: #fff;">
             <button type="button" class="btn-checkout" id="moveAllWishlistBtn" onclick="moveAllWishlistToBag()" style="cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: 700; background: var(--gold-accent); color: #241e1d; border: none; border-radius: var(--radius-sm); margin-bottom: 10px; transition: all 0.25s;">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span>Move All to Shopping Cart</span>
@@ -2209,11 +2209,7 @@ window.addEventListener('error', function(e) {
 
         <!-- Cart Items List -->
         <div class="cart-items-list" id="cartItemsList">
-            <!-- Rendered by app.js?v=similar_prod_v1 -->
-        </div>
-
-        <!-- Cart Drawer Footer -->
-        <div class="drawer-footer">
+            <!-- Rendered by app.js?v=mobile_v1"drawer-footer">
             <div class="coupon-box">
                 <input type="text" id="couponCodeInput" class="coupon-input" placeholder="Coupon Code (Try LAUNCH15)">
                 <button class="btn-apply-coupon" id="applyCouponBtn">Apply</button>
@@ -2618,7 +2614,7 @@ window.addEventListener('error', function(e) {
         </div>
     </div>
 
-    <script src="app.js?v=v33_img_stream_fix"></script>
+    <script src="app.js?v=mobile_v1"></script>
 
     </body>
 </html>
