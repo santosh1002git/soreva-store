@@ -857,7 +857,7 @@
                 </a>
 
                 <!-- Wishlist Button -->
-                <button class="header-action-btn wishlist-open-btn" onclick="openWishlistDrawer()" aria-label="Saved Favourites" title="Saved Favourites">
+                <button type="button" class="header-action-btn wishlist-open-btn" id="headerWishlistBtn" onclick="openWishlistDrawer()" ontouchend="event.preventDefault(); openWishlistDrawer();" aria-label="Saved Favourites" title="Saved Favourites">
                     <i class="fa-regular fa-heart"></i>
                     <span class="badge-count wishlist-count-badge">0</span>
                 </button>
@@ -879,6 +879,12 @@
                             </div>
                         </div>
                         <ul class="user-dropdown-items">
+                            <li>
+                                <button type="button" class="user-dropdown-link" onclick="openWishlistDrawer()">
+                                    <i class="fa-regular fa-heart" style="color: #e02424;"></i>
+                                    <span>Saved Favourites (<strong class="wishlist-count-badge">0</strong>)</span>
+                                </button>
+                            </li>
                             <li>
                                 <button type="button" class="user-dropdown-link" onclick="openCartDrawerFromAccount()">
                                     <i class="fa-solid fa-cart-shopping"></i>

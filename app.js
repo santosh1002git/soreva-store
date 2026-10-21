@@ -1523,6 +1523,10 @@ function initMobileNav() {
                 </div>
 
                 <div class="mobile-nav-section-title">Discover Sorèva</div>
+                <button type="button" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer(); openWishlistDrawer();" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                    <span><i class="fa-solid fa-heart" style="color: #e02424; margin-right: 10px;"></i> Saved Favourites</span>
+                    <span class="badge-count wishlist-count-badge" style="position: static; transform: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 0.75rem; border-radius: 50%; background: rgba(224, 36, 36, 0.12); color: #e02424; border: 1px solid rgba(224, 36, 36, 0.3); font-weight: 700;">0</span>
+                </button>
                 <button type="button" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer(); openCartDrawer();" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
                     <span><i class="fa-solid fa-cart-shopping" style="color: var(--gold-accent); margin-right: 10px;"></i> Shopping Cart</span>
                     <span class="badge-count cart-count-badge" style="position: static; transform: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 0.75rem; border-radius: 50%; background: var(--gold-accent); color: #120e0d; font-weight: 700;">0</span>
@@ -4827,12 +4831,13 @@ window.updateCartUI = updateCartUI;
 
 // ==========================================
 // ==========================================
+// ==========================================
 // Wishlist Engine (Persistent Drawer & Favourites)
 // ==========================================
 function toggleWishlist(productId) {
     if (!productId) return;
-    const pStr = String(productId);
-    const idx = wishlist.findIndex(id => String(id) === pStr);
+    const pStr = String(productId).trim();
+    const idx = wishlist.findIndex(id => String(id).trim() === pStr);
     let added = false;
 
     if (idx > -1) {
@@ -4850,9 +4855,11 @@ function toggleWishlist(productId) {
 
     updateWishlistUI();
 
-    // Update heart icons on all matching buttons
-    document.querySelectorAll(`[data-wishlist-id="${pStr}"], .btn-wishlist[data-id="${pStr}"]`).forEach(btn => {
+    // Update heart icons on all matching buttons across DOM
+    document.querySelectorAll(`[data-wishlist-id="${pStr}"], .btn-wishlist[data-id="${pStr}"], .curation-wishlist-btn[data-id="${pStr}"]`).forEach(btn => {
         btn.classList.toggle('active', added);
+        btn.setAttribute('title', added ? 'Remove from Wishlist' : 'Add to Wishlist');
+        btn.setAttribute('aria-label', added ? 'Remove from Wishlist' : 'Add to Wishlist');
         const icon = btn.querySelector('i');
         if (icon) {
             icon.className = added ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
@@ -4862,10 +4869,22 @@ function toggleWishlist(productId) {
     const pdpWishBtn = document.getElementById('pdpWishlistBtn');
     if (pdpWishBtn) {
         const urlParams = (typeof URLSearchParams !== "undefined" && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
-        const currentPdpId = urlParams.get('id');
-        if (currentPdpId && String(currentPdpId) === pStr) {
+        const currentPdpId = urlParams ? urlParams.get('id') : (window.currentPdpProduct ? window.currentPdpProduct.id : null);
+        if (currentPdpId && (String(currentPdpId).trim() === pStr || (window.currentPdpProduct && String(window.currentPdpProduct.sku).trim() === pStr))) {
             pdpWishBtn.classList.toggle('active', added);
+            pdpWishBtn.setAttribute('title', added ? 'Remove from Favourites' : 'Save to Favourites');
             const icon = pdpWishBtn.querySelector('i');
+            if (icon) icon.className = added ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+        }
+    }
+
+    const modalWishBtn = document.getElementById('modalWishlistBtn');
+    if (modalWishBtn) {
+        const modalPid = modalWishBtn.getAttribute('data-id');
+        if (modalPid && String(modalPid).trim() === pStr) {
+            modalWishBtn.classList.toggle('active', added);
+            modalWishBtn.setAttribute('title', added ? 'Remove from Favourites' : 'Save to Favourites');
+            const icon = modalWishBtn.querySelector('i');
             if (icon) icon.className = added ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
         }
     }
@@ -4875,6 +4894,8 @@ function toggleWishlist(productId) {
     if (drawer && drawer.classList.contains('active')) {
         renderWishlistItems();
     }
+
+    window.dispatchEvent(new CustomEvent('soreva:wishlist-updated', { detail: { count: wishlist.length, added, productId: pStr } }));
 }
 
 function updateWishlistUI() {
@@ -4884,12 +4905,14 @@ function updateWishlistUI() {
         b.textContent = count;
     });
 
-    document.querySelectorAll('.btn-wishlist').forEach(btn => {
-        const id = btn.getAttribute('data-id') || btn.dataset.id;
+    // Update all card wishlist buttons
+    document.querySelectorAll('.btn-wishlist, .curation-wishlist-btn').forEach(btn => {
+        const id = btn.getAttribute('data-id') || btn.dataset.id || btn.getAttribute('data-wishlist-id');
         if (id) {
-            const isFav = wishlist.some(w => String(w) === String(id));
+            const isFav = wishlist.some(w => String(w).trim() === String(id).trim());
             btn.classList.toggle('active', isFav);
             btn.setAttribute('title', isFav ? 'Remove from Wishlist' : 'Add to Wishlist');
+            btn.setAttribute('aria-label', isFav ? 'Remove from Wishlist' : 'Add to Wishlist');
             const icon = btn.querySelector('i');
             if (icon) {
                 icon.className = isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
@@ -4900,12 +4923,26 @@ function updateWishlistUI() {
     const pdpWishBtn = document.getElementById('pdpWishlistBtn');
     if (pdpWishBtn) {
         const urlParams = (typeof URLSearchParams !== "undefined" && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
-        const currentPdpId = urlParams ? urlParams.get('id') : null;
+        const currentPdpId = urlParams ? urlParams.get('id') : (window.currentPdpProduct ? window.currentPdpProduct.id : null);
         if (currentPdpId) {
-            const isFav = wishlist.some(w => String(w) === String(currentPdpId));
+            const isFav = wishlist.some(w => String(w).trim() === String(currentPdpId).trim() || (window.currentPdpProduct && String(w).trim() === String(window.currentPdpProduct.sku).trim()));
             pdpWishBtn.classList.toggle('active', isFav);
             pdpWishBtn.setAttribute('title', isFav ? 'Remove from Favourites' : 'Save to Favourites');
             const icon = pdpWishBtn.querySelector('i');
+            if (icon) {
+                icon.className = isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+            }
+        }
+    }
+
+    const modalWishBtn = document.getElementById('modalWishlistBtn');
+    if (modalWishBtn) {
+        const modalPid = modalWishBtn.getAttribute('data-id');
+        if (modalPid) {
+            const isFav = wishlist.some(w => String(w).trim() === String(modalPid).trim());
+            modalWishBtn.classList.toggle('active', isFav);
+            modalWishBtn.setAttribute('title', isFav ? 'Remove from Favourites' : 'Save to Favourites');
+            const icon = modalWishBtn.querySelector('i');
             if (icon) {
                 icon.className = isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
             }
@@ -4922,19 +4959,48 @@ function openWishlistDrawer() {
     if (cartDrawer) cartDrawer.classList.remove('active');
     if (cartBackdrop) cartBackdrop.classList.remove('active');
 
+    // Dismiss other overlays
+    if (typeof closeMobileNavDrawer === 'function') closeMobileNavDrawer();
+    if (typeof closeQuickView === 'function') closeQuickView();
+    if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
+
     renderWishlistItems();
 
     const drawer = document.getElementById('wishlistDrawer');
     const backdrop = document.getElementById('wishlistDrawerBackdrop');
-    if (drawer) drawer.classList.add('active');
-    if (backdrop) backdrop.classList.add('active');
+    if (drawer) {
+        drawer.classList.add('active');
+        drawer.setAttribute('aria-hidden', 'false');
+    }
+    if (backdrop) {
+        backdrop.classList.add('active');
+        backdrop.setAttribute('aria-hidden', 'false');
+    }
+
+    try {
+        document.body.style.overflow = 'hidden';
+    } catch (e) {}
+
+    window.dispatchEvent(new CustomEvent('soreva:wishlist-opened', { detail: { count: (wishlist || []).length } }));
 }
 
 function closeWishlistDrawer() {
     const drawer = document.getElementById('wishlistDrawer');
     const backdrop = document.getElementById('wishlistDrawerBackdrop');
-    if (drawer) drawer.classList.remove('active');
-    if (backdrop) backdrop.classList.remove('active');
+    if (drawer) {
+        drawer.classList.remove('active');
+        drawer.setAttribute('aria-hidden', 'true');
+    }
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        backdrop.setAttribute('aria-hidden', 'true');
+    }
+
+    try {
+        document.body.style.overflow = '';
+    } catch (e) {}
+
+    window.dispatchEvent(new CustomEvent('soreva:wishlist-closed'));
 }
 
 function renderWishlistItems() {
@@ -4948,11 +5014,11 @@ function renderWishlistItems() {
                 <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: rgba(197, 160, 89, 0.1); border: 1px dashed var(--gold-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fa-regular fa-heart" style="font-size: 2.2rem; color: var(--gold-accent);"></i>
                 </div>
-                <h4 style="font-family: var(--font-heading); color: var(--theme-color); font-size: 1.3rem; margin-bottom: 8px;">Your Wishlist is Empty</h4>
+                <h4 style="font-family: var(--font-heading); color: var(--theme-color); font-size: 1.3rem; margin-bottom: 8px;">Your Favourites List is Empty</h4>
                 <p style="font-size: 0.88rem; line-height: 1.6; margin-bottom: 24px; color: var(--text-muted);">
                     You haven't saved any jewellery pieces yet. Explore our handcrafted fine collections and tap the heart icon to save your favourites.
                 </p>
-                <a href="catalog.html" class="btn-primary" onclick="closeWishlistDrawer()" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; text-decoration: none; font-weight: 600;">
+                <a href="catalog.html" class="btn-primary" onclick="closeWishlistDrawer()" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; text-decoration: none; font-weight: 600; border-radius: 6px;">
                     <i class="fa-solid fa-gem"></i> Explore Catalog
                 </a>
             </div>
@@ -4964,25 +5030,25 @@ function renderWishlistItems() {
     if (footerEl) footerEl.style.display = 'block';
 
     const itemsHtml = wishlist.map(id => {
-        const prod = (PRODUCTS || []).find(p => String(p.id) === String(id) || String(p.sku) === String(id));
+        const prod = (typeof findProductById === 'function') ? findProductById(id) : ((PRODUCTS || []).find(p => String(p.id).trim() === String(id).trim() || String(p.sku).trim() === String(id).trim()));
         if (!prod) {
             return `
-                <div class="cart-item wishlist-item" id="wishlist-item-${id}" style="display: flex; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border-color); align-items: center;">
-                    <div style="width: 64px; height: 64px; border-radius: 6px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center;">
-                        <i class="fa-solid fa-gem" style="color: var(--gold-accent);"></i>
+                <div class="cart-item wishlist-item" id="wishlist-item-${id}" style="display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); align-items: center;">
+                    <div style="width: 68px; height: 68px; border-radius: 8px; background: rgba(197, 160, 89, 0.08); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                        <i class="fa-solid fa-gem" style="color: var(--gold-accent); font-size: 1.4rem;"></i>
                     </div>
-                    <div class="cart-item-details" style="flex: 1;">
-                        <h4 class="cart-item-title" style="font-size: 0.9rem; margin: 0 0 4px;">Jewellery Piece</h4>
-                        <span class="cart-item-variant" style="font-size: 0.78rem; color: var(--text-muted);">SKU: ${id}</span>
+                    <div class="cart-item-details" style="flex: 1; min-width: 0;">
+                        <h4 class="cart-item-title" style="font-size: 0.92rem; font-weight: 600; color: var(--theme-color); margin: 0 0 4px;">Sorèva Fine Jewel</h4>
+                        <span class="cart-item-variant" style="font-size: 0.78rem; color: var(--text-muted); display: block;">SKU: ${escapeHtml(id)}</span>
                     </div>
-                    <button type="button" onclick="toggleWishlist('${id}')" title="Remove" style="background: none; border: none; color: #e53935; cursor: pointer; padding: 8px;">
+                    <button type="button" onclick="toggleWishlist('${id}')" title="Remove from Favourites" style="background: none; border: none; color: #e53935; cursor: pointer; padding: 8px; font-size: 0.95rem;">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
             `;
         }
 
-        const priceFormatted = formatPrice(prod.priceINR);
+        const priceFormatted = formatPrice(prod.priceINR || 0);
         const originalPriceFormatted = prod.originalPriceINR ? formatPrice(prod.originalPriceINR) : '';
         const img = getOptimizedImgUrl(prod.primaryImg) || 'assets/categories/wristwear.jpg';
         const finish = (prod.availableFinishes && prod.availableFinishes[0]) || (prod.plating || '24K Gold');
@@ -4990,21 +5056,21 @@ function renderWishlistItems() {
 
         return `
             <div class="cart-item wishlist-item" id="wishlist-item-${prod.id}" style="display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); align-items: center;">
-                <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="display: block; width: 72px; height: 72px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #fff;">
-                    <img src="${img}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
+                <a href="product.html?id=${encodeURIComponent(prod.id)}" onclick="closeWishlistDrawer()" style="display: block; width: 72px; height: 72px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #fff;">
+                    <img src="${img}" alt="${escapeHtml(prod.name)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
                 </a>
                 <div class="cart-item-details" style="flex: 1; min-width: 0;">
-                    <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="text-decoration: none; color: inherit;">
-                        <h4 class="cart-item-title" style="font-size: 0.92rem; font-weight: 600; color: var(--theme-color); margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${prod.name}</h4>
+                    <a href="product.html?id=${encodeURIComponent(prod.id)}" onclick="closeWishlistDrawer()" style="text-decoration: none; color: inherit;">
+                        <h4 class="cart-item-title" style="font-size: 0.92rem; font-weight: 600; color: var(--theme-color); margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(prod.name)}</h4>
                     </a>
-                    <span class="cart-item-variant" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Finish: ${finish} • <span style="text-transform: capitalize;">${prod.category || 'Jewellery'}</span></span>
+                    <span class="cart-item-variant" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Finish: ${formatPlating(finish)} • <span style="text-transform: capitalize;">${escapeHtml(prod.category || 'Jewellery')}</span></span>
                     <div style="display: flex; align-items: baseline; gap: 8px;">
                         <span class="cart-item-price" style="font-size: 0.95rem; font-weight: 700; color: var(--theme-color);">${priceFormatted}</span>
                         ${originalPriceFormatted ? `<span style="font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted);">${originalPriceFormatted}</span>` : ''}
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-                    <button type="button" class="btn-primary btn-sm" onclick="moveWishlistToBag('${prod.id}', '${finish}')" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;" ${!inStock ? 'disabled style="opacity: 0.5;"' : ''}>
+                    <button type="button" class="btn-primary btn-sm btn-wishlist-move" onclick="moveWishlistToBag('${prod.id}', '${finish}')" style="padding: 7px 12px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; cursor: pointer;" ${!inStock ? 'disabled style="opacity: 0.5;"' : ''}>
                         <i class="fa-solid fa-cart-shopping"></i> ${inStock ? 'Move to Cart' : 'Out of Stock'}
                     </button>
                     <button type="button" onclick="toggleWishlist('${prod.id}')" title="Remove from Favourites" style="background: none; border: none; color: var(--text-muted); font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 4px;">
@@ -5019,11 +5085,12 @@ function renderWishlistItems() {
 }
 
 function moveWishlistToBag(productId, finish) {
-    addToCart(productId, finish || "24K Gold", 1);
+    if (!productId) return;
+    addToCart(productId, finish || "24K Gold", 1, { skipDrawer: true });
 
     // Remove from wishlist
-    const pStr = String(productId);
-    const idx = wishlist.findIndex(id => String(id) === pStr);
+    const pStr = String(productId).trim();
+    const idx = wishlist.findIndex(id => String(id).trim() === pStr);
     if (idx > -1) {
         wishlist.splice(idx, 1);
         try {
@@ -5032,8 +5099,12 @@ function moveWishlistToBag(productId, finish) {
         updateWishlistUI();
     }
 
-    renderWishlistItems();
-    showToast("Moved piece from favourites to your shopping cart!");
+    closeWishlistDrawer();
+
+    setTimeout(() => {
+        openCartDrawer();
+        showToast("Moved piece from favourites to your shopping cart!");
+    }, 200);
 }
 
 function moveAllWishlistToBag() {
@@ -5041,10 +5112,10 @@ function moveAllWishlistToBag() {
 
     let addedCount = 0;
     wishlist.forEach(id => {
-        const prod = (PRODUCTS || []).find(p => String(p.id) === String(id) || String(p.sku) === String(id));
+        const prod = (typeof findProductById === 'function') ? findProductById(id) : ((PRODUCTS || []).find(p => String(p.id).trim() === String(id).trim() || String(p.sku).trim() === String(id).trim()));
         if (prod) {
             const finish = (prod.availableFinishes && prod.availableFinishes[0]) || (prod.plating || '24K Gold');
-            addToCart(prod.id, finish, 1);
+            addToCart(prod.id, finish, 1, { skipDrawer: true });
             addedCount++;
         }
     });
@@ -5057,80 +5128,111 @@ function moveAllWishlistToBag() {
     closeWishlistDrawer();
 
     setTimeout(() => {
-        const cartDrawer = document.getElementById('cartDrawer');
-        const cartBackdrop = document.getElementById('cartDrawerBackdrop');
-        if (cartDrawer && cartBackdrop) {
-            cartDrawer.classList.add('active');
-            cartBackdrop.classList.add('active');
-        }
+        openCartDrawer();
         showToast(`${addedCount} piece(s) moved to your Shopping Cart!`);
     }, 250);
 }
 
 function initWishlistDrawer() {
     ensureWishlistDrawerInDOM();
-    const openBtns = document.querySelectorAll('.wishlist-open-btn');
+    const openBtns = document.querySelectorAll('.wishlist-open-btn, #headerWishlistBtn');
     openBtns.forEach(btn => {
         btn.onclick = (e) => {
+            e.preventDefault();
+            openWishlistDrawer();
+        };
+        btn.ontouchend = (e) => {
             e.preventDefault();
             openWishlistDrawer();
         };
     });
 
     const closeBtn = document.getElementById('wishlistDrawerClose');
-    if (closeBtn) closeBtn.onclick = closeWishlistDrawer;
+    if (closeBtn) {
+        closeBtn.onclick = closeWishlistDrawer;
+        closeBtn.ontouchend = (e) => { e.preventDefault(); closeWishlistDrawer(); };
+    }
 
     const backdrop = document.getElementById('wishlistDrawerBackdrop');
-    if (backdrop) backdrop.onclick = closeWishlistDrawer;
+    if (backdrop) {
+        backdrop.onclick = closeWishlistDrawer;
+        backdrop.ontouchend = (e) => { e.preventDefault(); closeWishlistDrawer(); };
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const drawer = document.getElementById('wishlistDrawer');
+            if (drawer && drawer.classList.contains('active')) {
+                closeWishlistDrawer();
+            }
+        }
+    });
 
     updateWishlistUI();
 }
 
 function ensureWishlistDrawerInDOM() {
-    if (document.getElementById('wishlistDrawer')) return;
+    let backdropEl = document.getElementById('wishlistDrawerBackdrop');
+    let drawerEl = document.getElementById('wishlistDrawer');
 
-    const backdropEl = document.createElement('div');
-    backdropEl.className = 'drawer-backdrop';
-    backdropEl.id = 'wishlistDrawerBackdrop';
-    backdropEl.onclick = closeWishlistDrawer;
-    document.body.appendChild(backdropEl);
+    if (!backdropEl) {
+        backdropEl = document.createElement('div');
+        backdropEl.className = 'drawer-backdrop';
+        backdropEl.id = 'wishlistDrawerBackdrop';
+        backdropEl.onclick = closeWishlistDrawer;
+        backdropEl.ontouchend = (e) => { e.preventDefault(); closeWishlistDrawer(); };
+        document.body.appendChild(backdropEl);
+    } else if (backdropEl.parentElement !== document.body) {
+        document.body.appendChild(backdropEl);
+    }
 
-    const drawerEl = document.createElement('aside');
-    drawerEl.className = 'cart-drawer wishlist-drawer';
-    drawerEl.id = 'wishlistDrawer';
-    drawerEl.setAttribute('aria-label', 'Saved Favourites');
-    drawerEl.innerHTML = `
-        <div class="drawer-header">
-            <h3 class="drawer-title">
-                <i class="fa-solid fa-heart" style="color: var(--gold-accent);"></i>
-                <span>Saved Favourites</span>
-                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="wishlist-count-badge">0</span>)</span>
-            </h3>
-            <button type="button" class="drawer-close-btn" id="wishlistDrawerClose" onclick="closeWishlistDrawer()" aria-label="Close Favourites">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
+    if (!drawerEl) {
+        drawerEl = document.createElement('aside');
+        drawerEl.className = 'cart-drawer wishlist-drawer';
+        drawerEl.id = 'wishlistDrawer';
+        drawerEl.setAttribute('aria-label', 'Saved Favourites');
+        drawerEl.innerHTML = `
+            <div class="drawer-header">
+                <h3 class="drawer-title">
+                    <i class="fa-solid fa-heart" style="color: #e02424;"></i>
+                    <span>Saved Favourites</span>
+                    <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="wishlist-count-badge">0</span>)</span>
+                </h3>
+                <button type="button" class="drawer-close-btn" id="wishlistDrawerClose" onclick="closeWishlistDrawer()" ontouchend="event.preventDefault(); closeWishlistDrawer();" aria-label="Close Favourites">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-        <div class="cart-items-list" id="wishlistItemsList" style="flex: 1; overflow-y: auto;"></div>
+            <div class="cart-items-list" id="wishlistItemsList" style="flex: 1; overflow-y: auto;"></div>
 
-        <div class="drawer-footer" id="wishlistDrawerFooter" style="padding: 20px 24px; border-top: 1px solid var(--border-color); background: #fff;">
-            <button type="button" class="btn-checkout" id="moveAllWishlistBtn" onclick="moveAllWishlistToBag()" style="cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: 700; background: var(--gold-accent); color: #241e1d; border: none; border-radius: var(--radius-sm); margin-bottom: 10px;">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span>Move All to Shopping Cart</span>
-            </button>
-            <button type="button" class="btn-outline" onclick="closeWishlistDrawer()" style="width: 100%; padding: 10px; font-size: 0.85rem; border: 1px solid var(--border-color); background: transparent; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-muted);">
-                Continue Browsing
-            </button>
-        </div>
-    `;
-    document.body.appendChild(drawerEl);
+            <div class="drawer-footer" id="wishlistDrawerFooter" style="padding: 20px 24px; border-top: 1px solid var(--border-color); background: #fff;">
+                <button type="button" class="btn-checkout" id="moveAllWishlistBtn" onclick="moveAllWishlistToBag()" style="cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: 700; background: var(--gold-accent); color: #241e1d; border: none; border-radius: var(--radius-sm); margin-bottom: 10px;">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>Move All to Shopping Cart</span>
+                </button>
+                <button type="button" class="btn-outline" onclick="closeWishlistDrawer()" style="width: 100%; padding: 10px; font-size: 0.85rem; border: 1px solid var(--border-color); background: transparent; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-muted);">
+                    Continue Browsing
+                </button>
+            </div>
+        `;
+        document.body.appendChild(drawerEl);
+    } else if (drawerEl.parentElement !== document.body) {
+        document.body.appendChild(drawerEl);
+    }
 }
 
 function handlePdpWishlistClick() {
     const urlParams = (typeof URLSearchParams !== "undefined" && window.location && window.location.search) ? new URLSearchParams(window.location.search) : null;
-    const productId = urlParams.get('id');
-    if (productId) {
-        toggleWishlist(productId);
+    const productId = urlParams ? urlParams.get('id') : (window.currentPdpProduct ? window.currentPdpProduct.id : null);
+    const pid = productId || (window.currentPdpProduct ? (window.currentPdpProduct.id || window.currentPdpProduct.sku) : null);
+    if (pid) {
+        toggleWishlist(pid);
+    }
+}
+
+function handleModalWishlistClick() {
+    if (typeof currentModalProductId !== 'undefined' && currentModalProductId) {
+        toggleWishlist(currentModalProductId);
     }
 }
 
@@ -5143,6 +5245,21 @@ window.moveWishlistToBag = moveWishlistToBag;
 window.moveAllWishlistToBag = moveAllWishlistToBag;
 window.initWishlistDrawer = initWishlistDrawer;
 window.handlePdpWishlistClick = handlePdpWishlistClick;
+window.handleModalWishlistClick = handleModalWishlistClick;
+window.getWishlist = () => wishlist;
+try {
+    Object.defineProperty(window, 'wishlist', {
+        get: () => wishlist,
+        set: (val) => {
+            wishlist = Array.isArray(val) ? val.map(String) : [];
+            try { localStorage.setItem('soreva_wishlist', JSON.stringify(wishlist)); } catch (e) {}
+            updateWishlistUI();
+        },
+        configurable: true
+    });
+} catch (e) {
+    window.wishlist = wishlist;
+}
 
 // ==========================================
 // Quick View Modal
@@ -5194,6 +5311,9 @@ function ensureQuickViewModalInDOM() {
                             </button>
                             <button type="button" class="btn-buy-now" id="modalBuyNowBtn" onclick="handleModalBuyNow()" style="flex: 1.2; min-width: 170px; padding: 14px; background: linear-gradient(135deg, #c5a059, #967537); color: #120e0d; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <i class="fa-solid fa-shield-halved"></i> Buy Now
+                            </button>
+                            <button type="button" class="btn-wishlist-modal" id="modalWishlistBtn" onclick="handleModalWishlistClick()" title="Save to Favourites" aria-label="Save to Favourites">
+                                <i class="fa-regular fa-heart"></i>
                             </button>
                             <a id="modalFullDetailsBtn" href="#" style="padding: 14px 18px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.25s;">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
@@ -5491,6 +5611,18 @@ function populateQuickViewModal(product) {
 
     const qtyInput = document.getElementById('modalQtyInput');
     if (qtyInput) qtyInput.value = 1;
+
+    // Sync Quick View modal Wishlist / Favourite button
+    const modalWishBtn = document.getElementById('modalWishlistBtn');
+    if (modalWishBtn) {
+        modalWishBtn.setAttribute('data-id', pid);
+        const isFav = (wishlist || []).some(w => String(w).trim() === pid);
+        modalWishBtn.classList.toggle('active', isFav);
+        modalWishBtn.setAttribute('title', isFav ? 'Remove from Favourites' : 'Save to Favourites');
+        modalWishBtn.setAttribute('aria-label', isFav ? 'Remove from Favourites' : 'Save to Favourites');
+        const icon = modalWishBtn.querySelector('i');
+        if (icon) icon.className = isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+    }
 
     if (modalBackdrop) {
         modalBackdrop.style.display = 'flex';
@@ -6959,7 +7091,7 @@ function renderCuratedBadges() {
                         <div class="product-badges">
                             <span class="product-badge ${badgeClass}">${badgeIcon}${badgeLabel}</span>
                         </div>
-                        <button type="button" class="curation-wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${p.id}'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                        <button type="button" class="curation-wishlist-btn btn-wishlist ${isWishlisted ? 'active' : ''}" data-id="${p.id}" onclick="event.stopPropagation(); toggleWishlist('${p.id}');" title="Save to Wishlist" aria-label="Save to Wishlist">
                             <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                         </button>
                         <div class="curation-quick-overlay" onclick="event.stopPropagation();">
