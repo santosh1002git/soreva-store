@@ -1532,7 +1532,9 @@ const SUBCATEGORY_SYNONYMS = {
     'small earring': ['small earring', 'minimal earring'],
     'jhumka earring': ['jhumka earring', 'royal jhumka', 'jhumka'],
     'traditional necklace': ['traditional necklace', 'traditional set'],
-    'bracelet and ring combo': ['bracelet and ring combo', 'bracelet ring combo', 'bracelets rings combo'],
+    'choker necklace': ['choker necklace', 'choker', 'chokers', 'royal choker'],
+    'cz accessory': ['cz accessory', 'cz accessories', 'hair and couture accessories', 'hair accessories', 'couture accessories', 'accessories'],
+    'bracelet and ring combo': ['bracelet and ring combo', 'bracelet ring combo', 'bracelets rings combo', 'hathphool'],
     'pendant with broad chain': ['pendant with broad chain', 'pendants with broad chain'],
     'pendant with medium chain': ['pendant with medium chain', 'pendants with medium chain'],
     'cz mangalsutra': ['cz mangalsutra', 'mangalsutra']
