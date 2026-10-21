@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Admin Stylesheet -->
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="admin.css?v=v23_bulk_disable">
 </head>
 <body>
 
@@ -88,6 +88,16 @@
                     <i class="fa-solid fa-receipt"></i>
                     <span>Orders & Sales</span>
                     <span class="badge-count" id="countBadgeOrders">4</span>
+                </button>
+                <button class="nav-item" data-tab="payments" id="navItemPayments">
+                    <i class="fa-solid fa-credit-card"></i>
+                    <span>Payment Gateway</span>
+                    <span class="badge-count" id="countBadgePayments" style="background: rgba(197,160,89,0.25); color: var(--gold-light);">RZP</span>
+                </button>
+                <button class="nav-item" data-tab="notifications" id="navItemNotifications">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Email & WhatsApp</span>
+                    <span class="badge-count" id="countBadgeNotifications" style="background: rgba(37,211,102,0.2); color: #25D366;">Alerts</span>
                 </button>
                 <button class="nav-item" data-tab="inventory">
                     <i class="fa-solid fa-boxes-stacked"></i>
@@ -270,6 +280,21 @@
                     </div>
 
                     <!-- QUICK ACTIONS & SYSTEM INFO -->
+                    <!-- EXCLUSIVE DATA GUARANTEE BANNER -->
+                    <div class="admin-card" style="margin-bottom: 24px; padding: 18px 22px; background: rgba(37,211,102,0.06); border: 1px solid rgba(37,211,102,0.3); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(37,211,102,0.15); display: flex; align-items: center; justify-content: center; color: #25D366; font-size: 1.3rem;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <strong style="color: #fff; font-size: 1rem; display: block;">Sorèva Exclusive Customer & Order Isolation Active</strong>
+                                <span style="font-size: 0.82rem; color: var(--admin-muted); display: block; margin-top: 3px;">
+                                    Catalog synchronizers strictly target <code>products</code> and <code>inventory</code> collections. All customer identities, saved profiles, and order sales records are completely exclusive to Sorèva and are strictly immune from external supplier syncing.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="overview-dual-grid">
                         <div class="admin-card">
                             <div class="card-header">
@@ -361,11 +386,11 @@
                         <table class="admin-table" id="ordersTable">
                             <thead>
                                 <tr>
-                                    <th>Order #</th>
-                                    <th>Customer</th>
+                                    <th>Order # & Date</th>
+                                    <th>Customer & Contact</th>
+                                    <th>Shipping Destination</th>
                                     <th>Items Purchased</th>
-                                    <th>Total (INR)</th>
-                                    <th>Payment</th>
+                                    <th>Total & Method</th>
                                     <th>Status</th>
                                     <th style="text-align: right;">Fulfill / Actions</th>
                                 </tr>
@@ -381,30 +406,87 @@
                 <section class="tab-panel" id="panel-inventory">
                     <div class="panel-header-row">
                         <div>
-                            <h3>Stock & Inventory Control (<span id="inventoryCountHeader">8</span> Items)</h3>
+                            <h3>Stock & Inventory Control (<span id="inventoryCountHeader">11,568</span> Items)</h3>
                             <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-admin-outline" onclick="fetchInventory()"><i class="fa-solid fa-rotate"></i> Sync Stock</button>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer;" title="Delete all out of stock products">
+                                <i class="fa-solid fa-trash-can"></i> Delete Out of Stock
+                            </button>
+                            <button class="btn-admin-primary" id="btnOpenCoworkerStock" onclick="openCzmCoworkerModal()" style="background: linear-gradient(135deg, #18181b, #27272a); border: 1px solid rgba(197,160,89,0.4); color: #fef08a;"><i class="fa-solid fa-robot"></i> Stock Co-Worker</button>
+                            <button class="btn-admin-outline" id="btnCzmLogin" onclick="openCzmLoginModal()" style="color: #6366f1; border-color: rgba(99,102,241,0.3);"><i class="fa-solid fa-right-to-bracket"></i> CZMakers Auth</button>
                         </div>
                     </div>
 
-                    <!-- Inventory summary pills -->
+                    <!-- Inventory summary pills (Clickable quick filters) -->
                     <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
-                            <div class="metric-data"><span class="metric-num" id="invSummaryTotalUnits">108</span><span class="metric-label">Total Units</span></div>
+                        <div class="metric-card" onclick="filterInventoryByStatus('all')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Show all inventory">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryTotalUnits">0</span><span class="metric-label">Total Units</span></div>
                         </div>
-                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
-                            <div class="metric-data"><span class="metric-num" id="invSummaryInStock" style="color: #81c784;">7</span><span class="metric-label">In Stock</span></div>
+                        <div class="metric-card" onclick="filterInventoryByStatus('in_stock')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Filter by In Stock items">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryInStock" style="color: #81c784;">0</span><span class="metric-label">In Stock</span></div>
                         </div>
-                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
-                            <div class="metric-data"><span class="metric-num" id="invSummaryLowStock" style="color: #ffb74d;">1</span><span class="metric-label">Low Stock Alert</span></div>
+                        <div class="metric-card" onclick="filterInventoryByStatus('low_stock')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Filter by Low Stock Alert items">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryLowStock" style="color: #ffb74d;">0</span><span class="metric-label">Low Stock Alert</span></div>
                         </div>
-                        <div class="metric-card" style="padding: 16px; flex: 1; min-width: 160px;">
+                        <div class="metric-card" onclick="filterInventoryByStatus('out_of_stock')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Filter by Out of Stock items">
                             <div class="metric-data"><span class="metric-num" id="invSummaryOutOfStock" style="color: #ef9a9a;">0</span><span class="metric-label">Out of Stock</span></div>
                         </div>
                     </div>
 
+                    <!-- INVENTORY SEARCH & FILTER TOOLBAR -->
+                    <div class="admin-card" style="margin-bottom: 20px; padding: 16px 20px;">
+                        <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                            <div style="flex: 1; min-width: 260px; position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--admin-muted);"></i>
+                                <input type="text" id="inventorySearchInput" class="admin-input" placeholder="Search inventory by piece name, SKU or ID..." style="padding-left: 38px; width: 100%;" oninput="handleInventoryFilter(true)">
+                            </div>
+                            <div style="min-width: 170px;">
+                                <select id="inventoryCategoryFilter" class="admin-select" onchange="onInventoryCategoryChange()">
+                                    <option value="all">All Categories</option>
+                                    <option value="necklace">Necklaces</option>
+                                    <option value="wristwear">Wristwear</option>
+                                    <option value="earrings">Earrings</option>
+                                    <option value="rings">Finger Rings</option>
+                                    <option value="pendants">Pendants</option>
+                                    <option value="silver">Silver Jewellery</option>
+                                    <option value="accessories">Accessories</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 175px;">
+                                <select id="inventorySubCategoryFilter" class="admin-select" onchange="handleInventoryFilter(true)">
+                                    <option value="all">All Sub-Categories</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 180px;">
+                                <select id="inventoryStatusFilter" class="admin-select" onchange="handleInventoryFilter(true)">
+                                    <option value="all">All Availability Statuses</option>
+                                    <option value="in_stock">In Stock (&gt; Threshold)</option>
+                                    <option value="low_stock">⚠️ Low Stock Alert</option>
+                                    <option value="out_of_stock">❌ Out of Stock (0 units)</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 175px;">
+                                <select id="inventorySortFilter" class="admin-select" onchange="handleInventoryFilter(true)">
+                                    <option value="default">Sort: Default</option>
+                                    <option value="recently_refreshed">🔄 Recently Refreshed</option>
+                                    <option value="newest_added">✨ Newest Added</option>
+                                    <option value="stock_desc">📦 Stock: High to Low</option>
+                                    <option value="stock_asc">⚠️ Stock: Low to High</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 130px;">
+                                <select id="inventoryPageSize" class="admin-select" onchange="handleInventoryFilter(true)">
+                                    <option value="50">50 per page</option>
+                                    <option value="100">100 per page</option>
+                                    <option value="200">200 per page</option>
+                                    <option value="500">500 per page</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INVENTORY TABLE -->
                     <div class="products-admin-table-wrap">
                         <table class="admin-table" id="inventoryTable">
                             <thead>
@@ -412,16 +494,36 @@
                                     <th>Product / Piece</th>
                                     <th>SKU</th>
                                     <th>Category</th>
+                                    <th>Sub-Category</th>
                                     <th>Stock Units</th>
                                     <th>Low Threshold</th>
                                     <th>Availability Status</th>
+                                    <th style="white-space: nowrap;"><i class="fa-regular fa-clock" style="color: var(--gold); margin-right: 4px;"></i> Last Refreshed</th>
                                     <th style="text-align: right;">Adjust Stock</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody">
-                                <!-- Rendered dynamically -->
+                                <!-- Rendered dynamically with pagination -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- PAGINATION BAR -->
+                    <div class="pagination-bar" id="inventoryPaginationBar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding: 12px 18px; background: var="--admin-surface"; border: 1px solid var(--admin-border); border-radius: 8px;">
+                        <div style="font-size: 0.85rem; color: var(--admin-muted);">
+                            Showing <strong id="invPageStart" style="color: var(--admin-text);">0</strong> to <strong id="invPageEnd" style="color: var(--admin-text);">0</strong> of <strong id="invTotalFiltered" style="color: var(--gold);">0</strong> items
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="btn-admin-outline btn-sm" id="btnInvPrevPage" onclick="changeInventoryPage(-1)" disabled>
+                                <i class="fa-solid fa-chevron-left"></i> Previous
+                            </button>
+                            <span style="font-size: 0.85rem; color: var(--admin-text); padding: 0 8px;">
+                                Page <strong id="invCurrentPage">1</strong> of <strong id="invTotalPages">1</strong>
+                            </span>
+                            <button type="button" class="btn-admin-outline btn-sm" id="btnInvNextPage" onclick="changeInventoryPage(1)">
+                                Next <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </section>
 
@@ -568,19 +670,102 @@
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input type="text" id="productSearchFilter" placeholder="Search products..." oninput="filterAdminProducts()">
                             </div>
-                            <select id="productCategoryFilter" onchange="filterAdminProducts()" class="admin-select">
+                            <select id="productCategoryFilter" onchange="onProductCategoryChange()" class="admin-select">
                                 <option value="all">All Categories</option>
+                                <option value="wristwear">Wristwear</option>
                                 <option value="necklace">Necklaces</option>
                                 <option value="earrings">Earrings</option>
                                 <option value="rings">Finger Rings</option>
                                 <option value="pendants">Pendants</option>
-                                <option value="bracelets">Wristwear</option>
+                                <option value="silver">Silver Jewellery</option>
+                                <option value="accessories">Accessories</option>
                             </select>
-                            <button class="btn-admin-primary" onclick="launchSyncAgent()" style="background: var(--text-dark); margin-right: 8px;">
-                                <i class="fa-solid fa-robot"></i> Launch Sync Agent
+                            <select id="productSubCategoryFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
+                                <option value="all">All Sub-Categories</option>
+                            </select>
+                            <select id="productPlatingFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
+                                <option value="all">All Finishes (Platings)</option>
+                                <option value="gold">✨ 24K Gold Plated</option>
+                                <option value="silver">💍 Rhodium Silver</option>
+                                <option value="rosegold">🌸 Rose Gold Plated</option>
+                                <option value="two-tone">🌓 Two Tone Plated</option>
+                                <option value="oxidised">🖤 Oxidised Silver</option>
+                                <option value="antique">🪔 Antique Mehndi Plated</option>
+                            </select>
+                            <select id="productBadgeFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
+                                <option value="all">All Badges</option>
+                                <option value="Sorèva Exclusive">💎 Sorèva Exclusive</option>
+                                <option value="Trending">🔥 Trending</option>
+                                <option value="New Launch">✨ New Launch</option>
+                                <option value="Bestseller">👑 Bestseller</option>
+                                <option value="none">No Badge (Unmarked)</option>
+                            </select>
+                            <select id="productStockFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
+                                <option value="all">All Products</option>
+                                <option value="in_stock">🟢 In Stock (Available)</option>
+                                <option value="out_of_stock">🔴 Out of Stock</option>
+                            </select>
+                            <select id="productSortFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
+                                <option value="default">Sort: Default (Category)</option>
+                                <option value="recently_refreshed">🔄 Recently Refreshed</option>
+                                <option value="newest_added">✨ Newest Added</option>
+                                <option value="price_asc">Price: Low to High</option>
+                                <option value="price_desc">Price: High to Low</option>
+                            </select>
+                            <span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px; margin-right: 8px;" title="Available In Stock Pieces"><i class="fa-solid fa-circle-check"></i> Available: <span id="inStockProductCount">0</span></span>
+                            <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Permanently delete all out of stock products from catalog">
+                                <i class="fa-solid fa-trash-can"></i> Delete Out of Stock (<span id="oosProductBadge">0</span>)
+                            </button>
+                            <button class="btn-admin-primary" onclick="openCzmCoworkerModal()" style="background: linear-gradient(135deg, #18181b, #27272a); border: 1px solid rgba(197,160,89,0.4); margin-right: 8px; color: #fef08a;" title="Open CZMakers Stock & Pricing Co-Worker Agent">
+                                <i class="fa-solid fa-robot"></i> Stock Co-Worker
                             </button>
                             <button class="btn-admin-primary" onclick="openProductModal()">
                                 <i class="fa-solid fa-plus"></i> Add Piece
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BULK PRODUCT ACTIONS BAR -->
+                    <div class="admin-bulk-badge-bar" id="adminBulkBadgeBar" style="display: none; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <span style="font-weight: 700; font-size: 0.88rem; color: var(--gold-light); display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-layer-group" style="color: var(--gold);"></i> 
+                                <span><strong id="bulkSelectedCount" style="color: #ffffff; font-size: 0.95rem;">0</strong> piece(s) selected</span>
+                            </span>
+                            <span id="bulkSelectAllFilteredWrap" style="display: none; font-size: 0.8rem; color: var(--admin-text-muted);">
+                                (<a href="javascript:void(0)" onclick="selectAllFilteredProducts()" style="color: var(--gold-light); text-decoration: underline;">Select all <span id="bulkFilteredTotalSpan">0</span> matching pieces</a>)
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <!-- Bulk Status Toggles -->
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <button type="button" class="btn-bulk-disable" id="btnBulkDisable" onclick="applyBulkDisable(1)" title="Disable selected pieces (hide from storefront catalog)">
+                                    <i class="fa-solid fa-eye-slash"></i> Disable Selected
+                                </button>
+                                <button type="button" class="btn-bulk-enable" id="btnBulkEnable" onclick="applyBulkDisable(0)" title="Enable selected pieces (show on storefront catalog)">
+                                    <i class="fa-solid fa-eye"></i> Enable Selected
+                                </button>
+                            </div>
+
+                            <span style="height: 20px; width: 1px; background: rgba(255,255,255,0.15); margin: 0 4px;"></span>
+
+                            <!-- Bulk Badge Assignment -->
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-size: 0.82rem; color: var(--admin-text-muted);">Badge:</span>
+                                <select id="bulkBadgeSelect" class="admin-select" style="width: auto; padding: 5px 12px; font-size: 0.82rem; height: 32px; border-radius: 6px;">
+                                    <option value="Sorèva Exclusive">💎 Sorèva Exclusive</option>
+                                    <option value="Trending">🔥 Trending</option>
+                                    <option value="New Launch">✨ New Launch</option>
+                                    <option value="Bestseller">👑 Bestseller</option>
+                                    <option value="">— Remove Badge (None) —</option>
+                                </select>
+                                <button type="button" class="btn-admin-primary" onclick="applyBulkBadgeChange()" style="padding: 5px 14px; font-size: 0.82rem; height: 32px; border-radius: 6px;">
+                                    Apply Badge
+                                </button>
+                            </div>
+
+                            <button type="button" class="btn-icon" onclick="deselectAllProducts()" title="Deselect all" style="height: 32px; width: 32px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
                     </div>
@@ -589,10 +774,14 @@
                         <table class="admin-table" id="productsAdminTable">
                             <thead>
                                 <tr>
+                                    <th style="width: 36px; text-align: center;">
+                                        <input type="checkbox" id="selectAllProdsCheckbox" onchange="toggleSelectAllProds(this.checked)" title="Select all on this page">
+                                    </th>
                                     <th style="width: 70px;">Image</th>
                                     <th>Piece Name</th>
                                     <th>Category</th>
-                                    <th>Price (INR)</th>
+                                    <th>Sub-Category</th>
+                                    <th>Price / CZM Cost</th>
                                     <th>Original</th>
                                     <th>Plating</th>
                                     <th>Badge</th>
@@ -604,6 +793,9 @@
                                 <!-- Rendered by JS -->
                             </tbody>
                         </table>
+                        <div class="admin-table-pagination" id="adminProductsPagination">
+                            <!-- Rendered by JS -->
+                        </div>
                     </div>
                 </section>
 
@@ -614,7 +806,7 @@
                             <h3>Shop Categories</h3>
                             <p>Update category titles, item count labels, and showcase photography.</p>
                         </div>
-                        <button class="btn-admin-primary" onclick="openCategoryModal()">
+                        <button class="btn-admin-primary" onclick="openCategoryEditModal(null)">
                             <i class="fa-solid fa-plus"></i> Add Category
                         </button>
                     </div>
@@ -648,7 +840,7 @@
                     <div class="panel-header-row">
                         <div>
                             <h3>Promotional Coupons & Discount Codes</h3>
-                            <p>Configure promo coupons applicable in the shopping bag drawer.</p>
+                            <p>Configure promo coupons applicable in the shopping cart drawer.</p>
                         </div>
                         <button class="btn-admin-primary" onclick="openCouponModal()">
                             <i class="fa-solid fa-plus"></i> Create Coupon
@@ -669,6 +861,9 @@
                         </div>
                         <button class="btn-admin-primary" onclick="openCurrencyModal()">
                             <i class="fa-solid fa-plus"></i> Add Currency
+                        </button>
+                        <button class="btn-admin-outline" onclick="autoSyncCurrencies()" style="margin-left: 10px; border-color: rgba(197, 160, 89, 0.4); color: var(--gold-light);">
+                            <i class="fa-solid fa-rotate-right"></i> Auto-Sync Live Rates
                         </button>
                     </div>
 
@@ -734,7 +929,13 @@
                             </div>
                             <div class="form-group">
                                 <label>Primary Craftsmanship Image URL</label>
-                                <input type="text" id="spotlightImgMainInput" class="admin-input" onchange="previewImg(this.value, 'spotlightPreviewMain')" oninput="previewImg(this.value, 'spotlightPreviewMain')">
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="spotlightImgMainInput" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'spotlightPreviewMain')" oninput="previewImg(this.value, 'spotlightPreviewMain')">
+                                    <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                        <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'spotlightImgMainInput', 'spotlightPreviewMain')">
+                                    </label>
+                                </div>
                                 <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1000 × 1200 px (5:6 Portrait)</strong> • JPG/WebP • &lt; 400 KB</div>
                                 <div class="img-preview-box">
                                     <img id="spotlightPreviewMain" src="" alt="Main Preview">
@@ -743,7 +944,13 @@
                             </div>
                             <div class="form-group">
                                 <label>Secondary Detailing Image URL</label>
-                                <input type="text" id="spotlightImgSubInput" class="admin-input" onchange="previewImg(this.value, 'spotlightPreviewSub')" oninput="previewImg(this.value, 'spotlightPreviewSub')">
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="spotlightImgSubInput" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'spotlightPreviewSub')" oninput="previewImg(this.value, 'spotlightPreviewSub')">
+                                    <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                        <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'spotlightImgSubInput', 'spotlightPreviewSub')">
+                                    </label>
+                                </div>
                                 <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 800 px (1:1 Square)</strong> • JPG/WebP • &lt; 250 KB</div>
                                 <div class="img-preview-box">
                                     <img id="spotlightPreviewSub" src="" alt="Sub Preview">
@@ -794,16 +1001,565 @@
                 <section class="tab-panel" id="panel-instagram">
                     <div class="panel-header-row">
                         <div>
-                            <h3>#SorèvaMoments Instagram Gallery</h3>
-                            <p>Manage the 6 visual showcase images displayed in the social gallery.</p>
+                            <h3>#SorèvaMoments Instagram Video Reels</h3>
+                            <p>Stream real-time reels from @soreva_jewels on your storefront, configure Meta Graph API auto-updates, and manage featured videos.</p>
                         </div>
-                        <button class="btn-admin-primary" onclick="saveInstagramFeed()">
-                            <i class="fa-solid fa-floppy-disk"></i> Save Gallery
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-admin-primary" onclick="syncInstagramFeed()" id="btnSyncInsta" style="background: linear-gradient(45deg, #f09433, #dc2743);">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sync Latest from Instagram
+                            </button>
+                            <button type="button" class="btn-admin-primary" onclick="saveInstagramFeed()">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- INSTAGRAM CONNECTION & META GRAPH API CONFIG -->
+                    <div class="insta-config-card">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.25rem;">
+                                    <i class="fa-brands fa-instagram"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.05rem; color: var(--admin-text);">Instagram Feed & Meta Graph API Integration</h4>
+                                    <span style="font-size: 0.8rem; color: var(--admin-text-muted);">Syncs live reels from Instagram account into your storefront social gallery</span>
+                                </div>
+                            </div>
+                            <span class="insta-status-pill ready" id="instaConnStatus">
+                                <i class="fa-solid fa-circle-check"></i> Gallery Live Active
+                            </span>
+                        </div>
+
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label>Instagram Handle *</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-brands fa-instagram"></i>
+                                    <input type="text" id="instaSettingHandle" class="admin-input" placeholder="e.g. soreva_jewels" value="soreva_jewels">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Instagram Business Account ID (Optional)</label>
+                                <input type="text" id="instaSettingAccountId" class="admin-input" placeholder="e.g. 17841400000000000 (leave blank for 'me')">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Meta Access Token / User Token (For Live Auto-Update from Instagram)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="password" id="instaSettingToken" class="admin-input" placeholder="Paste Meta / Instagram Graph API Access Token (e.g. EAA...)">
+                                <button type="button" class="btn-icon" onclick="togglePasswordVisibility('instaSettingToken', this)" title="Show/Hide Token">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn-admin-primary" onclick="saveInstagramSettings()" style="white-space: nowrap;">
+                                    Save Credentials
+                                </button>
+                            </div>
+                            <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-top: 6px;">
+                                <i class="fa-solid fa-circle-info"></i> To auto-update as per latest posts on Instagram, paste your Meta User Access Token or System User Token from Meta Business Suite / Graph API Explorer.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--admin-border); flex-wrap: wrap; gap: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; color: var(--admin-text);">
+                                <input type="checkbox" id="instaSettingAutoSync" checked style="accent-color: var(--gold);">
+                                Automatically refresh latest reels every 6 hours
+                            </label>
+                            <span style="font-size: 0.78rem; color: var(--admin-text-muted);" id="instaLastSyncLabel">
+                                Last checked: Today
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ADD REEL LINK MANUALLY -->
+                    <div class="admin-card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h4><i class="fa-solid fa-plus"></i> Add Instagram Reel or Video Link to Gallery</h4>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label>Reel URL or MP4 Video Link *</label>
+                                <input type="text" id="newReelUrl" class="admin-input" placeholder="https://www.instagram.com/reel/C.../ or .mp4 URL">
+                            </div>
+                            <div class="form-group">
+                                <label>Reel Title / Product Name</label>
+                                <input type="text" id="newReelTitle" class="admin-input" placeholder="e.g. Aurelia Pavé Heritage Collar in Motion">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Caption / Description</label>
+                            <input type="text" id="newReelCaption" class="admin-input" placeholder="e.g. Handcrafted Austrian CZ brilliance. Tap to shop #SorèvaMoments">
+                        </div>
+                        <button type="button" class="btn-admin-primary" onclick="addNewReelToGallery()">
+                            <i class="fa-solid fa-plus"></i> Add to Social Gallery
                         </button>
                     </div>
 
+                    <!-- ACTIVE REELS GRID -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                        <h4 style="margin: 0; color: var(--gold-light); font-size: 1rem;">Active Video Reels in Social Gallery (<span id="reelsCountLabel">6</span>)</h4>
+                    </div>
                     <div class="instagram-admin-grid" id="instagramAdminGrid">
                         <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB: PAYMENT GATEWAY (RAZORPAY) -->
+                <section class="tab-panel" id="panel-payments">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--gold-light); display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-credit-card"></i> Razorpay Payment Gateway
+                            </h2>
+                            <p style="color: var(--admin-muted); font-size: 0.88rem; margin-top: 4px;">
+                                Configure online payments, toggle between Test (Sandbox) and Live modes, and manage your merchant credentials.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="badge" id="rzpDedicatedStatusBadge" style="padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; background: rgba(197,160,89,0.2); color: #c5a059;">
+                                Loading Gateway Status...
+                            </span>
+                            <button type="button" class="btn-admin-outline" onclick="loadRazorpaySettings(true)" title="Refresh Status">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OVERVIEW STATS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="admin-card" style="padding: 18px;">
+                            <div style="font-size: 0.8rem; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-signal" style="color: var(--gold);"></i> Operating Mode
+                            </div>
+                            <div id="rzpCardModeLabel" style="font-size: 1.25rem; font-weight: 700; color: #fff;">Test Sandbox</div>
+                            <div style="font-size: 0.78rem; color: var(--admin-muted); margin-top: 4px;">Simulation active</div>
+                        </div>
+
+                        <div class="admin-card" style="padding: 18px;">
+                            <div style="font-size: 0.8rem; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-indian-rupee-sign" style="color: var(--gold);"></i> Settlement Currency
+                            </div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #fff;">INR (₹)</div>
+                            <div style="font-size: 0.78rem; color: #81c784; margin-top: 4px;">UPI, Cards & Net Banking</div>
+                        </div>
+
+                        <div class="admin-card" style="padding: 18px;">
+                            <div style="font-size: 0.8rem; color: var(--admin-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-shield-halved" style="color: var(--gold);"></i> Security Checksum
+                            </div>
+                            <div style="font-size: 1.25rem; font-weight: 700; color: #81c784;">HMAC-SHA256</div>
+                            <div style="font-size: 0.78rem; color: var(--admin-muted); margin-top: 4px;">Server-Verified Signatures</div>
+                        </div>
+                    </div>
+
+                    <!-- CONFIGURATION CARD -->
+                    <div class="admin-card" style="margin-bottom: 24px;">
+                        <div class="card-header" style="border-bottom: 1px solid var(--admin-border); padding-bottom: 14px; margin-bottom: 20px;">
+                            <h4><i class="fa-solid fa-sliders"></i> Gateway Configuration & API Credentials</h4>
+                            <p class="card-desc">Enter your Key ID and Key Secret from your Razorpay Dashboard to accept live client payments.</p>
+                        </div>
+
+                        <!-- TOGGLE ENABLE / DISABLE -->
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                            <div>
+                                <strong style="font-size: 1rem; color: #fff; display: block; margin-bottom: 4px;">
+                                    Enable Razorpay Payment Gateway at Checkout
+                                </strong>
+                                <span style="font-size: 0.82rem; color: var(--admin-muted);">
+                                    When active, customers will see Razorpay (UPI, Cards, NetBanking, Wallets) as the primary payment method on the storefront.
+                                </span>
+                            </div>
+                            <label style="position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="rzpDedicatedEnabled" checked style="width: 22px; height: 22px; accent-color: var(--gold); cursor: pointer;">
+                                <span style="font-weight: 600; color: var(--gold-light); font-size: 0.9rem;">Active</span>
+                            </label>
+                        </div>
+
+                        <!-- ENVIRONMENT MODE SELECTOR -->
+                        <div style="margin-bottom: 22px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--gold-light); font-size: 0.88rem;">
+                                Select Payment Mode *
+                            </label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                                <label id="lblModeTest" onclick="selectRzpMode('test')" style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(255,152,0,0.08); border: 1px solid #ffb74d; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;">
+                                    <input type="radio" name="rzpModeRadio" id="rzpRadioTest" value="test" checked style="accent-color: #ffb74d; margin-top: 3px;">
+                                    <div>
+                                        <div style="font-weight: 700; color: #ffb74d; font-size: 0.95rem;">
+                                            <i class="fa-solid fa-vial"></i> Test / Sandbox Mode
+                                        </div>
+                                        <p style="font-size: 0.8rem; color: var(--admin-muted); margin: 4px 0 0;">
+                                            Use for testing. Requires <code>rzp_test_...</code> keys. No actual funds are charged.
+                                        </p>
+                                    </div>
+                                </label>
+
+                                <label id="lblModeLive" onclick="selectRzpMode('live')" style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--admin-border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s;">
+                                    <input type="radio" name="rzpModeRadio" id="rzpRadioLive" value="live" style="accent-color: #81c784; margin-top: 3px;">
+                                    <div>
+                                        <div style="font-weight: 700; color: #81c784; font-size: 0.95rem;">
+                                            <i class="fa-solid fa-circle-check"></i> Live Production Mode
+                                        </div>
+                                        <p style="font-size: 0.8rem; color: var(--admin-muted); margin: 4px 0 0;">
+                                            Real client transactions. Requires <code>rzp_live_...</code> keys. Payments settle directly into your linked bank account.
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- API KEYS FORM -->
+                        <div class="form-row-2" style="margin-bottom: 18px;">
+                            <div class="form-group">
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Razorpay Key ID *</span>
+                                    <a href="https://dashboard.razorpay.com/app/keys" target="_blank" rel="noopener" style="font-size: 0.76rem; color: var(--gold); text-decoration: underline;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Get Keys from Razorpay
+                                    </a>
+                                </label>
+                                <input type="text" id="rzpDedicatedKeyId" class="admin-input" placeholder="e.g. rzp_test_... or rzp_live_..." autocomplete="off">
+                                <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;">
+                                    Copy from Razorpay Dashboard → Settings → API Keys.
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Razorpay Key Secret *</label>
+                                <div style="position: relative;">
+                                    <input type="password" id="rzpDedicatedKeySecret" class="admin-input" placeholder="Enter Razorpay Secret Key" style="padding-right: 44px;" autocomplete="new-password">
+                                    <button type="button" onclick="toggleSecretVisibility('rzpDedicatedKeySecret', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--admin-muted); cursor: pointer; font-size: 0.9rem; padding: 4px;">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;" id="rzpDedicatedSecretHint">
+                                    Never shared with browser; securely stored server-side for verifying payments.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MERCHANT DISPLAY & BRANDING -->
+                        <div class="form-row-2" style="margin-bottom: 24px;">
+                            <div class="form-group">
+                                <label>Merchant Brand Name</label>
+                                <input type="text" id="rzpDedicatedMerchantName" class="admin-input" value="Sorèva Luxury Jewellery" placeholder="e.g. Sorèva Luxury Jewellery">
+                                <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;">
+                                    Displayed on the customer's checkout window and bank statements.
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Checkout Theme Accent Color</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="color" id="rzpDedicatedThemeColor" value="#38302e" onchange="document.getElementById('rzpDedicatedThemeColorHex').value = this.value;" style="width: 48px; height: 40px; border: 1px solid var(--admin-border); border-radius: 6px; background: transparent; cursor: pointer;">
+                                    <input type="text" id="rzpDedicatedThemeColorHex" class="admin-input" value="#38302e" onchange="document.getElementById('rzpDedicatedThemeColor').value = this.value;" style="flex: 1;" placeholder="#38302e">
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;">
+                                    Accent color applied to Razorpay checkout header and buttons.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ACCEPTED PAYMENT MODES -->
+                        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 24px;">
+                            <strong style="display: block; font-size: 0.88rem; color: var(--gold-light); margin-bottom: 12px;">
+                                <i class="fa-solid fa-circle-check" style="color: #81c784;"></i> Supported Payment Methods
+                            </strong>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.84rem;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-mobile-screen-button" style="color: var(--gold);"></i>
+                                    <span>UPI (GPay, PhonePe, Paytm, BHIM)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-credit-card" style="color: var(--gold);"></i>
+                                    <span>Cards (Visa, MasterCard, RuPay)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-building-columns" style="color: var(--gold);"></i>
+                                    <span>Net Banking (50+ Indian Banks)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-wallet" style="color: var(--gold);"></i>
+                                    <span>Wallets & PayLater Options</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TEST CONNECTION RESULT BANNER -->
+                        <div id="rzpTestResultBox" style="display: none; padding: 14px 18px; border-radius: var(--radius-md); margin-bottom: 20px; font-size: 0.88rem; align-items: center; gap: 10px;"></div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+                            <button type="button" class="btn-admin-primary" onclick="saveRazorpaySettings()" style="padding: 12px 24px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Razorpay Configuration
+                            </button>
+                            <button type="button" class="btn-admin-outline" id="btnTestRzp" onclick="testRazorpayConnection()" style="padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-bolt"></i> Test Credentials Connection
+                            </button>
+                            <a href="https://dashboard.razorpay.com/" target="_blank" rel="noopener" class="btn-admin-outline" style="text-decoration: none; padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px; color: var(--admin-text);">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Razorpay Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: NOTIFICATIONS & ALERTS (EMAIL TO SUPPORT & WHATSAPP TO CUSTOMER) -->
+                <section class="tab-panel" id="panel-notifications">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--gold-light); display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-bell"></i> Automated Order Notifications (Email & WhatsApp)
+                            </h2>
+                            <p style="color: var(--admin-muted); font-size: 0.88rem; margin-top: 4px;">
+                                Automatically alert Sorèva Support via email and dispatch luxury order confirmations to customers on WhatsApp immediately upon order receipt. All templates and credentials are fully customizable below.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="badge" id="notifStatusBadge" style="padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; background: rgba(37,211,102,0.15); color: #25D366; border: 1px solid rgba(37,211,102,0.3);">
+                                <i class="fa-solid fa-circle-check"></i> Automated Dispatch Active
+                            </span>
+                            <button type="button" class="btn-admin-outline" onclick="loadNotificationSettings(true)" title="Refresh Settings">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE VARIABLES REFERENCE BAR -->
+                    <div class="admin-card" style="margin-bottom: 24px; padding: 18px 22px; background: rgba(197, 160, 89, 0.05); border: 1px dashed var(--gold);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <strong style="color: var(--gold-light); font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-code"></i> Live Dynamic Template Variables (Click any chip to copy):
+                            </strong>
+                            <span style="font-size: 0.78rem; color: var(--admin-muted);">These placeholders are automatically replaced with real order data.</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="variableChipsList">
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{order_number}')"><code>{order_number}</code> — Order ID</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{customer_name}')"><code>{customer_name}</code> — Client Name</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{customer_email}')"><code>{customer_email}</code> — Email</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{customer_phone}')"><code>{customer_phone}</code> — Phone</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{total_amount}')"><code>{total_amount}</code> — Total ₹</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{items_summary}')"><code>{items_summary}</code> — Items List</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{shipping_address}')"><code>{shipping_address}</code> — Street Address</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{city}')"><code>{city}</code> — City / State</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{payment_method}')"><code>{payment_method}</code> — Mode (Razorpay/UPI)</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{payment_id}')"><code>{payment_id}</code> — Transaction Ref</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{date_time}')"><code>{date_time}</code> — Timestamp</button>
+                            <button type="button" class="btn-variable-chip" onclick="copyVariableTag('{status}')"><code>{status}</code> — Order Status</button>
+                        </div>
+                    </div>
+
+                    <!-- GRID: EMAIL SETTINGS & WHATSAPP SETTINGS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 24px; margin-bottom: 24px;">
+
+                        <!-- CARD 1: SOREVA SUPPORT EMAIL ALERTS -->
+                        <div class="admin-card" style="padding: 24px; border-top: 3px solid #3b82f6;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #60a5fa; font-size: 1.2rem;">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: #fff; margin: 0;">Support Email Alerts</h3>
+                                        <span style="font-size: 0.8rem; color: var(--admin-muted);">Sent to Sorèva internal support when order is placed</span>
+                                    </div>
+                                </div>
+                                <label class="switch-toggle" title="Enable/Disable Email Alerts">
+                                    <input type="checkbox" id="notifEmailEnabled" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px; color: var(--admin-text);">
+                                    Support Alert Recipient Email <span style="color: #f87171;">*</span>
+                                </label>
+                                <input type="email" id="notifSupportEmail" class="admin-input" placeholder="support@soreva.in" value="support@soreva.in" style="width: 100%;">
+                                <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">Orders placed on the store send full inventory & fulfillment tickets to this address.</small>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">From Email / Display</label>
+                                    <input type="text" id="notifFromEmail" class="admin-input" placeholder="orders@soreva.in" style="width: 100%;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">SMTP Host</label>
+                                    <input type="text" id="notifSmtpHost" class="admin-input" placeholder="smtp.gmail.com" value="smtp.gmail.com" style="width: 100%;">
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 120px 1fr; gap: 14px; margin-bottom: 16px;">
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">SMTP Port</label>
+                                    <input type="number" id="notifSmtpPort" class="admin-input" placeholder="587" value="587" style="width: 100%;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">SMTP Username / Email</label>
+                                    <input type="text" id="notifSmtpUser" class="admin-input" placeholder="orders@soreva.in (or Gmail)" style="width: 100%;">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                                    SMTP Password / App Password
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="password" id="notifSmtpPassword" class="admin-input" placeholder="Leave blank to keep existing password, or enter 16-char App Password" style="width: 100%; padding-right: 44px;">
+                                    <button type="button" class="btn-reveal-pwd" onclick="togglePasswordVisibility('notifSmtpPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--admin-muted); cursor: pointer;">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">For Gmail, generate an <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: var(--gold-light);">App Password</a> under 2-Step Verification.</small>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Email Subject Line Template</label>
+                                <input type="text" id="notifEmailSubject" class="admin-input" placeholder="💎 New Order Received: {order_number} — ₹{total_amount} ({customer_name})" style="width: 100%;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 18px;">
+                                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Email Body Template (Plain Text / Markdown)</label>
+                                <textarea id="notifEmailBody" class="admin-input" rows="8" style="width: 100%; font-family: monospace; font-size: 0.82rem; line-height: 1.5; resize: vertical;"></textarea>
+                            </div>
+
+                            <!-- TEST EMAIL BOX -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: 8px; padding: 14px;">
+                                <div style="font-size: 0.8rem; font-weight: 600; color: var(--admin-text); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-flask" style="color: #60a5fa;"></i> Test Email Dispatch to Support
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="email" id="testEmailTarget" class="admin-input" placeholder="support@soreva.in" value="support@soreva.in" style="flex: 1; font-size: 0.85rem;">
+                                    <button type="button" class="btn-admin-outline" id="btnTestEmail" onclick="sendTestSupportEmail()" style="white-space: nowrap; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-paper-plane"></i> Send Test
+                                    </button>
+                                </div>
+                                <div id="testEmailStatus" style="display: none; margin-top: 8px; font-size: 0.8rem; padding: 6px 10px; border-radius: 6px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- CARD 2: CUSTOMER WHATSAPP ORDER CONFIRMATION -->
+                        <div class="admin-card" style="padding: 24px; border-top: 3px solid #25D366;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(37, 211, 102, 0.15); display: flex; align-items: center; justify-content: center; color: #25D366; font-size: 1.25rem;">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: #fff; margin: 0;">Customer WhatsApp Confirmation</h3>
+                                        <span style="font-size: 0.8rem; color: var(--admin-muted);">Automated WhatsApp message sent directly to customer</span>
+                                    </div>
+                                </div>
+                                <label class="switch-toggle" title="Enable/Disable WhatsApp Confirmations">
+                                    <input type="checkbox" id="notifWaEnabled" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 140px; gap: 14px; margin-bottom: 16px;">
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">WhatsApp Provider</label>
+                                    <select id="notifWaProvider" class="admin-select" style="width: 100%;" onchange="toggleWaProviderFields()">
+                                        <option value="meta">Meta WhatsApp Cloud API (Recommended)</option>
+                                        <option value="webhook">Custom Webhook / SMS Gateway (Twilio/Wati)</option>
+                                        <option value="direct">Direct Concierge Link Only (Manual Chat)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Country Code</label>
+                                    <input type="text" id="notifWaCountry" class="admin-input" placeholder="91" value="91" style="width: 100%;">
+                                </div>
+                            </div>
+
+                            <!-- META CLOUD API FIELDS -->
+                            <div id="metaProviderFields">
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                                        Meta WhatsApp Phone Number ID
+                                    </label>
+                                    <input type="text" id="notifWaPhoneId" class="admin-input" placeholder="e.g. 104829103984920 (From Meta App Dashboard)" style="width: 100%;">
+                                    <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">Found in Meta Business Suite > WhatsApp > API Setup.</small>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">
+                                        Meta Permanent System User Token
+                                    </label>
+                                    <div style="position: relative;">
+                                        <input type="password" id="notifWaToken" class="admin-input" placeholder="Leave blank to keep existing token, or paste EAAB..." style="width: 100%; padding-right: 44px;">
+                                        <button type="button" class="btn-reveal-pwd" onclick="togglePasswordVisibility('notifWaToken', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--admin-muted); cursor: pointer;">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">System User access token with <code>whatsapp_business_messaging</code> permission.</small>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+                                    <div class="form-group">
+                                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">WhatsApp Message Type</label>
+                                        <select id="notifWaMessageType" class="admin-select" style="width: 100%;">
+                                            <option value="template">Approved Template (Meta Policy Standard)</option>
+                                            <option value="text">Direct Custom Text (24h Window Only)</option>
+                                        </select>
+                                        <small style="font-size: 0.74rem; color: var(--admin-muted); display: block; margin-top: 3px;">Meta requires templates for business-initiated chats.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Template Name</label>
+                                        <input type="text" id="notifWaTemplateName" class="admin-input" placeholder="e.g. hello_world" value="hello_world" style="width: 100%;">
+                                        <small style="font-size: 0.74rem; color: var(--admin-muted); display: block; margin-top: 3px;">Use <code>hello_world</code> for instant sandbox testing.</small>
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 16px;">
+                                    <button type="button" class="btn-admin-outline" id="btnDiagnoseWa" onclick="diagnoseMetaWhatsApp()" style="color: var(--gold); border-color: rgba(200, 162, 77, 0.4); font-size: 0.82rem; padding: 7px 14px; display: inline-flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-stethoscope"></i> Diagnose Meta Token & Phone ID
+                                    </button>
+                                    <div id="waDiagnosticResult" style="display: none; margin-top: 10px; padding: 14px; border-radius: 8px; font-size: 0.82rem; line-height: 1.6;"></div>
+                                </div>
+                            </div>
+
+                            <!-- WEBHOOK PROVIDER FIELDS -->
+                            <div id="webhookProviderFields" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Custom Webhook Dispatch URL</label>
+                                    <input type="url" id="notifWaWebhook" class="admin-input" placeholder="https://api.wati.io/v1/sendSessionMessage/..." style="width: 100%;">
+                                    <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">POST request with JSON payload containing <code>phone</code>, <code>message</code>, and <code>order</code> details.</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 18px;">
+                                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">WhatsApp Message Template (Customer Confirmation)</label>
+                                <textarea id="notifWaTemplate" class="admin-input" rows="8" style="width: 100%; font-family: monospace; font-size: 0.82rem; line-height: 1.5; resize: vertical;"></textarea>
+                                <small style="font-size: 0.76rem; color: var(--admin-muted); display: block; margin-top: 4px;">WhatsApp supports *bold*, _italics_, and emojis. Placeholders are dynamically interpolated.</small>
+                            </div>
+
+                            <!-- TEST WHATSAPP BOX -->
+                            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: 8px; padding: 14px;">
+                                <div style="font-size: 0.8rem; font-weight: 600; color: var(--admin-text); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-flask" style="color: #25D366;"></i> Test WhatsApp Dispatch to Mobile
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="tel" id="testWaTargetPhone" class="admin-input" placeholder="e.g. 9741118940" value="9741118940" style="flex: 1; font-size: 0.85rem;">
+                                    <button type="button" class="btn-admin-outline" id="btnTestWa" onclick="sendTestCustomerWhatsApp()" style="white-space: nowrap; font-size: 0.85rem; color: #25D366; border-color: rgba(37,211,102,0.4);">
+                                        <i class="fa-brands fa-whatsapp"></i> Send Test
+                                    </button>
+                                </div>
+                                <div id="testWaStatus" style="display: none; margin-top: 8px; font-size: 0.8rem; padding: 6px 10px; border-radius: 6px;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FOOTER ACTION BAR -->
+                    <div class="admin-card" style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: rgba(30, 25, 24, 0.95); border: 1px solid var(--gold);">
+                        <div>
+                            <strong style="color: var(--gold-light); font-size: 1rem; display: block;">Save Live Notification Configuration</strong>
+                            <span style="font-size: 0.8rem; color: var(--admin-muted);">All edits are instantly saved and applied to subsequent customer purchases.</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <span id="notifSaveFeedback" style="font-size: 0.85rem; font-weight: 600; display: none;"></span>
+                            <button type="button" class="btn-admin-primary" onclick="saveNotificationSettings()" style="padding: 12px 28px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Notification Settings & Templates
+                            </button>
+                        </div>
                     </div>
                 </section>
 
@@ -827,7 +1583,13 @@
                             <div class="form-row-2">
                                 <div class="form-group">
                                     <label>Primary Logo (Black Text - Light Header)</label>
-                                    <input type="text" id="settingLogoUrl" class="admin-input" onchange="previewImg(this.value, 'logoPreview')" oninput="previewImg(this.value, 'logoPreview')">
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="settingLogoUrl" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'logoPreview')" oninput="previewImg(this.value, 'logoPreview')">
+                                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingLogoUrl', 'logoPreview')">
+                                        </label>
+                                    </div>
                                     <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 200 px (4:1 Wide Strip)</strong> • Transparent PNG • &lt; 150 KB</div>
                                     <div class="img-preview-box" style="height: 60px; background: #ffffff; border: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: center; padding: 6px;">
                                         <img id="logoPreview" src="assets/logo-black.png" alt="Logo Black" style="object-fit: contain; max-height: 44px;">
@@ -836,7 +1598,13 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Inverted Logo (White Text - Dark Footer & Sidebar)</label>
-                                    <input type="text" id="settingLogoWhiteUrl" class="admin-input" onchange="previewImg(this.value, 'logoWhitePreview')" oninput="previewImg(this.value, 'logoWhitePreview')">
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="settingLogoWhiteUrl" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'logoWhitePreview')" oninput="previewImg(this.value, 'logoWhitePreview')">
+                                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingLogoWhiteUrl', 'logoWhitePreview')">
+                                        </label>
+                                    </div>
                                     <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>800 × 200 px (4:1 Wide Strip)</strong> • Transparent PNG • &lt; 150 KB</div>
                                     <div class="img-preview-box" style="height: 60px; background: #1c1716; border: 1px solid var(--admin-border); display: flex; align-items: center; justify-content: center; padding: 6px;">
                                         <img id="logoWhitePreview" src="assets/logo-white.png" alt="Logo White" style="object-fit: contain; max-height: 44px;">
@@ -858,8 +1626,145 @@
                                 <label>Instagram Handle</label>
                                 <input type="text" id="settingInstagram" class="admin-input">
                             </div>
+                                                        <!-- GST & TAX CONFIGURATION -->
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 16px; margin-top: 16px; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                    <h5 style="margin: 0; font-size: 0.95rem; color: #c5a059; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-receipt"></i> Goods & Services Tax (GST)
+                                    </h5>
+                                    <span class="badge" style="background: rgba(197,160,89,0.2); color: #c5a059; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Jewellery Tax</span>
+                                </div>
+                                <div class="form-row-2">
+                                    <div class="form-group">
+                                        <label for="settingGstRate">GST Rate (%) *</label>
+                                        <div style="position: relative;">
+                                            <input type="number" id="settingGstRate" class="admin-input" min="0" max="100" step="0.1" value="3" placeholder="3" style="padding-right: 36px;">
+                                            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--admin-muted); font-weight: 700;">%</span>
+                                        </div>
+                                        <div style="font-size: 0.74rem; color: var(--admin-muted); margin-top: 5px;">
+                                            Standard Indian jewellery GST rate is 3%. Automatically added to subtotal at checkout.
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>GST Application</label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; height: 42px; padding: 0 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; margin-top: 2px;">
+                                            <input type="checkbox" id="settingGstEnabled" checked style="width: 18px; height: 18px; accent-color: #c5a059;">
+                                            <span style="font-size: 0.88rem; color: #fff; font-weight: 500;">Enable GST on Checkout</span>
+                                        </label>
+                                        <div style="font-size: 0.74rem; color: var(--admin-muted); margin-top: 5px;">
+                                            When enabled, GST is calculated and displayed as a separate itemized line in the Order Summary.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- WHOLESALE PROFIT CONFIGURATION -->
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.12); padding-top: 16px; margin-top: 16px; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                    <h5 style="margin: 0; font-size: 0.95rem; color: #c5a059; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-chart-line"></i> Wholesale Profit Adjustment
+                                    </h5>
+                                    <span class="badge" style="background: rgba(197,160,89,0.2); color: #c5a059; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;">Pricing Engine</span>
+                                </div>
+                                <div class="form-row-2">
+                                    <div class="form-group">
+                                        <label for="settingProfitMarkup">Profit Markup Multiplier *</label>
+                                        <input type="number" id="settingProfitMarkup" class="admin-input" step="0.1" value="2.2" placeholder="2.2">
+                                        <div style="font-size: 0.74rem; color: var(--admin-muted); margin-top: 5px;">
+                                            Multiplied over CZMakers base wholesale cost (e.g. 2.2x).
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="settingProfitFlat">Flat Profit Addition (₹) *</label>
+                                        <input type="number" id="settingProfitFlat" class="admin-input" step="1" value="0" placeholder="0">
+                                        <div style="font-size: 0.74rem; color: var(--admin-muted); margin-top: 5px;">
+                                            Flat fee added after the multiplier. Retail Price = (Cost × Multiplier) + Flat Fee.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px; text-align: right;">
+                                    <button class="btn-admin-outline" type="button" onclick="recalculateCatalogPrices()" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; border-color: #c5a059; color: #c5a059;">
+                                        <i class="fa-solid fa-calculator"></i> Apply to Entire Catalog Now
+                                </div>
+                            </div>
+
                             <button class="btn-admin-primary" onclick="saveGeneralSettings()">
                                 <i class="fa-solid fa-floppy-disk"></i> Save General Settings
+                            </button>
+                        </div>
+
+                        
+                        <!-- STOREFRONT PAGE BANNERS & VISUALS -->
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h4><i class="fa-solid fa-images"></i> Storefront Page Banners & Visuals</h4>
+                            </div>
+                            <p class="card-desc">Configure banners and visual imagery displayed across specialized storefront pages.</p>
+                            
+                            <div class="form-group">
+                                <label>Luxury Presentation & Unboxing Showcase Banner</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="settingPackagingBanner" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'packagingBannerPreview')" oninput="previewImg(this.value, 'packagingBannerPreview')">
+                                    <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                        <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingPackagingBanner', 'packagingBannerPreview')">
+                                    </label>
+                                </div>
+                                <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1200 × 800 px (3:2)</strong> • Luxury packaging showcase</div>
+                                <div class="img-preview-box" style="height: 100px;">
+                                    <img id="packagingBannerPreview" src="" alt="Packaging Banner Preview">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Catalog Page Header Banner</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="settingCatalogBanner" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'catalogBannerPreview')" oninput="previewImg(this.value, 'catalogBannerPreview')">
+                                    <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                        <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingCatalogBanner', 'catalogBannerPreview')">
+                                    </label>
+                                </div>
+                                <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1600 × 500 px (16:5 Wide Strip)</strong> • Collection catalog header</div>
+                                <div class="img-preview-box" style="height: 90px;">
+                                    <img id="catalogBannerPreview" src="" alt="Catalog Banner Preview">
+                                </div>
+                            </div>
+
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>About Us Story Header Banner</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="settingAboutUsBanner" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'aboutUsBannerPreview')" oninput="previewImg(this.value, 'aboutUsBannerPreview')">
+                                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingAboutUsBanner', 'aboutUsBannerPreview')">
+                                        </label>
+                                    </div>
+                                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> 1200 × 600 px (2:1)</div>
+                                    <div class="img-preview-box" style="height: 75px;">
+                                        <img id="aboutUsBannerPreview" src="" alt="About Us Preview">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Contact Us Concierge Banner</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="settingContactUsBanner" class="admin-input" style="flex: 1;" onchange="previewImg(this.value, 'contactUsBannerPreview')" oninput="previewImg(this.value, 'contactUsBannerPreview')">
+                                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'settingContactUsBanner', 'contactUsBannerPreview')">
+                                        </label>
+                                    </div>
+                                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> 1200 × 600 px (2:1)</div>
+                                    <div class="img-preview-box" style="height: 75px;">
+                                        <img id="contactUsBannerPreview" src="" alt="Contact Us Preview">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn-admin-primary" onclick="savePageBannersSettings()">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Page Banners & Visuals
                             </button>
                         </div>
 
@@ -899,7 +1804,59 @@
                             </form>
                         </div>
 
-                        <!-- DATA BACKUP & RESTORE -->
+                                                <!-- RAZORPAY PAYMENT GATEWAY -->
+                        <div class="admin-card" style="grid-column: 1 / -1;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4><i class="fa-solid fa-credit-card"></i> Razorpay Payment Gateway</h4>
+                                <span class="badge" id="rzpStatusBadge" style="background: rgba(197,160,89,0.2); color: #c5a059; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Loading...</span>
+                            </div>
+                            <p class="card-desc">Accept UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, Net Banking, and Wallets on your store using Razorpay.</p>
+                            
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem;">
+                                    <input type="checkbox" id="rzpEnabledCheckbox" checked style="width: 18px; height: 18px; accent-color: #c5a059;">
+                                    <strong>Enable Razorpay Gateway on Checkout</strong>
+                                </label>
+                            </div>
+
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label>Razorpay Key ID *</label>
+                                    <input type="text" id="rzpKeyIdInput" class="admin-input" placeholder="e.g. rzp_test_... or rzp_live_...">
+                                    <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;">
+                                        Copy from <a href="https://dashboard.razorpay.com/app/keys" target="_blank" rel="noopener" style="color: #c5a059; text-decoration: underline;">Razorpay Dashboard → Settings → API Keys</a>.
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Razorpay Key Secret *</label>
+                                    <div style="position: relative;">
+                                        <input type="password" id="rzpKeySecretInput" class="admin-input" placeholder="Enter Razorpay Secret Key" style="padding-right: 40px;">
+                                        <button type="button" onclick="toggleSecretVisibility('rzpKeySecretInput', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--admin-muted); cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--admin-muted); margin-top: 5px;">
+                                        Secret key used to securely sign and verify customer payments.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Merchant Display Name (Brand)</label>
+                                <input type="text" id="rzpMerchantNameInput" class="admin-input" value="Sorèva Luxury Jewellery" placeholder="e.g. Sorèva Luxury Jewellery">
+                            </div>
+
+                            <div style="display: flex; gap: 12px; margin-top: 14px;">
+                                <button type="button" class="btn-admin-primary" onclick="saveRazorpaySettings()">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save Razorpay Settings
+                                </button>
+                                <button type="button" class="btn-admin-outline" onclick="loadRazorpaySettings(true)">
+                                    <i class="fa-solid fa-rotate"></i> Refresh Status
+                                </button>
+                            </div>
+                        </div>
+
+<!-- DATA BACKUP & RESTORE -->
                         <div class="admin-card" style="grid-column: 1 / -1;">
                             <div class="card-header">
                                 <h4><i class="fa-solid fa-database"></i> Backup, Export & Factory Reset</h4>
@@ -951,11 +1908,13 @@
                     <div class="form-group">
                         <label>Category *</label>
                         <select id="prodCategory" required class="admin-select">
-                            <option value="necklace">Necklace</option>
+                            <option value="wristwear">Wristwear</option>
+                            <option value="necklace">Necklaces</option>
                             <option value="earrings">Earrings</option>
                             <option value="rings">Finger Rings</option>
                             <option value="pendants">Pendants</option>
-                            <option value="bracelets">Wristwear</option>
+                            <option value="silver">Silver Jewellery</option>
+                            <option value="accessories">Accessories</option>
                         </select>
                     </div>
                 </div>
@@ -963,12 +1922,15 @@
                 <div class="form-row-2">
                     <div class="form-group">
                         <label>Subcategory Label</label>
-                        <input type="text" id="prodSubCategory" class="admin-input" placeholder="e.g. Modern Chokers">
+                        <input type="text" id="prodSubCategory" list="subCategoryDatalist" class="admin-input" placeholder="e.g. Modern Chokers">
+                        <datalist id="subCategoryDatalist">
+                            <!-- Populated dynamically by JS -->
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label>Primary Metal Plating</label>
                         <select id="prodPlating" class="admin-select">
-                            <option value="gold">18K Gold Plated</option>
+                            <option value="gold">24K Gold Plated</option>
                             <option value="silver">Rhodium Silver</option>
                             <option value="rosegold">Rose Gold Plated</option>
                         </select>
@@ -988,12 +1950,34 @@
 
                 <div class="form-row-2">
                     <div class="form-group">
+                        <label>CZMakers Actual Cost (₹)</label>
+                        <input type="number" id="prodUsdWholesale" step="0.01" class="admin-input" placeholder="e.g. 1697.30" title="Retained actual wholesale cost from czmakers.com">
+                        <small style="color: var(--admin-text-muted); font-size: 0.73rem;">Retained automatically from czmakers.com wholesale inventory sync.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU / Model Number</label>
+                        <input type="text" id="prodSku" class="admin-input" placeholder="e.g. 7718220" title="CZMakers model SKU">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
                         <label>Product Badge</label>
-                        <input type="text" id="prodBadge" class="admin-input" placeholder="e.g. Bestseller, Royal Edition, Trending">
+                        <div style="display: flex; gap: 8px;">
+                            <select id="prodBadgeSelect" class="admin-select" onchange="handleModalBadgeSelectChange(this.value)">
+                                <option value="Sorèva Exclusive">💎 Sorèva Exclusive</option>
+                                <option value="Trending">🔥 Trending</option>
+                                <option value="New Launch">✨ New Launch</option>
+                                <option value="Bestseller">👑 Bestseller</option>
+                                <option value="">— None (No Badge) —</option>
+                                <option value="__custom__">✏️ Custom Badge...</option>
+                            </select>
+                            <input type="text" id="prodBadge" class="admin-input" placeholder="Custom badge..." style="display: none; flex: 1;">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Available Finishes (Comma-separated)</label>
-                        <input type="text" id="prodFinishes" class="admin-input" placeholder="18K Gold, Rhodium Silver, Rose Gold">
+                        <input type="text" id="prodFinishes" class="admin-input" placeholder="24K Gold, Rhodium Silver, Rose Gold">
                     </div>
                 </div>
 
@@ -1075,12 +2059,18 @@
 
                 <div class="form-group">
                     <label>Subtitle Description *</label>
-                    <textarea id="heroSubtitleInput" rows="3" required class="admin-textarea" placeholder="Handcrafted 18K Gold Plated with Austrian AAA+ Cubic Zirconia..."></textarea>
+                    <textarea id="heroSubtitleInput" rows="3" required class="admin-textarea" placeholder="Handcrafted 24K Gold Plated with Austrian AAA+ Cubic Zirconia..."></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Full-Bleed Landscape Image URL *</label>
-                    <input type="url" id="heroImageInput" required class="admin-input" placeholder="https://images.unsplash.com/..." onchange="previewImg(this.value, 'heroPreviewImg')" oninput="previewImg(this.value, 'heroPreviewImg')">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="url" id="heroImageInput" required class="admin-input" style="flex: 1;" placeholder="https://..." onchange="previewImg(this.value, 'heroPreviewImg')" oninput="previewImg(this.value, 'heroPreviewImg')">
+                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'heroImageInput', 'heroPreviewImg')">
+                        </label>
+                    </div>
                     <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1920 × 1080 px (16:9 Widescreen)</strong> • JPG/WebP • &lt; 500 KB</div>
                     <div class="img-preview-box" style="height: 140px;">
                         <img id="heroPreviewImg" src="" alt="Slide Preview">
@@ -1102,7 +2092,7 @@
                 <div class="form-row-2">
                     <div class="form-group">
                         <label>Metal Finish Label *</label>
-                        <input type="text" id="heroPieceFinish" required class="admin-input" placeholder="18K Gold Plated">
+                        <input type="text" id="heroPieceFinish" required class="admin-input" placeholder="24K Gold Plated">
                     </div>
                     <div class="form-group">
                         <label>Linked Product ID (for Quick View)</label>
@@ -1193,7 +2183,16 @@
                     </div>
                     <div class="form-group">
                         <label>Avatar Photo URL *</label>
-                        <input type="url" id="reviewAvatar" required class="admin-input" placeholder="https://images.unsplash.com/...">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="url" id="reviewAvatar" required class="admin-input" style="flex: 1;" placeholder="https://..." onchange="previewImg(this.value, 'reviewAvatarPreview')" oninput="previewImg(this.value, 'reviewAvatarPreview')">
+                            <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'reviewAvatar', 'reviewAvatarPreview')">
+                            </label>
+                        </div>
+                        <div class="img-preview-box" style="height: 55px; margin-top: 6px;">
+                            <img id="reviewAvatarPreview" src="" alt="Avatar Preview" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
+                        </div>
                     </div>
                 </div>
 
@@ -1208,36 +2207,80 @@
                 </div>
             </form>
         </div>
+    </div>
+
     <!-- STOCK ADJUSTMENT MODAL -->
-    <div class="admin-modal-backdrop" id="stockModalBackdrop">
-        <div class="admin-modal" style="max-width: 480px;">
+    <div class="admin-modal-backdrop" id="stockModalBackdrop" onclick="if(event.target === this) closeStockModal()">
+        <div class="admin-modal" style="max-width: 520px;">
             <div class="modal-top">
-                <h3>Adjust Stock & Threshold</h3>
-                <button class="modal-close" onclick="closeStockModal()"><i class="fa-solid fa-xmark"></i></button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-boxes-stacked" style="color: var(--gold); font-size: 1.2rem;"></i>
+                    <h3>Adjust Stock & Threshold</h3>
+                </div>
+                <button type="button" class="modal-close" onclick="closeStockModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form class="modal-form" id="stockForm" onsubmit="handleSaveStock(event)">
                 <input type="hidden" id="editStockId" value="">
                 <input type="hidden" id="editStockSku" value="">
 
-                <div class="form-group">
-                    <label>Product Name</label>
-                    <input type="text" id="editStockProdName" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: var(--admin-text-muted);">
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">Product Piece Name</label>
+                    <input type="text" id="editStockProdName" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: var(--admin-text); font-weight: 600;">
                 </div>
 
-                <div class="form-row-2">
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">Product SKU Code</label>
+                    <input type="text" id="editStockSkuDisplay" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: var(--gold-light); font-family: monospace;">
+                </div>
+
+                <div class="form-row-2" style="margin-bottom: 14px;">
                     <div class="form-group">
-                        <label>Stock Quantity (Units) *</label>
-                        <input type="number" id="editStockQty" required min="0" class="admin-input" placeholder="e.g. 15">
+                        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Category</label>
+                        <input type="text" id="editStockCategory" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: var(--admin-text); text-transform: capitalize;">
                     </div>
                     <div class="form-group">
-                        <label>Low Stock Alert Threshold</label>
-                        <input type="number" id="editStockThreshold" required min="1" class="admin-input" placeholder="e.g. 5">
+                        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Sub-Category</label>
+                        <input type="text" id="editStockSubCategory" readonly class="admin-input" style="background: rgba(255,255,255,0.05); color: #fef08a;">
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="form-row-2" style="margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Stock Quantity (Units) *</label>
+                        <input type="number" id="editStockQty" required min="0" class="admin-input" placeholder="e.g. 15" oninput="updateModalStockPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 6px;">Low Stock Alert Threshold *</label>
+                        <input type="number" id="editStockThreshold" required min="1" class="admin-input" placeholder="e.g. 5" oninput="updateModalStockPreview()">
+                    </div>
+                </div>
+
+                <!-- Quick adjustment presets -->
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.8rem; color: var(--admin-muted); display: block; margin-bottom: 6px;">Quick Quantity Adjustments:</label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickAdd(1)">+1</button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickAdd(5)">+5</button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickAdd(10)">+10</button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickAdd(25)">+25</button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickAdd(50)">+50</button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="modalStockQuickSet(0)" style="color: #ff6b6b; border-color: rgba(255,107,107,0.3);">Set 0 (Out of Stock)</button>
+                    </div>
+                </div>
+
+                <!-- Live Status preview in modal -->
+                <div style="padding: 12px 16px; background: rgba(0,0,0,0.3); border: 1px solid var(--admin-border); border-radius: 8px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.85rem; color: var(--admin-muted);">Live Calculated Status:</span>
+                    <span id="modalStockStatusBadge" class="stock-pill in-stock">
+                        <i class="fa-solid fa-check"></i> In Stock
+                    </span>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
                     <button type="button" class="btn-admin-outline" onclick="closeStockModal()">Cancel</button>
-                    <button type="submit" class="btn-admin-primary">Update Stock</button>
+                    <button type="submit" class="btn-admin-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Stock Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -1290,63 +2333,157 @@
 
     <!-- ORDER INSPECTION & FULFILLMENT MODAL -->
     <div class="admin-modal-backdrop" id="orderModalBackdrop">
-        <div class="admin-modal" style="max-width: 560px;">
+        <div class="admin-modal" style="max-width: 720px; width: 94%;">
             <div class="modal-top">
-                <h3 id="orderModalTitle">Order Details</h3>
+                <div>
+                    <h3 id="orderModalTitle" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <i class="fa-solid fa-receipt" style="color: var(--gold);"></i> Order Dossier & Fulfillment
+                    </h3>
+                    <div style="font-size: 0.8rem; color: var(--admin-muted); margin-top: 3px;" id="inspectOrderDate">Placed: Loading...</div>
+                </div>
                 <button class="modal-close" onclick="closeOrderModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div style="padding: 24px 0 10px;">
+            
+            <div style="padding: 20px 0 10px; max-height: calc(85vh - 140px); overflow-y: auto; padding-right: 6px;">
                 <input type="hidden" id="inspectOrderId" value="">
                 
-                <div style="background: var(--admin-surface-light); border: 1px solid var(--admin-border); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--gold-light);" id="inspectOrderNum">SRV-2026-1081</span>
+                <!-- TOP BADGE ROW -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: 10px; padding: 12px 18px;">
+                    <div>
+                        <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted);">Order Tracking ID</span>
+                        <div style="font-family: var(--font-heading); font-size: 1.35rem; color: var(--gold-light); font-weight: 700;" id="inspectOrderNum">SRV-2026-1081</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted); display: block; margin-bottom: 4px;">Status</span>
                         <span id="inspectOrderStatusBadge" class="order-status-badge processing">Processing</span>
                     </div>
-                    <div style="font-size: 0.88rem; color: var(--admin-text-muted); line-height: 1.6;">
-                        <div><strong style="color: var(--admin-text);">Customer:</strong> <span id="inspectCustName">Ananya Sharma</span> (<span id="inspectCustEmail"></span>)</div>
-                        <div><strong style="color: var(--admin-text);">Phone:</strong> <span id="inspectCustPhone"></span></div>
-                        <div><strong style="color: var(--admin-text);">Shipping Destination:</strong> <span id="inspectCustAddr"></span>, <span id="inspectCustCity"></span></div>
-                        <div><strong style="color: var(--admin-text);">Payment Mode:</strong> <span id="inspectPaymentMode"></span></div>
-                    </div>
                 </div>
 
+                <!-- 2-COLUMN GRID: CLIENT INFO & FULL ADDRESS DETAILS -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                    
+                    <!-- CARD: CLIENT PROFILE & CONTACT -->
+                    <div style="background: var(--admin-surface-light); border: 1px solid var(--admin-border); border-radius: 12px; padding: 18px;">
+                        <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-user-circle"></i> Client Profile & Contact
+                        </div>
+                        <div style="font-size: 0.88rem; line-height: 1.7; color: var(--admin-text);">
+                            <div><strong style="color: #fff;">Name:</strong> <span id="inspectCustName">Ananya Sharma</span></div>
+                            <div>
+                                <strong style="color: #fff;">Email:</strong> 
+                                <a id="inspectCustEmailLink" href="#" style="color: var(--gold-light); text-decoration: none;"><span id="inspectCustEmail"></span></a>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; flex-wrap: wrap; gap: 6px;">
+                                <div>
+                                    <strong style="color: #fff;">Phone:</strong> 
+                                    <span id="inspectCustPhone" style="font-weight: 600;"></span>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <a id="inspectCustWaLink" href="#" target="_blank" class="btn-admin-outline btn-sm" style="color: #25D366; border-color: rgba(37,211,102,0.4); text-decoration: none; padding: 3px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;" title="Open WhatsApp Chat">
+                                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD: COMPLETE SHIPPING & DELIVERY ADDRESS -->
+                    <div style="background: var(--admin-surface-light); border: 1px solid var(--admin-border); border-radius: 12px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-location-dot"></i> Delivery Destination
+                            </div>
+                            <a id="inspectMapsBtn" href="#" target="_blank" rel="noopener" class="btn-admin-outline btn-sm" style="font-size: 0.72rem; padding: 2px 7px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="View on Google Maps">
+                                <i class="fa-solid fa-map-location-dot"></i> Maps
+                            </a>
+                        </div>
+                        <div style="font-size: 0.86rem; line-height: 1.6; color: var(--admin-text-muted);">
+                            <div><strong style="color: #fff;">Address Line 1:</strong> <span id="inspectCustAddr" style="color: var(--admin-text);"></span></div>
+                            <div><strong style="color: #fff;">Landmark / Area:</strong> <span id="inspectCustAddr2" style="color: var(--admin-text);">—</span></div>
+                            <div><strong style="color: #fff;">City & State:</strong> <span id="inspectCustCityStatePin" style="color: var(--admin-text);"></span></div>
+                            <div><strong style="color: #fff;">Country:</strong> <span id="inspectCustCountry" style="color: var(--admin-text);">India</span></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SPECIAL ORDER NOTES / GIFT INSTRUCTIONS BANNER -->
+                <div id="inspectNotesWrap" style="display: none; background: rgba(197, 160, 89, 0.08); border: 1px dashed var(--gold); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--gold-light); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <i class="fa-solid fa-gift"></i> Client Packaging Notes & Instructions:
+                    </div>
+                    <div id="inspectCustNotes" style="font-size: 0.86rem; color: #fff; font-style: italic;"></div>
+                </div>
+
+                <!-- PURCHASED ITEMS TABLE -->
                 <div style="margin-bottom: 20px;">
-                    <h4 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px;">Purchased Items</h4>
-                    <div id="inspectItemsList" style="background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); border-radius: 8px; padding: 14px; font-size: 0.9rem; line-height: 1.6;">
-                        <!-- Items rendered here -->
+                    <h4 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-gem"></i> Purchased Items Manifest
+                    </h4>
+                    <div id="inspectItemsList" style="background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); border-radius: 8px; padding: 12px; font-size: 0.88rem; line-height: 1.6;">
+                        <!-- Items rendered dynamically -->
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(197, 160, 89, 0.1); border: 1px solid var(--gold); border-radius: 10px; margin-bottom: 24px;">
-                    <span style="font-weight: 600;">Total Amount Paid / Due:</span>
-                    <span id="inspectTotalAmt" style="font-size: 1.3rem; font-weight: 700; color: var(--gold-light);">₹3,499</span>
+                <!-- FINANCIALS & PAYMENT TRANSACTION BREAKDOWN -->
+                <div style="background: rgba(197, 160, 89, 0.08); border: 1px solid var(--gold); border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 12px; font-size: 0.85rem;">
+                        <div>
+                            <span style="color: var(--admin-muted); display: block; font-size: 0.76rem; text-transform: uppercase;">Payment Mode</span>
+                            <strong style="color: #fff;" id="inspectPaymentMode">Razorpay</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--admin-muted); display: block; font-size: 0.76rem; text-transform: uppercase;">Transaction ID</span>
+                            <span style="font-family: monospace; color: #81c784; font-size: 0.82rem;" id="inspectPaymentId">N/A</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--admin-muted); display: block; font-size: 0.76rem; text-transform: uppercase;">Subtotal</span>
+                            <span style="color: #fff;" id="inspectSubtotal">₹0</span>
+                        </div>
+                                                <div id="inspectGstRowWrap" style="display: none; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #c5a059;">
+                            <span>GST</span>
+                            <strong id="inspectGstRow">₹0</strong>
+                        </div>
+                        <div id="inspectDiscountRowWrap" style="display: none;">
+                            <span style="color: var(--admin-muted); display: block; font-size: 0.76rem; text-transform: uppercase;">Discount Applied</span>
+                            <span style="color: #f87171;" id="inspectDiscountRow">-₹0</span>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid rgba(197, 160, 89, 0.3); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">Total Settlement (INR):</span>
+                        <span id="inspectTotalAmt" style="font-size: 1.4rem; font-weight: 700; color: var(--gold-light);">₹3,499</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label style="margin-bottom: 8px; display: block; font-weight: 600;">Update Fulfillment Status</label>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="inspectStatusSelect" class="admin-select" style="flex: 1;">
+                <!-- UPDATE FULFILLMENT STATUS -->
+                <div class="form-group" style="background: rgba(0,0,0,0.25); border: 1px solid var(--admin-border); border-radius: 10px; padding: 16px;">
+                    <label style="margin-bottom: 8px; display: block; font-weight: 600; font-size: 0.88rem;">Update Order Fulfillment Status</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="inspectStatusSelect" class="admin-select" style="flex: 1; min-width: 180px;">
                             <option value="Pending">Pending</option>
                             <option value="Processing">Processing</option>
+                            <option value="Paid (Razorpay)">Paid (Razorpay)</option>
                             <option value="Shipped">Shipped</option>
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>
                         </select>
-                        <button type="button" class="btn-admin-primary" onclick="saveOrderStatusFromModal()">
+                        <button type="button" class="btn-admin-primary" onclick="saveOrderStatusFromModal()" style="padding: 10px 20px;">
                             <i class="fa-solid fa-floppy-disk"></i> Update Status
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
+
+            <!-- MODAL ACTION FOOTER -->
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 14px; border-top: 1px solid var(--admin-border);">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn-admin-outline btn-sm" onclick="resendAlertForModalOrder('email')" title="Send order email to support@soreva.in"><i class="fa-solid fa-envelope"></i> Alert Support</button>
+                    <button type="button" class="btn-admin-outline btn-sm" onclick="resendAlertForModalOrder('whatsapp')" style="color: #25D366; border-color: rgba(37,211,102,0.4);" title="Send WhatsApp confirmation to client"><i class="fa-brands fa-whatsapp"></i> WhatsApp Client</button>
+                </div>
                 <button type="button" class="btn-admin-outline" onclick="closeOrderModal()">Close</button>
             </div>
         </div>
-    <!-- ==========================================
-         IMAGE RESOLUTION & QUALITY INSPECTOR MODAL
-         "automatically updated in the details section of the image which I click on"
-         ========================================== -->
+    </div>
     <div class="admin-modal-backdrop" id="imageInspectorModalBackdrop" onclick="if(event.target === this) closeImageInspector()">
         <div class="admin-modal" style="max-width: 820px;">
             <div class="modal-top">
@@ -1561,10 +2698,262 @@
         </div>
     </div>
 
+    <!-- CATEGORY EDIT & CREATION MODAL -->
+    <div class="admin-modal-backdrop" id="categoryEditModalBackdrop" onclick="if(event.target === this) closeCategoryEditModal()">
+        <div class="admin-modal" style="max-width: 560px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-shapes" style="color: var(--gold); font-size: 1.2rem;"></i>
+                    <h3 id="categoryModalTitle">Edit Category</h3>
+                </div>
+                <button type="button" class="modal-close" onclick="closeCategoryEditModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="categoryEditForm" onsubmit="handleSaveCategoryForm(event)">
+                <input type="hidden" id="editCategoryIdx" value="">
+                <input type="hidden" id="editCategoryId" value="">
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">Category Name *</label>
+                    <input type="text" id="catModalName" class="admin-input" required placeholder="e.g. Wristwear, Necklaces, Rings">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">Subtitle / Count Label</label>
+                    <input type="text" id="catModalCountLabel" class="admin-input" placeholder="e.g. Bangles, Kadas & Cuffs (1,710+)">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">Showcase Photography (URL or Local Upload)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="catModalImage" class="admin-input" style="flex: 1;" placeholder="assets/categories/wristwear.jpg or URL" oninput="previewCategoryModalImg(this.value)">
+                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; padding: 9px 15px; font-size: 0.82rem; font-weight: 600;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                            <input type="file" id="catModalFileInput" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'catModalImage', 'catModalPreview')">
+                        </label>
+                    </div>
+                    <small style="font-size: 0.74rem; color: var(--admin-muted); display: block; margin-top: 5px;">
+                        Recommended: 600 × 750 px (4:5 Portrait). Supported: WebP, JPEG, PNG, GIF under 5MB.
+                    </small>
+                </div>
+
+                <!-- PREVIEW BOX -->
+                <div class="img-preview-box" id="catModalPreviewBox" style="width: 100%; height: 210px; background: #0c0a09; border: 1px dashed var(--admin-border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                    <img id="catModalPreview" src="" alt="Category Preview" style="max-width: 100%; max-height: 100%; object-fit: contain; display: none;">
+                    <div id="catModalPlaceholder" style="color: var(--admin-muted); font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <i class="fa-regular fa-image" style="font-size: 2.4rem; color: rgba(197, 160, 89, 0.4);"></i>
+                        <span>No image preview available</span>
+                    </div>
+                    <div class="img-meta-tags" id="meta_catModalPreview" style="position: absolute; bottom: 8px; right: 8px;"></div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 16px;">
+                    <button type="button" class="btn-admin-outline" id="btnDeleteCategoryModal" style="color: #ff6b6b; border-color: rgba(255, 107, 107, 0.35); display: inline-flex; align-items: center; gap: 6px;" onclick="handleDeleteCategoryFromModal()">
+                        <i class="fa-solid fa-trash-can"></i> Delete Category
+                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-admin-outline" onclick="closeCategoryEditModal()">Cancel</button>
+                        <button type="submit" class="btn-admin-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Category
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CZMakers Login Modal -->
+    <div class="admin-modal-backdrop" id="czmLoginModalBackdrop">
+        <div class="admin-modal" style="max-width: 480px;">
+            <div class="modal-top">
+                <h3><i class="fa-solid fa-lock"></i> CZMakers Authentication</h3>
+                <button class="modal-close" onclick="closeCzmLoginModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form class="modal-form" id="czmLoginForm" onsubmit="handleCzmLogin(event)">
+                <p style="margin-bottom: 16px; font-size: 0.9rem; color: #a1a1aa;">Login to CZMakers to sync inventory and get actual wholesale costs.</p>
+                <div class="form-group">
+                    <label for="czmEmail">Email Address</label>
+                    <input type="email" id="czmEmail" class="form-control" required placeholder="Enter CZMakers email">
+                </div>
+                <div class="form-group">
+                    <label for="czmPassword">Password</label>
+                    <input type="password" id="czmPassword" class="form-control" required placeholder="Enter CZMakers password">
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+                    <button type="button" class="btn-admin-outline" onclick="closeCzmLoginModal()">Cancel</button>
+                    <button type="submit" class="btn-admin-primary" id="btnSubmitCzmLogin">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CZMakers Stock & Pricing Co-Worker Agent Modal -->
+    <div class="admin-modal-backdrop" id="czmCoworkerModalBackdrop">
+        <div class="admin-modal" style="max-width: 780px; max-height: 92vh; display: flex; flex-direction: column;">
+            <div class="modal-top" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,160,89,0.25), rgba(99,102,241,0.25)); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #c5a059; border: 1px solid rgba(197,160,89,0.35);">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h3 style="margin: 0; font-size: 1.18rem; font-weight: 700; color: #fff;">CZMakers Stock & Pricing Co-Worker</h3>
+                            <span id="coworkerStatusBadge" class="badge" style="background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); font-size: 0.74rem; padding: 2px 9px; border-radius: 12px;">
+                                <i class="fa-solid fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Ready
+                            </span>
+                        </div>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--admin-text-muted);">
+                            Automated warehouse stock sync, live wholesale price extraction & verified 2.2x retail pricing.
+                        </p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeCzmCoworkerModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="overflow-y: auto; padding: 18px 4px; flex: 1;">
+                <!-- Security & Pricing Guarantee Banner -->
+                <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #34d399; font-size: 1.15rem;"></i>
+                        <span style="font-size: 0.82rem; color: #d1fae5;">
+                            <strong>Customer Records & Orders 100% Isolated:</strong> Never modified, imported, or deleted.
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #a7f3d0; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 6px;">
+                        <i class="fa-solid fa-tags" style="color: #c5a059;"></i>
+                        <span>Markup Rule: <strong>2.2x Wholesale INR</strong> | Min Retail ₹1,499</span>
+                    </div>
+                </div>
+
+                <!-- CZMakers Login Account Indicator -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: #fef08a; background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.3); padding: 8px 14px; border-radius: 8px; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-key" style="color: #c5a059;"></i>
+                        <span>Authenticated CZMakers Account: <strong id="coworkerAuthEmail">sonal.belchada@gmail.com</strong> <i class="fa-solid fa-circle-check" style="color: #34d399; margin-left: 4px;" title="Active authenticated session"></i></span>
+                    </div>
+                    <button type="button" onclick="openCzmLoginModal()" style="background: none; border: none; color: #93c5fd; cursor: pointer; text-decoration: underline; font-size: 0.76rem; padding: 0;">Update Credentials</button>
+                </div>
+
+                <!-- Co-Worker Action Options Form -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 0.88rem; font-weight: 600; color: var(--gold-light); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-sliders"></i> Select Co-Worker Operation
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                        <label id="lblModeDiscovery" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid rgba(197,160,89,0.35); background: rgba(197,160,89,0.06); cursor: pointer;">
+                            <input type="radio" name="coworkerSyncMode" value="full_discovery" checked style="margin-top: 3px;" onchange="handleCoworkerModeChange()">
+                            <div>
+                                <strong style="font-size: 0.86rem; color: #fff; display: block;">🌐 Scan Every Stock (Full CZMakers Catalog)</strong>
+                                <span style="font-size: 0.76rem; color: var(--admin-text-muted); line-height: 1.35; display: block; margin-top: 3px;">
+                                    Deep scan across all 32 CZMakers categories to pull each and every available stock item with verified pricing.
+                                </span>
+                            </div>
+                        </label>
+
+                        <label id="lblModeRefresh" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); cursor: pointer;">
+                            <input type="radio" name="coworkerSyncMode" value="refresh_stock" style="margin-top: 3px;" onchange="handleCoworkerModeChange()">
+                            <div>
+                                <strong style="font-size: 0.86rem; color: #fff; display: block;">⚡ Fast Stock & Price Refresh</strong>
+                                <span style="font-size: 0.76rem; color: var(--admin-text-muted); line-height: 1.35; display: block; margin-top: 3px;">
+                                    Quick refresh of current catalog stock, wholesale costs, and retail prices on top categories.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label for="coworkerMaxPages" style="font-size: 0.8rem; color: var(--admin-text-muted); margin: 0;">Category Depth:</label>
+                            <select id="coworkerMaxPages" class="admin-select" style="padding: 4px 10px; font-size: 0.82rem; width: auto;">
+                                <option value="0" selected>All Available Pages (Full Scan of Every Stock)</option>
+                                <option value="5">5 Pages per Category (~400 pieces/cat)</option>
+                                <option value="3">3 Pages per Category (~240 pieces/cat)</option>
+                                <option value="1">1 Page per Category (Quick ~80/cat)</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); padding: 5px 12px; border-radius: 6px;">
+                            <i class="fa-solid fa-shield-check" style="color: #34d399; font-size: 0.85rem;"></i>
+                            <span style="font-size: 0.78rem; color: #a7f3d0;">
+                                <strong>Preserve Inventory:</strong> Matched stock updated, new stock added, unmatched marked Out of Stock.
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(197,160,89,0.1); border: 1px solid rgba(197,160,89,0.25); padding: 5px 12px; border-radius: 6px;">
+                            <i class="fa-solid fa-sparkles" style="color: #fef08a; font-size: 0.85rem;"></i>
+                            <span style="font-size: 0.78rem; color: #fef08a;">
+                                <strong>New Launch (FIFO):</strong> New arrivals auto-added to New Launch (max 30); older stock moves to normal collection.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time Metrics & Progress Telemetry -->
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span id="coworkerCurrentStepText" style="font-size: 0.82rem; font-weight: 600; color: var(--gold-light);">Ready to launch</span>
+                        <span id="coworkerProgressPercent" style="font-size: 0.82rem; color: var(--admin-text-muted); font-weight: 600;">0%</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; position: relative;">
+                        <div id="coworkerProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #c5a059, #10b981); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- 4 Live Metric Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="display: block; font-size: 1.25rem; font-weight: 700; color: #fff;" id="metricScanned">0</span>
+                        <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase;">Pieces Scanned</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="display: block; font-size: 1.25rem; font-weight: 700; color: #34d399;" id="metricUpdated">0</span>
+                        <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase;">Stock / Prices Synced</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="display: block; font-size: 1.25rem; font-weight: 700; color: #60a5fa;" id="metricAdded">0</span>
+                        <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase;">New Arrivals Added</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="display: block; font-size: 1.25rem; font-weight: 700; color: #f87171;" id="metricOutOfStock">0</span>
+                        <span style="font-size: 0.72rem; color: var(--admin-text-muted); text-transform: uppercase;">Out of Stock</span>
+                    </div>
+                </div>
+
+                <!-- Live Co-Worker Activity Console -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 0.78rem; font-weight: 600; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-terminal" style="margin-right: 5px;"></i> Live Co-Worker Activity Stream
+                        </span>
+                        <span id="coworkerDurationText" style="font-size: 0.74rem; color: var(--admin-text-muted);">Duration: 0s</span>
+                    </div>
+                    <div id="coworkerTerminalLogs" style="background: #09090b; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; height: 160px; overflow-y: auto; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.75rem; color: #d4d4d8; line-height: 1.5;">
+                        <div style="color: #71717a;">Waiting for co-worker agent launch...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.78rem; color: var(--admin-text-muted);">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Last sync: <span id="coworkerLastSyncTime">Never</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-admin-danger" id="btnStopCoworker" onclick="stopCzmCoworkerAgent()" style="display: none; padding: 8px 16px;">
+                        <i class="fa-solid fa-stop"></i> Stop Agent
+                    </button>
+                    <button type="button" class="btn-admin-outline" onclick="closeCzmCoworkerModal()">Close</button>
+                    <button type="button" class="btn-admin-primary" id="btnStartCoworker" onclick="startCzmCoworkerAgent()" style="padding: 8px 20px;">
+                        <i class="fa-solid fa-play"></i> Start Co-Worker
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=20260923_sync"></script>
-</body>
+    <script src="admin.js?v=v28_bulk_disable"></script>
+
+    </body>
 </html>

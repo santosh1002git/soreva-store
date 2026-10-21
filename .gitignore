@@ -1,0 +1,51 @@
+# Credentials, Secrets & Sensitive Data
+data/czm-credentials.json
+data/czm-cookie.json
+data/czm-sync-status.json
+data/razorpay-config.json
+data/notifications-config.json
+data/inquiries.json
+*.env
+*.env.*
+*.pem
+*.key
+
+# Backup Files & Snapshots
+*.bak
+*.bak*
+*.backup.*
+*.backup
+data/*.backup.*
+data/*.backup
+data/store-data.backup.*.json
+pb/pb_data/*.backup.*
+pb/pb_data/*.backup.*.db
+
+# Cache, Logs & SQLite Temp Files
+data/img_cache/
+server.log
+*.log
+__pycache__/
+*.py[cod]
+*$py.class
+*.db-shm
+*.db-wal
+pb/pb_data/data.db-shm
+pb/pb_data/data.db-wal
+pb/pb_data/.notify/
+
+# Scratch & Temporary Analysis Files
+grep_output.txt
+grep_test.txt
+grep_first.txt
+recovered_contents.txt
+app_reconstructed.js
+app_recovered_auto.js
+app_js_history.json
+
+# Operating System & Editor Files
+.DS_Store
+*/.DS_Store
+.vscode/
+.idea/
+Thumbs.db

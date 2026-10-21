@@ -549,7 +549,7 @@ async function handleSaveProduct(e) {
         hoverImg,
         videoUrl,
         description,
-        availableFinishes: ["18K Gold", "Rhodium Silver"],
+        availableFinishes: ["24K Gold", "Rhodium Silver"],
         employeeName: currentStaff ? currentStaff.name : 'Owner'
     };
 

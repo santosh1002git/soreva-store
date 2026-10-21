@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us • The Sorèva Story | Everyday Luxury, Timeless Elegance</title>
+    <meta name="description" content="Discover the House of Sorèva, co-founded by Sonal Belchada & Shruthi Shivakumar. Quiet luxury demi-fine jewellery handcrafted with 24K gold plating, AAA-grade cubic zirconia, and diamond-inspired brilliance.">
+
+    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+
+    <!-- Custom Stylesheet (Theme Core) -->
+    <link rel="stylesheet" href="styles.css?v=v11_quickview">
+
+    <style>
+        /* ==========================================================================
+           SORÈVA LUXURY THEME ABOUT US STYLING
+           Palette: Espresso (#38302e), Soft Cream (#fbf8f5), Champagne Gold (#c5a059)
+           ========================================================================== */
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* HERO HEADER (Luxury Espresso & Ambient Champagne Glow) */
+        .about-hero-section {
+            background: linear-gradient(180deg, #27201e 0%, var(--theme-color) 55%, #2e2624 100%);
+            color: var(--text-color);
+            padding: 95px 0 85px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+        }
+
+        .about-hero-ambient {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(740px, 94vw);
+            height: min(400px, 70vw);
+            background: radial-gradient(ellipse at center, rgba(197, 160, 89, 0.24) 0%, rgba(223, 189, 124, 0.07) 50%, transparent 75%);
+            filter: blur(55px);
+            pointer-events: none;
+        }
+
+        .about-breadcrumbs {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: rgba(251, 248, 245, 0.65);
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-breadcrumbs a {
+            color: rgba(251, 248, 245, 0.8);
+            transition: color var(--transition-fast);
+        }
+
+        .about-breadcrumbs a:hover {
+            color: var(--gold-accent);
+        }
+
+        .about-breadcrumbs span.sep {
+            color: rgba(197, 160, 89, 0.6);
+            font-size: 0.75rem;
+        }
+
+        .about-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(197, 160, 89, 0.12);
+            border: 1px solid rgba(197, 160, 89, 0.35);
+            padding: 6px 22px;
+            border-radius: var(--radius-full);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--gold-accent);
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(2.5rem, 5.5vw, 4.2rem);
+            font-weight: 600;
+            line-height: 1.15;
+            color: #ffffff;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-hero-title em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--gold-accent);
+        }
+
+        .about-hero-subtitle {
+            max-width: 720px;
+            margin: 0 auto;
+            color: rgba(251, 248, 245, 0.9);
+            font-size: 1.15rem;
+            line-height: 1.8;
+            font-weight: 300;
+            position: relative;
+            z-index: 2;
+            font-family: var(--font-heading);
+            font-style: italic;
+        }
+
+        .about-hero-meta {
+            margin-top: 24px;
+            font-size: 0.84rem;
+            color: rgba(197, 160, 89, 0.95);
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 24px;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+        }
+
+        /* BRAND HIGHLIGHTS STRIP */
+        .about-highlights-strip {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 18px 0;
+            box-shadow: 0 2px 8px rgba(56, 48, 46, 0.02);
+        }
+
+        .about-highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .about-highlight-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .about-highlight-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            color: var(--gold-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .about-highlight-info strong {
+            display: block;
+            font-size: 0.86rem;
+            color: var(--theme-color);
+            font-weight: 600;
+        }
+
+        .about-highlight-info span {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        /* MAIN CONTENT SECTION */
+        .about-main-wrapper {
+            padding: 70px 0 100px;
+        }
+
+        /* STORY CHAPTER SECTION */
+        .about-chapter-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 55px 60px;
+            margin-bottom: 55px;
+            text-align: center;
+            box-shadow: var(--shadow-subtle);
+            position: relative;
+        }
+
+        .about-chapter-box::before {
+            content: "✦";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            padding: 0 14px;
+            color: var(--gold-accent);
+            font-size: 1rem;
+        }
+
+        .about-chapter-tag {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold-hover);
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .about-chapter-title {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 3.6vw, 2.6rem);
+            color: var(--theme-color);
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .about-chapter-title em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--gold-accent);
+        }
+
+        .about-chapter-desc {
+            max-width: 820px;
+            margin: 0 auto;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.9;
+        }
+
+        /* FOUNDERS SPOTLIGHT CARD (Featured Co-Founders) */
+        .founders-card {
+            background: linear-gradient(135deg, #ffffff 0%, var(--bg-ivory) 100%);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1.15fr 1.35fr;
+            box-shadow: 0 12px 35px rgba(56, 48, 46, 0.08);
+            margin-bottom: 60px;
+            transition: all var(--transition-smooth);
+            position: relative;
+        }
+
+        .founders-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold-accent);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .founders-visual-side {
+            background: linear-gradient(145deg, #27201e 0%, var(--theme-color) 60%, #1f1917 100%);
+            color: #ffffff;
+            padding: 50px 42px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            border-right: 1px solid rgba(197, 160, 89, 0.3);
+        }
+
+        .founders-visual-side::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(197, 160, 89, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .founders-seal {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            border: 2px solid var(--gold-accent);
+            background: rgba(197, 160, 89, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .founders-seal i {
+            font-size: 2.4rem;
+            color: var(--gold-accent);
+        }
+
+        .founders-names-hero {
+            font-family: var(--font-heading);
+            font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+            color: #ffffff;
+            margin-bottom: 6px;
+            font-weight: 600;
+            line-height: 1.25;
+            position: relative;
+            z-index: 2;
+        }
+
+        .founders-names-hero span.amp {
+            color: var(--gold-accent);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .founders-role-pill {
+            font-size: 0.8rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--gold-badge);
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .founders-badges-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .founders-mini-pill {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(197, 160, 89, 0.35);
+            padding: 5px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.74rem;
+            color: #dcd4ce;
+            font-weight: 600;
+        }
+
+        .founders-content-side {
+            padding: 50px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .founders-quote-tag {
+            color: var(--gold-hover);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .founders-heading {
+            font-family: var(--font-heading);
+            font-size: 1.85rem;
+            color: var(--theme-color);
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .founders-manifesto-text {
+            color: var(--text-muted);
+            font-size: 0.98rem;
+            line-height: 1.85;
+            margin-bottom: 22px;
+        }
+
+        .founders-manifesto-text strong {
+            color: var(--theme-color);
+        }
+
+        .founders-signature-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 18px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .founders-sign-name {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            color: var(--gold-hover);
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .founders-origin {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        /* 4 CHAPTERS GRID */
+        .about-chapters-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+            margin-bottom: 60px;
+        }
+
+        .about-chapter-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 34px 26px;
+            box-shadow: var(--shadow-subtle);
+            transition: all var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .about-chapter-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold-accent);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .about-chapter-num {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--gold-accent);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .about-chapter-num::after {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 1.5px;
+            background: var(--gold-accent);
+        }
+
+        .about-chapter-name {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            color: var(--theme-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .about-chapter-text {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .about-chapter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .about-mini-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--theme-color);
+            background: var(--bg-cream);
+            padding: 3px 9px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        /* MADE WITH INTENTION SECTION (CRAFT & MATERIALS) */
+        .craft-showcase-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 50px;
+            margin-bottom: 60px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .craft-header-text {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 40px;
+        }
+
+        .craft-header-tag {
+            color: var(--gold-hover);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .craft-header-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+            color: var(--theme-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .craft-grid-3col {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 26px;
+        }
+
+        .craft-item {
+            background: var(--bg-cream);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 32px 26px;
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+
+        .craft-item:hover {
+            border-color: var(--gold-accent);
+            background: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(197, 160, 89, 0.12);
+        }
+
+        .craft-item-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            border: 1px solid rgba(197, 160, 89, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--gold-hover);
+            margin: 0 auto 16px;
+        }
+
+        .craft-item h4 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            color: var(--theme-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .craft-item p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* SIGNATURE PHILOSOPHY BANNER */
+        .about-quote-banner {
+            background: var(--theme-color);
+            color: var(--text-color);
+            border-radius: var(--radius-lg);
+            padding: 55px 50px;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(56, 48, 46, 0.15);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+        }
+
+        .about-quote-banner::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(197, 160, 89, 0.18) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .about-quote-banner::after {
+            content: "“";
+            position: absolute;
+            font-family: var(--font-heading);
+            font-size: 240px;
+            color: rgba(255, 255, 255, 0.035);
+            right: 25px;
+            top: -45px;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .about-quote-banner small {
+            display: block;
+            color: var(--gold-accent);
+            font-size: 0.8rem;
+            letter-spacing: 3.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-quote-banner h2 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-quote-banner blockquote {
+            max-width: 780px;
+            margin: 0 auto 20px;
+            color: rgba(251, 248, 245, 0.9);
+            font-size: 1.08rem;
+            line-height: 1.85;
+            font-style: italic;
+            position: relative;
+            z-index: 2;
+        }
+
+        .about-quote-author {
+            display: inline-block;
+            font-size: 0.88rem;
+            color: var(--gold-badge);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* EXPLORE INVITATION CTA */
+        .about-cta-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 50px 45px;
+            text-align: center;
+            box-shadow: var(--shadow-subtle);
+            position: relative;
+        }
+
+        .about-cta-tag {
+            color: var(--gold-hover);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .about-cta-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            color: var(--theme-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .about-cta-desc {
+            max-width: 660px;
+            margin: 0 auto 30px;
+            color: var(--text-muted);
+            font-size: 0.98rem;
+            line-height: 1.8;
+        }
+
+        .about-cta-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-luxury-primary {
+            background-color: var(--gold-accent);
+            color: #241e1d;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            border-radius: var(--radius-full);
+            padding: 14px 32px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 16px rgba(197, 160, 89, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-luxury-primary:hover {
+            background-color: #d8b874;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(197, 160, 89, 0.4);
+            color: #241e1d;
+        }
+
+        .btn-luxury-secondary {
+            background-color: transparent;
+            color: var(--theme-color);
+            border: 1px solid var(--border-color);
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-radius: var(--radius-full);
+            padding: 13px 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .btn-luxury-secondary:hover {
+            border-color: var(--gold-accent);
+            color: var(--gold-hover);
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 992px) {
+            .about-highlights-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .founders-card {
+                grid-template-columns: 1fr;
+            }
+            .founders-visual-side {
+                border-right: none;
+                border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+                padding: 40px 24px;
+            }
+            .about-chapters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .craft-grid-3col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .about-chapters-grid {
+                grid-template-columns: 1fr;
+            }
+            .about-chapter-box,
+            .founders-content-side,
+            .craft-showcase-box,
+            .about-quote-banner,
+            .about-cta-card {
+                padding: 36px 22px;
+            }
+        }
+
+        @media (max-width: 580px) {
+            .about-highlights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <!-- PROLOGUE ENTRY BACKDROP -->
+    <div class="entry-experience logo-intro-experience unveiled" id="sorevaLogoIntro" style="display: none;"></div>
+
+    <!-- ANNOUNCEMENT BANNER -->
+    <aside class="announcement-bar" role="region" aria-label="Announcement">
+        <div class="announcement-track" id="announcementTrack">
+            <span class="announcement-item"><i class="fa-solid fa-sparkles"></i> <strong>LAUNCH15</strong> — Celebrate our launch with 15% OFF across all creations</span>
+            <span class="announcement-separator">•</span>
+            <span class="announcement-item"><i class="fa-solid fa-truck-fast"></i> Worldwide Shipping Available</span>
+            <span class="announcement-separator">•</span>
+            <span class="announcement-item"><i class="fa-solid fa-shield-halved"></i> Express Delivery Across India (2–5 Business Days)</span>
+        </div>
+    </aside>
+
+    <!-- STICKY SITE HEADER -->
+    <header class="site-header">
+        <div class="header-main container">
+            <!-- Left Navigation Menu -->
+            <nav class="header-nav-left" aria-label="Main Navigation"></nav>
+
+            <!-- Brand Logo -->
+            <div class="header-brand">
+                <a href="index.html" aria-label="Sorèva Home" style="display: inline-flex; align-items: center; justify-content: center;">
+                    <img class="brand-logo-img" id="siteLogoImg" src="assets/logo-black.png?v=clean2026" alt="Sorèva Exquisite Jewellery">
+                </a>
+            </div>
+
+            <!-- Right Header Actions -->
+            <div class="header-actions-right">
+                <!-- Currency Selector -->
+                <div class="currency-selector">
+                    <button class="currency-btn" id="currencyBtn" aria-label="Select Currency">
+                        <i class="fa-solid fa-globe" style="font-size: 0.8rem; color: var(--gold-accent);"></i>
+                        <span id="currentCurrencyLabel">INR</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem;"></i>
+                    </button>
+                    <div class="currency-dropdown" id="currencyDropdown">
+                        <div class="currency-option active" data-currency="INR"><span>INR (₹)</span><i class="fa-solid fa-check"></i></div>
+                        <div class="currency-option" data-currency="USD"><span>USD ($)</span></div>
+                        <div class="currency-option" data-currency="AED"><span>AED (د.إ)</span></div>
+                        <div class="currency-option" data-currency="GBP"><span>GBP (£)</span></div>
+                        <div class="currency-option" data-currency="EUR"><span>EUR (€)</span></div>
+                    </div>
+                </div>
+
+                <!-- Live Search Button -->
+                <a href="catalog.html" class="header-action-btn" title="Search Collection">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </a>
+
+                <!-- Wishlist Button -->
+                <button class="header-action-btn wishlist-open-btn" onclick="openWishlistDrawer()" aria-label="Saved Favourites" title="Saved Favourites">
+                    <i class="fa-regular fa-heart"></i>
+                    <span class="badge-count wishlist-count-badge">0</span>
+                </button>
+
+                <!-- Shopping Cart Button -->
+                                <!-- User Account / Sign In Pill (E-Commerce Standard) -->
+                <div class="user-account-container" id="userAccountContainer">
+                    <button class="header-auth-pill" id="headerAuthBtn" onclick="handleHeaderAuthClick(event)" aria-label="Sign In / Client Account" title="Sign In to Sorèva">
+                        <i class="fa-regular fa-user" id="userAuthIcon"></i>
+                        <span class="user-avatar-initials" id="userAvatarBadge" style="display: none;"></span>
+                        <span class="auth-btn-text" id="authBtnText">Sign In</span>
+                    </button>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <div class="user-dropdown-header">
+                            <div class="user-dropdown-avatar" id="userDropdownAvatar">S</div>
+                            <div class="user-dropdown-info">
+                                <span class="user-dropdown-name" id="userDropdownName">Valued Client</span>
+                                <span class="user-dropdown-email" id="userDropdownEmail">client@soreva.in</span>
+                            </div>
+                        </div>
+                        <ul class="user-dropdown-items">
+                            <li>
+                                <button type="button" class="user-dropdown-link" onclick="openCartDrawerFromAccount()">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                    <span>Shopping Cart (<strong class="cart-count-badge">0</strong>)</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" class="user-dropdown-link logout-link" onclick="handleUserLogout()">
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                    <span>Sign Out</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+<button class="header-action-btn cart-open-btn" aria-label="Shopping Cart" title="Shopping Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="badge-count cart-count-badge" id="headerCartCount">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Secondary Category Navigation Bar -->
+        <nav class="header-category-bar" aria-label="Category Navigation">
+            <div class="container">
+                <ul class="category-nav-list dropdown-nav-list">
+                    <li class="nav-dropdown-item"><a href="about-us.html" class="cat-nav-link" style="color: var(--gold-accent); font-weight: 600;">The Maison</a></li>
+                    
+                    <!-- 1. Necklace -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=necklace" class="cat-nav-link">Necklaces <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=necklace&sub=Bridal%20Necklaces">Bridal Necklaces</a>
+                            <a href="catalog.html?cat=necklace&sub=Traditional%20Necklaces">Traditional Sets</a>
+                            <a href="catalog.html?cat=necklace&sub=Aurous%20Collection">Aurous Collection</a>
+                            <a href="catalog.html?cat=necklace&sub=Classic%20Necklaces">Classic Necklaces</a>
+                            <a href="catalog.html?cat=necklace&sub=Collar%20Necklaces">Collar Necklaces</a>
+                        </div>
+                    </li>
+
+                    <!-- 2. Earring -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=earrings" class="cat-nav-link">Earrings <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=earrings&sub=Big%20Size%20Earrings">Statement Earrings</a>
+                            <a href="catalog.html?cat=earrings&sub=Medium%20Earrings">Elegant Drops</a>
+                            <a href="catalog.html?cat=earrings&sub=Tops%20%26%20Studs">Essential Studs</a>
+                            <a href="catalog.html?cat=earrings&sub=Small%20Earrings">Minimal Earrings</a>
+                            <a href="catalog.html?cat=earrings&sub=Jhumka%20Earrings">Royal Jhumkas</a>
+                        </div>
+                    </li>
+
+                    <!-- 3. Finger Ring -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=rings" class="cat-nav-link">Finger Rings <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=rings&sub=Finger%20Rings">Statement Rings</a>
+                        </div>
+                    </li>
+
+                    <!-- 4. Pendants -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=pendants" class="cat-nav-link">Pendants <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=pendants&sub=CZ%20Pendant%20Sets">CZ Pendant Sets</a>
+                            <a href="catalog.html?cat=pendants&sub=CZ%20Mangalsutra">CZ Mangalsutra</a>
+                            <a href="catalog.html?cat=pendants&sub=Pendant%20With%20Broad%20Chain">Pendant With Broad Chain</a>
+                            <a href="catalog.html?cat=pendants&sub=Pendant%20With%20Medium%20Chain">Pendant With Medium Chain</a>
+                        </div>
+                    </li>
+
+                    <!-- 5. Wristwear -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=wristwear" class="cat-nav-link">Wristwear <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=bracelets&sub=CZ%20Bracelets">CZ Bracelets</a>
+                            <a href="catalog.html?cat=bracelets&sub=CZ%20Bangles">CZ Bangles</a>
+                            <a href="catalog.html?cat=bracelets&sub=Bracelets%20Rings%20Combo">Bracelet Rings Combo</a>
+                        </div>
+                    </li>
+
+                    <!-- 6. Silver jewellery -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=silver" class="cat-nav-link">Silver Jewellery <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=silver">925 Sterling Silver Masterpieces</a>
+                            <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Earrings">Sterling Silver Earrings</a>
+                            <a href="catalog.html?cat=rings&sub=925%20Sterling%20Silver%20Rings">Sterling Silver Rings</a>
+                            <a href="catalog.html?cat=pendants&sub=925%20Sterling%20Silver%20Pendants">Sterling Silver Pendants</a>
+                        </div>
+                    </li>
+
+                    <!-- 7. Accessories -->
+                    <li class="nav-dropdown-item">
+                        <a href="catalog.html?cat=accessories" class="cat-nav-link">Accessories <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i></a>
+                        <div class="nav-dropdown-menu">
+                            <a href="catalog.html?cat=accessories&sub=CZ%20Maang%20Tikka">Royal Maang Tikka</a>
+                            <a href="catalog.html?cat=accessories&sub=CZ%20Brooch">Artisanal Brooches</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HERO HEADER -->
+    <section class="about-hero-section">
+        <div class="about-hero-ambient"></div>
+        <div class="container">
+            <div class="about-breadcrumbs">
+                <a href="index.html">Home</a>
+                <span class="sep">/</span>
+                <span style="color: var(--gold-accent); font-weight: 500;">The Maison</span>
+                <span class="sep">/</span>
+                <span style="color: var(--gold-accent); font-weight: 500;">About Us</span>
+            </div>
+            <br>
+            <div class="about-badge-pill">
+                <i class="fa-solid fa-gem"></i> The House of Sorèva
+            </div>
+            <h1 class="about-hero-title">The Sorèva <em>Story</em></h1>
+            <p class="about-hero-subtitle">
+                “Luxury is a feeling — not a price tag.”
+            </p>
+            <div class="about-hero-meta">
+                <span><i class="fa-solid fa-sparkles"></i> Founded by Sonal Belchada &amp; Shruthi Shivakumar</span>
+                <span>•</span>
+                <span>Bengaluru, India</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- BRAND HIGHLIGHTS STRIP -->
+    <section class="about-highlights-strip">
+        <div class="container">
+            <div class="about-highlights-grid">
+                <div class="about-highlight-item">
+                    <div class="about-highlight-icon"><i class="fa-solid fa-gem"></i></div>
+                    <div class="about-highlight-info">
+                        <strong>AAA-Grade CZ</strong>
+                        <span>Diamond-Inspired Brilliance</span>
+                    </div>
+                </div>
+                <div class="about-highlight-item">
+                    <div class="about-highlight-icon"><i class="fa-solid fa-crown"></i></div>
+                    <div class="about-highlight-info">
+                        <strong>24K Gold Plated</strong>
+                        <span>Anti-Tarnish Lustrous Polish</span>
+                    </div>
+                </div>
+                <div class="about-highlight-item">
+                    <div class="about-highlight-icon"><i class="fa-solid fa-feather-pointed"></i></div>
+                    <div class="about-highlight-info">
+                        <strong>Skin-Friendly</strong>
+                        <span>Hypoallergenic Demi-Fine Alloy</span>
+                    </div>
+                </div>
+                <div class="about-highlight-item">
+                    <div class="about-highlight-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <div class="about-highlight-info">
+                        <strong>Hand-Checked</strong>
+                        <span>Inspected with Intention</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN BODY -->
+    <main class="about-main-wrapper">
+        <div class="container">
+            <!-- CHAPTER 01: OUR PHILOSOPHY -->
+            <section class="about-chapter-box">
+                <span class="about-chapter-tag">OUR PHILOSOPHY</span>
+                <h2 class="about-chapter-title">We believe luxury should feel <em>effortless</em>.</h2>
+                <p class="about-chapter-desc">
+                    At Sorèva, we believe luxury is a feeling—not a price tag. We created Sorèva with a simple vision: to make beautifully crafted, AAA-grade cubic zirconia jewellery with a genuine diamond-inspired sparkle accessible to every woman who loves elegance, confidence, and timeless style.
+                </p>
+            </section>
+
+            <!-- FOUNDERS SPOTLIGHT CARD (Featured Co-Founders: Sonal Belchada & Shruthi Shivakumar) -->
+            <section class="founders-card" id="founders-note">
+                <div class="founders-visual-side">
+                    <div class="founders-seal">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <h3 class="founders-names-hero">
+                        Sonal Belchada <span class="amp">&amp;</span><br>Shruthi Shivakumar
+                    </h3>
+                    <span class="founders-role-pill">CO-FOUNDERS &amp; CREATIVE DIRECTORS</span>
+                    <div class="founders-badges-row">
+                        <span class="founders-mini-pill"><i class="fa-solid fa-gem" style="color: var(--gold-accent);"></i> Demi-Fine Vision</span>
+                        <span class="founders-mini-pill"><i class="fa-solid fa-heart" style="color: var(--gold-accent);"></i> Artisan Rooted</span>
+                        <span class="founders-mini-pill"><i class="fa-solid fa-award" style="color: var(--gold-accent);"></i> Made for Modern India</span>
+                    </div>
+                </div>
+
+                <div class="founders-content-side">
+                    <span class="founders-quote-tag">A NOTE FROM OUR FOUNDERS</span>
+                    <h3 class="founders-heading">Crafting Jewellery That Becomes A Natural Part Of You.</h3>
+                    <p class="founders-manifesto-text">
+                        “When we founded Sorèva, we asked ourselves why extraordinary jewellery had to be locked away in vaults, saved only for rarest milestones, while daily wear was dominated by fast fashion that tarnished within weeks.
+                    </p>
+                    <p class="founders-manifesto-text">
+                        We envisioned a different standard: <strong>demi-fine quiet luxury</strong>. Pieces designed with 24K gold plating, impeccably faceted AAA-grade cubic zirconia, and lightweight hypoallergenic ergonomics that transition effortlessly from high-stakes morning meetings to radiant evening celebrations.
+                    </p>
+                    <p class="founders-manifesto-text" style="margin-bottom: 0;">
+                        Every Sorèva piece represents our promise to you: uncompromising quality, accessible indulgence, and personal elegance that shines with you every single day.”
+                    </p>
+                    <div class="founders-signature-row">
+                        <span class="founders-sign-name">— Sonal Belchada &amp; Shruthi Shivakumar</span>
+                        <span class="founders-origin">The House of Sorèva</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAPTER 02: THE SORÈVA VISION -->
+            <section class="about-chapter-box">
+                <span class="about-chapter-tag">THE SORÈVA VISION</span>
+                <h2 class="about-chapter-title">Quiet luxury, <em>beautifully reimagined</em>.</h2>
+                <p class="about-chapter-desc">
+                    Our designs follow the quiet-luxury movement—clean lines, lightweight settings, and understated sparkle that layer effortlessly from your morning meeting to your evening plans. We believe jewellery doesn't need to be loud to make an impression. The most beautiful pieces are often the ones that become a natural part of who you are.
+                </p>
+            </section>
+
+            <!-- CHAPTER 03: DESIGNED FOR REAL LIFE (4 Life Chapters) -->
+            <section style="margin-bottom: 60px;">
+                <div style="text-align: center; margin-bottom: 36px;">
+                    <span class="about-chapter-tag">DESIGNED FOR REAL LIFE</span>
+                    <h2 class="about-chapter-title" style="margin-bottom: 10px;">Jewellery For Every <em>Chapter</em></h2>
+                    <p style="color: var(--text-muted); font-size: 1.02rem; max-width: 680px; margin: 0 auto;">
+                        Sparkle that belongs to every moment. Whether you're dressing for work, an evening gala, a wedding, or elevating your day.
+                    </p>
+                </div>
+
+                <div class="about-chapters-grid">
+                    <!-- 01 Work -->
+                    <article class="about-chapter-card">
+                        <div>
+                            <div class="about-chapter-num">01</div>
+                            <h3 class="about-chapter-name">Work</h3>
+                            <p class="about-chapter-text">
+                                Refined pieces that bring subtle confidence to your everyday professional style.
+                            </p>
+                        </div>
+                        <div class="about-chapter-tags">
+                            <span class="about-mini-tag">Solitaires</span>
+                            <span class="about-mini-tag">Sleek Pendants</span>
+                            <span class="about-mini-tag">Studs</span>
+                        </div>
+                    </article>
+
+                    <!-- 02 Celebrations -->
+                    <article class="about-chapter-card">
+                        <div>
+                            <div class="about-chapter-num">02</div>
+                            <h3 class="about-chapter-name">Celebrations</h3>
+                            <p class="about-chapter-text">
+                                Elegant sparkle for moments worth remembering and occasions worth dressing for.
+                            </p>
+                        </div>
+                        <div class="about-chapter-tags">
+                            <span class="about-mini-tag">Cocktail Rings</span>
+                            <span class="about-mini-tag">Tennis Bracelets</span>
+                            <span class="about-mini-tag">Drops</span>
+                        </div>
+                    </article>
+
+                    <!-- 03 Weddings -->
+                    <article class="about-chapter-card">
+                        <div>
+                            <div class="about-chapter-num">03</div>
+                            <h3 class="about-chapter-name">Weddings</h3>
+                            <p class="about-chapter-text">
+                                Timeless designs created to complement your most unforgettable celebrations and festive grandeur.
+                            </p>
+                        </div>
+                        <div class="about-chapter-tags">
+                            <span class="about-mini-tag">Bridal Chokers</span>
+                            <span class="about-mini-tag">Royal Jhumkas</span>
+                            <span class="about-mini-tag">Sets</span>
+                        </div>
+                    </article>
+
+                    <!-- 04 Everyday -->
+                    <article class="about-chapter-card">
+                        <div>
+                            <div class="about-chapter-num">04</div>
+                            <h3 class="about-chapter-name">Everyday</h3>
+                            <p class="about-chapter-text">
+                                Effortless jewellery that turns ordinary moments into something a little more special.
+                            </p>
+                        </div>
+                        <div class="about-chapter-tags">
+                            <span class="about-mini-tag">Stacking Bands</span>
+                            <span class="about-mini-tag">Minimal Chains</span>
+                            <span class="about-mini-tag">Huggies</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- CHAPTER 04: CRAFT & INTENTION -->
+            <section class="craft-showcase-box" id="craft">
+                <div class="craft-header-text">
+                    <span class="craft-header-tag">MADE WITH INTENTION</span>
+                    <h2 class="craft-header-title">Thoughtfully crafted. Carefully finished.</h2>
+                    <p style="color: var(--text-muted); font-size: 1.02rem; line-height: 1.8; margin: 0;">
+                        Every piece is hand-checked for craftsmanship before it reaches you. We believe that accessible luxury should never mean compromising on attention to detail.
+                    </p>
+                </div>
+
+                <div class="craft-grid-3col">
+                    <div class="craft-item">
+                        <div class="craft-item-icon"><i class="fa-solid fa-gem"></i></div>
+                        <h4>AAA-Grade CZ</h4>
+                        <p>Beautifully crafted cubic zirconia selected for its diamond-inspired brilliance, optical purity, and fire.</p>
+                    </div>
+                    <div class="craft-item">
+                        <div class="craft-item-icon"><i class="fa-solid fa-hands-bubbles"></i></div>
+                        <h4>Skin-Friendly &amp; Plated</h4>
+                        <p>Finished with anti-tarnish, hypoallergenic 24K gold plating, so you can enjoy the look of luxury in comfort, every day.</p>
+                    </div>
+                    <div class="craft-item">
+                        <div class="craft-item-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                        <h4>Hand-Checked</h4>
+                        <p>Every piece receives careful individual attention under magnification before it becomes part of your collection.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SIGNATURE PHILOSOPHY BANNER -->
+            <section class="about-quote-banner">
+                <small>THE SORÈVA PHILOSOPHY</small>
+                <h2>Because everyday deserves a little more sparkle.</h2>
+                <blockquote>
+                    “Sorèva — Everyday Luxury, Timeless Elegance. We believe true elegance does not shout; it radiates from within.”
+                </blockquote>
+                <span class="about-quote-author">— Sonal Belchada &amp; Shruthi Shivakumar, Co-Founders</span>
+            </section>
+
+            <!-- EXPLORE INVITATION CTA -->
+            <section class="about-cta-card">
+                <span class="about-cta-tag">EXPERIENCE THE BRILLIANCE</span>
+                <h2 class="about-cta-title">Begin Your Sorèva Journey</h2>
+                <p class="about-cta-desc">
+                    Explore over 11,000 uniquely crafted Italian luxury demi-fine designs, or speak directly with our styling concierge advisors for personalized recommendations.
+                </p>
+                <div class="about-cta-actions">
+                    <a href="catalog.html" class="btn-luxury-primary">
+                        <span>Shop The Collections</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a href="contact-us.html" class="btn-luxury-secondary">
+                        <i class="fa-solid fa-headset"></i>
+                        <span>Contact Concierge Desk</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- SITE FOOTER -->
+    <footer class="site-footer">
+        <div class="container footer-top">
+            <div class="footer-grid">
+                <!-- Col 1: Brand & Contact -->
+                <div class="footer-col footer-about">
+                    <a href="index.html" aria-label="Sorèva Home" style="display: inline-block; margin-bottom: 16px;">
+                        <img class="footer-logo-img" id="footerLogoImg" src="assets/logo-white.png" alt="Sorèva Exquisite Jewellery">
+                    </a>
+                    <p>
+                        Discover Sorèva — premium Cubic Zirconia jewellery handcrafted to celebrate modern grace and timeless Indian grandeur. Founded by Sonal Belchada &amp; Shruthi Shivakumar.
+                    </p>
+                    <div class="footer-contact-item">
+                        <i class="fa-solid fa-phone"></i>
+                        <a href="tel:+919741118940">+91 97411 18940</a>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <a href="mailto:support@soreva.in">support@soreva.in</a>
+                    </div>
+                </div>
+
+                <!-- Col 2: Jewellery Collections -->
+                                <div class="footer-col footer-links">
+                    <h4>Collections</h4>
+                    <ul>
+                        <li><a href="catalog.html?cat=necklace">Necklaces</a></li>
+                        <li><a href="catalog.html?cat=earrings">Earrings</a></li>
+                        <li><a href="catalog.html?cat=rings">Finger Rings</a></li>
+                        <li><a href="catalog.html?cat=pendants">Pendants</a></li>
+                        <li><a href="catalog.html?cat=wristwear">Wristwear</a></li>
+                        <li><a href="catalog.html?cat=silver">Silver Jewellery</a></li>
+                        <li><a href="catalog.html?cat=accessories">Accessories</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Customer Care & Policies -->
+                <div class="footer-col footer-links">
+                    <h4>The Maison &amp; Policies</h4>
+                    <ul>
+                        <li><a href="about-us.html" style="color: var(--gold-accent); font-weight: 600;">About Us (The Maison)</a></li>
+                        <li><a href="shipping-delivery-policy.html">Shipping &amp; Delivery Policy</a></li>
+                        <li><a href="return-exchange-policy.html">Return &amp; Exchange Policy</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-conditions.html">Terms &amp; Conditions</a></li>
+                        <li><a href="contact-us.html">Contact Concierge</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Newsletter & Exclusive Offers -->
+                <div class="footer-col">
+                    <h4>Join The Sorèva Circle</h4>
+                    <p class="newsletter-desc">
+                        Subscribe for private seasonal sales, new collection drops, and receive <strong>15% OFF</strong> on your first order.
+                    </p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); if(window.showToast) window.showToast('Thank you for subscribing to Sorèva!'); else alert('Thank you for subscribing to Sorèva!'); this.reset();">
+                        <input type="email" class="newsletter-input" placeholder="Your email address" required>
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/soreva_jewels" target="_blank" rel="noopener" class="social-link-btn" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://facebook.com" target="_blank" rel="noopener" class="social-link-btn" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://youtube.com/@soreva_jewels" target="_blank" rel="noopener" class="social-link-btn" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://wa.me/919741118940" target="_blank" rel="noopener" class="social-link-btn" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container footer-bottom">
+            <p id="footerCopyright">© 2026 Sorèva Jewellery. All Rights Reserved. Reference: soreva.in</p>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa" title="Visa"></i>
+                <i class="fa-brands fa-cc-mastercard" title="Mastercard"></i>
+                <i class="fa-brands fa-cc-amex" title="American Express"></i>
+                <i class="fa-brands fa-google-pay" title="Google Pay"></i>
+                <i class="fa-brands fa-apple-pay" title="Apple Pay"></i>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WISHLIST SLIDE-OVER DRAWER -->
+    <div class="drawer-backdrop" id="wishlistDrawerBackdrop" onclick="closeWishlistDrawer()"></div>
+    <aside class="cart-drawer wishlist-drawer" id="wishlistDrawer" aria-label="Saved Favourites">
+        <div class="drawer-header">
+            <h3 class="drawer-title">
+                <i class="fa-solid fa-heart" style="color: var(--gold-accent);"></i>
+                <span>Saved Favourites</span>
+                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="wishlist-count-badge">0</span>)</span>
+            </h3>
+            <button type="button" class="drawer-close-btn" id="wishlistDrawerClose" onclick="closeWishlistDrawer()" aria-label="Close Favourites">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Wishlist Items List -->
+        <div class="cart-items-list" id="wishlistItemsList" style="flex: 1; overflow-y: auto;">
+            <!-- Rendered by app.js -->
+        </div>
+
+        <!-- Wishlist Drawer Footer -->
+        <div class="drawer-footer" id="wishlistDrawerFooter" style="padding: 20px 24px; border-top: 1px solid var(--border-color); background: #fff;">
+            <button type="button" class="btn-checkout" id="moveAllWishlistBtn" onclick="moveAllWishlistToBag()" style="cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-weight: 700; background: var(--gold-accent); color: #241e1d; border: none; border-radius: var(--radius-sm); margin-bottom: 10px; transition: all 0.25s;">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span>Move All to Shopping Cart</span>
+            </button>
+            <button type="button" class="btn-outline" onclick="closeWishlistDrawer()" style="width: 100%; padding: 10px; font-size: 0.85rem; border: 1px solid var(--border-color); background: transparent; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-muted); transition: all 0.25s;">
+                Continue Browsing
+            </button>
+        </div>
+    </aside>
+
+    <!-- CART SLIDE-OVER DRAWER -->
+    <div class="drawer-backdrop" id="cartDrawerBackdrop"></div>
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping Cart">
+        <div class="drawer-header">
+            <h3 class="drawer-title">
+                <i class="fa-solid fa-cart-shopping" style="color: var(--gold-accent);"></i>
+                <span>Your Cart</span>
+                <span style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-body);">(<span class="cart-count-badge">0</span>)</span>
+            </h3>
+            <button class="drawer-close-btn" id="cartDrawerClose" aria-label="Close Cart">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Free Shipping Progress Meter -->
+        <div class="shipping-meter">
+            <div class="shipping-meter-text" id="shippingMeterText">
+                <span>Free Express Shipping Progress</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="shippingProgressFill"></div>
+            </div>
+        </div>
+
+        <!-- Cart Items List -->
+        <div class="cart-items-list" id="cartItemsList">
+            <!-- Rendered by app.js -->
+        </div>
+
+        <!-- Cart Drawer Footer -->
+        <div class="drawer-footer">
+            <div class="coupon-box">
+                <input type="text" id="couponCodeInput" class="coupon-input" placeholder="Coupon Code (Try LAUNCH15)">
+                <button class="btn-apply-coupon" id="applyCouponBtn">Apply</button>
+            </div>
+
+            <div class="cart-summary-row">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">₹0</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Promotional Discount</span>
+                <span id="cartDiscount" style="color: #2e7d32;">₹0</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>Shipping</span>
+                <span style="color: #2e7d32;">Complimentary</span>
+            </div>
+            <div class="cart-summary-row total-row">
+                <span>Total</span>
+                <span id="cartTotal">₹0</span>
+            </div>
+
+            <button class="btn-checkout" id="checkoutBtn">
+                <span>Proceed to Checkout</span>
+                <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- App JavaScript -->
+        <!-- AUTHENTICATION / SIGN IN MODAL -->
+    <div class="modal-backdrop" id="authModalBackdrop" onclick="if(event.target === this) closeAuthModal();">
+        <div class="auth-modal-card" id="authModalCard">
+            <div class="auth-modal-header">
+                <button class="auth-modal-close" id="authModalClose" aria-label="Close Modal" onclick="closeAuthModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="auth-brand-badge">
+                    <i class="fa-solid fa-gem"></i>
+                    <span>Sorèva Client Privileges</span>
+                </div>
+                <h3 class="auth-modal-title" id="authModalTitle">Welcome to Sorèva</h3>
+                <p class="auth-modal-sub" id="authModalSub">Sign in to synchronize your bespoke jewellery cart and order privileges.</p>
+            </div>
+
+            <div class="auth-tab-bar">
+                <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" onclick="switchAuthTab('signin')">Sign In</button>
+                <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">Create Account</button>
+            </div>
+
+            <div class="auth-form-body">
+                <div class="auth-alert-box" id="authAlertBox"></div>
+
+                <!-- Sign In Form -->
+                <form id="signInForm" onsubmit="handleSignInSubmit(event)">
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="loginEmail">Email Address</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-regular fa-envelope auth-input-icon"></i>
+                            <input type="email" id="loginEmail" class="auth-input" placeholder="e.g. client@soreva.in" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="loginPassword">Password</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-lock auth-input-icon"></i>
+                            <input type="password" id="loginPassword" class="auth-input" placeholder="Enter your account password" required autocomplete="current-password">
+                            <button type="button" class="auth-password-toggle" onclick="toggleAuthPasswordVisibility('loginPassword', this)">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-btn" id="btnSubmitLogin">
+                        <span>Sign In to Sorèva</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <div style="margin-top: 14px; padding: 10px 14px; background: rgba(197, 160, 89, 0.08); border: 1px dashed rgba(197, 160, 89, 0.4); border-radius: 8px; font-size: 0.78rem; color: #5a4b49; text-align: left; line-height: 1.5;">
+                        <div style="font-weight: 700; color: #8a6a2a; margin-bottom: 2px;">
+                            <i class="fa-solid fa-key" style="margin-right: 4px;"></i> Client Credentials:
+                        </div>
+                        <div>Email: <strong style="color: #241e1d; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('loginEmail').value='sonal@soreva.in'; document.getElementById('loginPassword').value='soreva@2026';">sonal@soreva.in</strong> (or admin@soreva.in)</div>
+                        <div>Password: <strong style="color: #241e1d;">soreva@2026</strong></div>
+                        <div style="margin-top: 4px; font-size: 0.72rem; color: #888;">Click email to auto-fill, or click "Create Account" tab to register.</div>
+                    </div>
+                    <div class="auth-footer-notes">
+                        <span>New to the Maison? </span>
+                        <a href="javascript:void(0)" onclick="switchAuthTab('register')">Create an Account</a>
+                    </div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" style="display: none;" onsubmit="handleRegisterSubmit(event)">
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regName">Full Name</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-regular fa-user auth-input-icon"></i>
+                            <input type="text" id="regName" class="auth-input" placeholder="e.g. Sonal Belchada" required autocomplete="name">
+                        </div>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regEmail">Email Address</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-regular fa-envelope auth-input-icon"></i>
+                            <input type="email" id="regEmail" class="auth-input" placeholder="e.g. sonal@soreva.in" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regPhone">Mobile Number (For Concierge Updates)</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-phone auth-input-icon"></i>
+                            <input type="tel" id="regPhone" class="auth-input" placeholder="+91 98765 43210" autocomplete="tel">
+                        </div>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regPassword">Create Password</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-lock auth-input-icon"></i>
+                            <input type="password" id="regPassword" class="auth-input" placeholder="Minimum 6 characters" minlength="6" required autocomplete="new-password">
+                            <button type="button" class="auth-password-toggle" onclick="toggleAuthPasswordVisibility('regPassword', this)">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-btn" id="btnSubmitRegister">
+                        <span>Create Maison Account</span>
+                        <i class="fa-solid fa-gem"></i>
+                    </button>
+                    <div class="auth-footer-notes">
+                        <span>Already registered? </span>
+                        <a href="javascript:void(0)" onclick="switchAuthTab('signin')">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=similar_prod_v1"></script>
+
+    <!-- CHECKOUT MODAL BACKDROP -->
+    <div class="modal-backdrop" id="checkoutModalBackdrop" style="display: none; align-items: center; justify-content: center; z-index: 10000; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);">
+        <div class="checkout-modal" style="background: #1e1918; border: 1px solid rgba(197,160,89,0.35); border-radius: 16px; width: 92%; max-width: 820px; max-height: 90vh; overflow-y: auto; padding: 36px 32px; color: #fbf8f5; box-shadow: 0 25px 70px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.2); position: relative;">
+            <button class="modal-close-btn" onclick="closeCheckoutModal()" aria-label="Close Checkout" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: #fbf8f5; font-size: 1.3rem; cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- CHECKOUT FORM VIEW -->
+            <div id="checkoutFormView">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <img src="assets/logo-white.png" alt="Sorèva" style="height: 38px; width: auto; object-fit: contain; margin-bottom: 8px;">
+                    <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; color: #c5a059;">Boutique Atelier Checkout</h2>
+                    <p style="font-size: 0.88rem; color: rgba(251,248,245,0.7);">Enter your delivery details to reserve and finalize your handcrafted jewellery.</p>
+                </div>
+
+                <div class="checkout-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+                    <!-- LEFT COLUMN: Client Details -->
+                    <div>
+                        <h4 style="font-size: 0.88rem; text-transform: uppercase; letter-spacing: 1px; color: #c5a059; margin-bottom: 14px;">
+                            <i class="fa-solid fa-location-dot"></i> Shipping Destination
+                        </h4>
+
+                        <form id="checkoutOrderForm" onsubmit="handlePlaceOrder(event)">
+                            <div style="margin-bottom: 14px;">
+                                <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Full Name *</label>
+                                <input type="text" id="chkCustName" required placeholder="e.g. Radhika Merchant" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Email *</label>
+                                    <input type="email" id="chkCustEmail" required placeholder="radhika@example.com" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.8);">Phone Number *</label>
+                                    <input type="tel" id="chkCustPhone" required placeholder="+91 97411 18940" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                            </div>
+
+                                                        <!-- ADDRESS LINE 1: FLAT / BUILDING / STREET -->
+                            <div style="margin-bottom: 12px;">
+                                <label for="chkCustAddress" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">Flat, House No., Building, Apartment *</label>
+                                <input type="text" id="chkCustAddress" required placeholder="e.g. Flat 402, Sea Crest Towers, 12th Road" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            </div>
+
+                            <!-- ADDRESS LINE 2: AREA / LANDMARK / SECTOR -->
+                            <div style="margin-bottom: 12px;">
+                                <label for="chkCustAddressLine2" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">Area, Street, Landmark / Sector (Optional)</label>
+                                <input type="text" id="chkCustAddressLine2" placeholder="e.g. Near Palladium Mall, High Street Phoenix" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            </div>
+
+                            <!-- PIN CODE & CITY -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <label for="chkCustPincode" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">Postal / PIN Code *</label>
+                                    <input type="text" id="chkCustPincode" required placeholder="e.g. 400013" maxlength="10" oninput="handlePincodeLookup(this.value)" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label for="chkCustCity" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">Town / City *</label>
+                                    <input type="text" id="chkCustCity" required placeholder="e.g. Mumbai" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                            </div>
+
+                            <!-- STATE & COUNTRY -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div>
+                                    <label for="chkCustState" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">State *</label>
+                                    <input type="text" id="chkCustState" required placeholder="e.g. Maharashtra" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(197,160,89,0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label for="chkCustCountry" style="display: block; font-size: 0.82rem; margin-bottom: 5px; color: rgba(251,248,245,0.85); font-weight: 500;">Country</label>
+                                    <input type="text" id="chkCustCountry" readonly value="India" style="width: 100%; box-sizing: border-box; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #c5a059; font-weight: 600; font-size: 0.9rem; cursor: not-allowed;">
+                                </div>
+                            </div>
+
+                            <!-- LUXURY RAZORPAY PAYMENT SELECTION -->
+                            <div style="margin-bottom: 18px;">
+                                <label style="display: block; font-size: 0.82rem; margin-bottom: 8px; color: rgba(251,248,245,0.85); font-weight: 600;">Payment Method *</label>
+                                <div id="lblPayRazorpay" style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(197,160,89,0.12); border: 1px solid #c5a059; border-radius: 10px;">
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                            <span style="font-weight: 700; color: #fbf8f5; font-size: 0.94rem;">
+                                                <i class="fa-solid fa-shield-halved" style="color: #c5a059; margin-right: 6px;"></i> Razorpay Secure Checkout
+                                            </span>
+                                            <span style="background: rgba(46,125,50,0.25); color: #81c784; border: 1px solid rgba(76,175,80,0.4); font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;">100% Secure & Encrypted</span>
+                                        </div>
+                                        <p style="margin: 6px 0 10px; font-size: 0.82rem; color: rgba(251,248,245,0.75); line-height: 1.4;">
+                                            Instant confirmation via UPI (Google Pay, PhonePe, Paytm), Credit / Debit Cards, Net Banking & Wallets.
+                                        </p>
+                                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                            <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; color: #c5a059; font-weight: 600;">UPI</span>
+                                            <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; color: #c5a059; font-weight: 600;">GPay</span>
+                                            <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; color: #c5a059; font-weight: 600;">PhonePe</span>
+                                            <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; color: #c5a059; font-weight: 600;">Cards</span>
+                                            <span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; color: #c5a059; font-weight: 600;">NetBanking</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="chkPaymentMethod" value="Razorpay">
+                            </div>
+
+                                                        <button type="submit" id="btnSubmitOrder" style="width: 100%; background: linear-gradient(135deg, #c5a059, #967537); border: none; padding: 14px; border-radius: 8px; color: #120e0d; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                                <i id="btnSubmitOrderIcon" class="fa-solid fa-shield-halved"></i>
+                                <span id="btnSubmitOrderText">Pay Securely via Razorpay</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Order Summary -->
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(197,160,89,0.2); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <h4 style="font-size: 0.88rem; text-transform: uppercase; letter-spacing: 1px; color: #c5a059; margin-bottom: 14px;">
+                                <i class="fa-solid fa-cart-shopping"></i> Order Summary
+                            </h4>
+                            <div id="chkItemsList" style="max-height: 220px; overflow-y: auto; margin-bottom: 16px;">
+                                <!-- Items rendered dynamically -->
+                            </div>
+
+                            <!-- CHECKOUT PROMO COUPON CODE SECTION -->
+                            <div id="chkCouponContainer" style="margin-bottom: 16px; border-top: 1px dashed rgba(197,160,89,0.25); padding-top: 14px;">
+                                <div id="chkCouponInputWrap" style="display: flex; gap: 8px;">
+                                    <input type="text" id="chkCouponCodeInput" placeholder="Coupon Code (e.g. LAUNCH15)" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.4); border: 1px solid rgba(197,160,89,0.35); border-radius: 6px; padding: 10px 12px; color: #fff; font-size: 0.85rem; text-transform: uppercase; font-family: inherit; outline: none; transition: border-color 0.2s;" onkeydown="if(event.key==='Enter'){event.preventDefault();handleCheckoutApplyCoupon();}" onfocus="this.style.borderColor='#c5a059';" onblur="this.style.borderColor='rgba(197,160,89,0.35)';">
+                                    <button type="button" id="chkApplyCouponBtn" onclick="handleCheckoutApplyCoupon()" style="background: linear-gradient(135deg, #c5a059, #967537); color: #120e0d; border: none; border-radius: 6px; padding: 0 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: transform 0.15s, opacity 0.15s; white-space: nowrap;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
+                                        Apply
+                                    </button>
+                                </div>
+                                <div id="chkCouponAppliedBadge" style="display: none; align-items: center; justify-content: space-between; background: rgba(129,199,132,0.12); border: 1px solid rgba(129,199,132,0.35); border-radius: 6px; padding: 8px 12px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #81c784;">
+                                        <i class="fa-solid fa-tags"></i>
+                                        <span>Coupon <strong id="chkAppliedCouponCodeText" style="letter-spacing: 0.5px;"></strong> applied (<span id="chkAppliedCouponPercentText"></span>% off)</span>
+                                    </div>
+                                    <button type="button" onclick="handleCheckoutRemoveCoupon()" title="Remove coupon" style="background: none; border: none; color: rgba(251,248,245,0.6); cursor: pointer; font-size: 0.9rem; padding: 2px 6px; border-radius: 4px; transition: color 0.15s;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(251,248,245,0.6)'">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <div id="chkCouponMsg" style="font-size: 0.76rem; margin-top: 6px; display: none;"></div>
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid rgba(197,160,89,0.2); padding-top: 14px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: rgba(251,248,245,0.7);">
+                                <span>Subtotal</span>
+                                <span id="chkSubtotal">₹0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: #81c784;">
+                                <span>Promo Discount</span>
+                                <span id="chkDiscount">₹0</span>
+                            </div>
+                            <div id="chkGstRow" style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; color: rgba(251,248,245,0.75);">
+                                <span id="chkGstLabel">Applicable GST (3%)</span>
+                                <span id="chkGstAmount">₹0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; color: #81c784;">
+                                <span>Complimentary Insured Shipping</span>
+                                <span>Free</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700; color: #dfbd7c; border-top: 1px dashed rgba(197,160,89,0.3); padding-top: 10px;">
+                                <span>Grand Total</span>
+                                <span id="chkGrandTotal">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUCCESS CONFIRMATION VIEW -->
+            <div id="checkoutSuccessView" style="display: none; text-align: center; padding: 28px 12px;">
+                <div style="width: 72px; height: 72px; background: rgba(76,175,80,0.15); border: 2px solid #4caf50; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #81c784; font-size: 2rem; margin-bottom: 18px;">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.9rem; color: #dfbd7c; margin-bottom: 8px;">Order Confirmed</h2>
+                <p style="font-size: 1rem; color: rgba(251,248,245,0.85); margin-bottom: 20px;">
+                    Thank you, <strong id="successCustName" style="color: #fff;"></strong>! Your bespoke jewellery order has been received and routed into our atelier queue.
+                </p>
+
+                <div style="background: rgba(197,160,89,0.12); border: 1px solid #c5a059; border-radius: 12px; max-width: 440px; margin: 0 auto 24px; padding: 18px 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Order Number</span>
+                        <strong style="font-family: monospace; font-size: 1.05rem; color: #c5a059;" id="successOrderNum">SRV-2026-1085</strong>
+                    </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Payment Method</span>
+                        <strong style="color: #81c784;" id="successPaymentMethod">Razorpay (Verified)</strong>
+                    </div>
+                    <div id="successPaymentIdRow" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Razorpay Payment ID</span>
+                        <strong style="font-family: monospace; font-size: 0.88rem; color: #c5a059;" id="successPaymentId">—</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Total Charged</span>
+                        <strong style="color: #fff;" id="successTotalAmt">₹3,499</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Estimated Delivery</span>
+                        <strong style="color: #81c784;">3 - 5 Business Days</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 14px; justify-content: center;">
+                    <button class="btn-primary" onclick="closeCheckoutModal()" style="padding: 12px 28px; background: #c5a059; color: #120e0d; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                        <i class="fa-solid fa-gem"></i> Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -130,7 +130,7 @@ def parse_products_from_html(html, cat_slug):
             'usdWholesale': usd_price,
             'badge': 'Distributor Exclusive',
             'plating': plating,
-            'availableFinishes': ['18K Gold', 'Rhodium Silver', 'Rose Gold'],
+            'availableFinishes': ['24K Gold', 'Rhodium Silver', 'Rose Gold'],
             'primaryImg': primary_img or img_thumb,
             'hoverImg': hover_img or primary_img or img_thumb,
             'videoUrl': video,

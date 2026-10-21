@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "keyId": "rzp_live_YOUR_KEY_ID_HERE",
+  "keySecret": "YOUR_KEY_SECRET_HERE",
+  "merchantName": "Sorèva Luxury Jewellery",
+  "themeColor": "#38302e"
+}
