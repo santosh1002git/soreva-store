@@ -17,7 +17,7 @@ export NEEDRESTART_MODE=a
 
 # 2. Update OS and install prerequisites
 sudo apt-get update -y
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" python3 python3-pip git nginx curl ufw unzip certbot python3-certbot-nginx
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" python3 python3-pip python3-pil git nginx curl ufw unzip certbot python3-certbot-nginx
 
 # 2. Setup Directories
 sudo mkdir -p /var/www/soreva-production
@@ -91,57 +91,57 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/var/www/soreva-development
-    ExecStart=/usr/bin/python3 /var/www/soreva-development/server.py 8002
-    Restart=always
-    RestartSec=3
-    Environment=APP_ENV=development
+ExecStart=/usr/bin/python3 /var/www/soreva-development/server.py 8002
+Restart=always
+RestartSec=3
+Environment=APP_ENV=development
 
-    [Install]
-    WantedBy=multi-user.target
-    EOF
+[Install]
+WantedBy=multi-user.target
+EOF
 
-    # 10. Configure Nginx Reverse Proxy
-    sudo tee /etc/nginx/sites-available/soreva > /dev/null << 'EOF'
-    # Production Server (Default HTTP on Port 80)
-    server {
-        listen 80 default_server;
-        listen [::]:80 default_server;
-        server_name soreva.in www.soreva.in _;
+# 10. Configure Nginx Reverse Proxy
+sudo tee /etc/nginx/sites-available/soreva > /dev/null << 'EOF'
+# Production Server (Default HTTP on Port 80)
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name soreva.in www.soreva.in _;
 
-        client_max_body_size 50M;
+    client_max_body_size 50M;
 
-        location / {
-            proxy_pass http://127.0.0.1:8000;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
 
-    # Development Server (Accessible on Port 8001 or dev.soreva.in)
-    server {
-        listen 8001;
-        listen [::]:8001;
-        server_name dev.soreva.in _;
+# Development Server (Accessible on Port 8001 or dev.soreva.in)
+server {
+    listen 8001;
+    listen [::]:8001;
+    server_name dev.soreva.in _;
 
-        client_max_body_size 50M;
+    client_max_body_size 50M;
 
-        location / {
-            proxy_pass http://127.0.0.1:8002;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+    location / {
+        proxy_pass http://127.0.0.1:8002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
-    EOF
+}
+EOF
 
 sudo ln -sf /etc/nginx/sites-available/soreva /etc/nginx/sites-enabled/default
 sudo nginx -t

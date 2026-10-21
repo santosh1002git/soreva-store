@@ -14,6 +14,30 @@ let databaseInfo = null;
 // Default Password SHA-256 (soreva@2026)
 const DEFAULT_PASSWORD_HASH = "3779c849af88128e466010f799175ce3344f2392947810fa4501766c0664d846";
 
+function getOptimizedImgUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    if (url.startsWith('/api/img/') || url.startsWith('assets/') || url.startsWith('/assets/')) return url;
+    if (url.includes('/api/img/')) {
+        return url.substring(url.indexOf('/api/img/'));
+    }
+    if (url.includes('indian-jewellery.com/core/thumb_images/product_images/')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn) return `/api/img/${fn}`;
+    }
+    if (url.includes('indian-jewellery.com')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn && /\.(jpg|jpeg|png|webp)$/i.test(fn)) {
+            return `/api/img/${fn}`;
+        }
+    }
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
+        return `/api/img?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+}
+window.getOptimizedImgUrl = getOptimizedImgUrl;
+
 // ==========================================
 // INITIALIZATION & AUTHENTICATION GATE
 // ==========================================
@@ -894,7 +918,7 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                 <input type="checkbox" class="prod-row-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="handleProductRowSelect('${p.id}', this.checked)">
             </td>
             <td>
-                <img src="${p.primaryImg}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" style="cursor: pointer;" title="Click to inspect resolution & image specs">
+                <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';" style="cursor: pointer;" title="Click to inspect resolution & image specs">
             </td>
             <td>
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -2456,7 +2480,7 @@ function previewImg(url, targetId) {
         }
     };
 
-    el.src = cleanUrl;
+    el.src = getOptimizedImgUrl(cleanUrl);
 }
 
 function handleFileUpload(event, inputId, previewId) {

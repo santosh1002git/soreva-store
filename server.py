@@ -1231,7 +1231,11 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             req_headers = {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://indian-jewellery.com/',
-                'Accept': 'image/webp,image/avif,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Sec-Fetch-Dest': 'image',
+                'Sec-Fetch-Mode': 'no-cors',
+                'Sec-Fetch-Site': 'same-origin'
             }
             req = urllib.request.Request(target_url, headers=req_headers)
             with urllib.request.urlopen(req, timeout=12) as resp:
@@ -1255,12 +1259,12 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             else:
                 mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
                 self._serve_image_file(orig_path, mime)
-        except urllib.error.HTTPError as he:
-            self.send_response(he.code)
-            self._send_cors_headers()
-            self.end_headers()
         except Exception as e:
-            print(f"[Image Fetch Error for {filename}] {e}")
+            print(f"[Image Fetch Notice for {filename}] {e} - Serving graceful fallback")
+            fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
+            if os.path.exists(fallback_path):
+                self._serve_image_file(fallback_path, 'image/jpeg')
+                return
             self.send_response(502)
             self._send_cors_headers()
             self.end_headers()

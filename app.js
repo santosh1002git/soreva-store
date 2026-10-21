@@ -19,12 +19,22 @@ let currentCurrency = 'INR';
 
 function getOptimizedImgUrl(url) {
     if (!url || typeof url !== 'string') return '';
-    if (url.startsWith('/api/img/') || url.startsWith('assets/')) return url;
+    url = url.trim();
+    if (url.startsWith('/api/img/') || url.startsWith('assets/') || url.startsWith('/assets/')) return url;
+    if (url.includes('/api/img/')) {
+        return url.substring(url.indexOf('/api/img/'));
+    }
     if (url.includes('indian-jewellery.com/core/thumb_images/product_images/')) {
         const fn = url.split('/').pop().split('?')[0];
         if (fn) return `/api/img/${fn}`;
     }
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('indian-jewellery.com')) {
+        const fn = url.split('/').pop().split('?')[0];
+        if (fn && /\.(jpg|jpeg|png|webp)$/i.test(fn)) {
+            return `/api/img/${fn}`;
+        }
+    }
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
         return `/api/img?url=${encodeURIComponent(url)}`;
     }
     return url;
@@ -710,7 +720,7 @@ function renderCategories(categories) {
     container.innerHTML = categories.map((cat, idx) => `
         <a href="catalog.html?cat=${cat.slug}" class="category-card" aria-label="${cat.name}">
             <div class="category-img-wrap">
-                <img class="category-img" src="${cat.image}" alt="${cat.name}" loading="lazy">
+                <img class="category-img" src="${getOptimizedImgUrl(cat.image)}" alt="${cat.name}" loading="lazy" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
                 <div class="category-overlay-gradient"></div>
                 <span class="category-number-badge">${String(idx + 1).padStart(2, '0')}</span>
             </div>
@@ -755,8 +765,14 @@ function renderSpotlight(spotlight) {
     if (titleEl && spotlight.title) titleEl.innerHTML = spotlight.title;
     if (desc1El && spotlight.desc1) desc1El.textContent = spotlight.desc1;
     if (desc2El && spotlight.desc2) desc2El.innerHTML = spotlight.desc2;
-    if (imgMainEl && spotlight.imgMain) imgMainEl.src = spotlight.imgMain;
-    if (imgSubEl && spotlight.imgSub) imgSubEl.src = spotlight.imgSub;
+    if (imgMainEl && spotlight.imgMain) {
+        imgMainEl.src = getOptimizedImgUrl(spotlight.imgMain);
+        imgMainEl.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
+    if (imgSubEl && spotlight.imgSub) {
+        imgSubEl.src = getOptimizedImgUrl(spotlight.imgSub);
+        imgSubEl.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-2.jpg'; };
+    }
     if (featEl && spotlight.features && spotlight.features.length) {
         const icons = [
             'fa-gem',
@@ -2037,7 +2053,7 @@ function renderProducts(isLoadMore = false) {
             return `
             <div class="product-card ${isProductOutOfStock(product) ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -2740,7 +2756,7 @@ function openCheckoutModal() {
         return `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${prod.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img src="${getOptimizedImgUrl(prod.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">${(prod.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</div>
                         <div style="font-size: 0.75rem; color: rgba(251,248,245,0.6);">${item.qty || 1} × ${formatPrice(price)} • ${(item.finish || '24K Gold').replace(/</g, '&lt;')}</div>
@@ -3905,6 +3921,11 @@ async function fetchProductData(pid) {
             const data = await resp.json();
             if (data && data.success && data.product) {
                 const prod = data.product;
+                if (prod.primaryImg) prod.primaryImg = getOptimizedImgUrl(prod.primaryImg);
+                if (prod.hoverImg) prod.hoverImg = getOptimizedImgUrl(prod.hoverImg);
+                if (Array.isArray(prod.gallery)) {
+                    prod.gallery = prod.gallery.map(g => getOptimizedImgUrl(g));
+                }
                 if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) {
                     const idx = PRODUCTS.findIndex(p => String(p.id).trim() === String(prod.id).trim() || String(p.id).replace(/^czm_/, '') === cleanNum);
                     if (idx >= 0) {
@@ -4108,7 +4129,7 @@ function updateCartUI() {
 
         return `
             <div class="cart-item" data-index="${idx}" data-product-id="${item.productId}">
-                <img class="cart-item-thumb" src="${product.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img class="cart-item-thumb" src="${getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                 <div class="cart-item-info">
                     <h4 class="cart-item-title">${(product.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</h4>
                     <p class="cart-item-variant">Finish: <strong>${(item.finish || '24K Gold').replace(/</g, '&lt;')}</strong></p>
@@ -4321,14 +4342,14 @@ function renderWishlistItems() {
 
         const priceFormatted = formatPrice(prod.priceINR);
         const originalPriceFormatted = prod.originalPriceINR ? formatPrice(prod.originalPriceINR) : '';
-        const img = prod.primaryImg || 'assets/categories/wristwear.jpg';
+        const img = getOptimizedImgUrl(prod.primaryImg) || 'assets/categories/wristwear.jpg';
         const finish = (prod.availableFinishes && prod.availableFinishes[0]) || (prod.plating || '24K Gold');
         const inStock = prod.stockQty === undefined || prod.stockQty > 0;
 
         return `
             <div class="cart-item wishlist-item" id="wishlist-item-${prod.id}" style="display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-color); align-items: center;">
                 <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="display: block; width: 72px; height: 72px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); background: #fff;">
-                    <img src="${img}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/categories/wristwear.jpg'">
+                    <img src="${img}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='assets/categories/wristwear.jpg';">
                 </a>
                 <div class="cart-item-details" style="flex: 1; min-width: 0;">
                     <a href="product.html?id=${prod.id}" onclick="closeWishlistDrawer()" style="text-decoration: none; color: inherit;">
@@ -4680,7 +4701,10 @@ function populateQuickViewModal(product) {
         fullDetailsBtn.href = `product.html?id=${encodeURIComponent(product.id)}`;
     }
 
-    if (modalImg) modalImg.src = product.primaryImg || '';
+    if (modalImg) {
+        modalImg.src = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
+        modalImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
     if (modalCat) modalCat.textContent = `${product.category || 'Jewellery'} • ${product.subCategory || 'Collection'}`;
     if (modalTitle) modalTitle.textContent = product.name || 'Jewellery Piece';
 
@@ -4762,9 +4786,12 @@ function populateQuickViewModal(product) {
     // Gallery Thumbs
     if (modalThumbs) {
         const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
-        modalThumbs.innerHTML = gallery.map((img, i) => `
-            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${img}" alt="Thumbnail" onclick="switchModalImage(this, '${img}')">
-        `).join('');
+        modalThumbs.innerHTML = gallery.map((rawImg, i) => {
+            const optImg = getOptimizedImgUrl(rawImg);
+            return `
+            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${optImg}" alt="Thumbnail" onclick="switchModalImage(this, '${optImg}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+        `;
+        }).join('');
     }
 
     const qtyInput = document.getElementById('modalQtyInput');
@@ -4782,7 +4809,10 @@ function switchModalImage(thumbEl, src) {
     });
     if (thumbEl && thumbEl.classList) thumbEl.classList.add('active');
     const mainImg = document.getElementById('modalMainImg');
-    if (mainImg && src) mainImg.src = src;
+    if (mainImg && src) {
+        mainImg.src = getOptimizedImgUrl(src);
+        mainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+    }
 }
 
 function selectModalFinish(pillEl, finish) {
@@ -4996,7 +5026,7 @@ function renderSearchSuggestions(query, results, totalCount) {
         const priceStr = (typeof formatPrice === 'function') ? formatPrice(p.priceINR || 0) : `₹${p.priceINR}`;
         const subText = p.subCategory || (p.category ? (p.category.charAt(0).toUpperCase() + p.category.slice(1)) : 'Demi-Fine Jewellery');
         const finishText = formatPlating(p.plating || p.finish);
-        const img = p.primaryImg || 'assets/hero/hero-slide-1.jpg';
+        const img = getOptimizedImgUrl(p.primaryImg) || 'assets/hero/hero-slide-1.jpg';
 
         html += `
             <div class="search-item-match" onclick="handleSearchResultClick('${escapeHtml(p.id)}')" role="button" tabindex="0">
@@ -5540,31 +5570,38 @@ function renderProductPageContent(product) {
     if (pdpTitle) pdpTitle.textContent = product.name || 'Jewellery Piece';
 
     const pdpMainImg = document.getElementById('pdpMainImg');
+    const optPrimary = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
     if (pdpMainImg) {
+        pdpMainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
         if (pdpMainImg.tagName && pdpMainImg.tagName.toLowerCase() === 'video') {
             const newImg = document.createElement('img');
             newImg.id = 'pdpMainImg';
-            newImg.src = product.primaryImg || '';
+            newImg.src = optPrimary;
             newImg.style.cssText = pdpMainImg.style ? pdpMainImg.style.cssText : '';
             newImg.alt = product.name || 'Product Image';
+            newImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
             if (typeof pdpMainImg.replaceWith === 'function') {
                 pdpMainImg.replaceWith(newImg);
             } else {
-                pdpMainImg.src = product.primaryImg || '';
+                pdpMainImg.src = optPrimary;
             }
         } else {
-            pdpMainImg.src = product.primaryImg || '';
+            pdpMainImg.src = optPrimary;
         }
     }
 
     const pdpThumbs = document.getElementById('pdpThumbs');
     if (pdpThumbs) {
         const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
-        let galleryHtml = gallery.map((img, idx) => `
-            <img src="${img}" class="pdp-thumb-img ${idx === 0 ? 'active' : ''}" 
-                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${img}'; imgEl.style=main.getAttribute('style'); main.replaceWith(imgEl); } else { main.src='${img}'; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
+        let galleryHtml = gallery.map((rawImg, idx) => {
+            const optImg = getOptimizedImgUrl(rawImg);
+            return `
+            <img src="${optImg}" class="pdp-thumb-img ${idx === 0 ? 'active' : ''}" 
+                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${optImg}'; imgEl.style=main.getAttribute('style'); imgEl.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; main.replaceWith(imgEl); } else { main.src='${optImg}'; main.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
+                 onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';"
                  style="width: 80px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${idx === 0 ? 'var(--gold-accent)' : 'transparent'};">
-        `).join('');
+            `;
+        }).join('');
 
         if (product.videoUrl) {
             galleryHtml += `
@@ -5923,7 +5960,7 @@ function renderSimilarProducts(currentProduct) {
         return `
             <div class="product-card ${oos ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="window.location.href='product.html?id=${product.id}'" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -5985,6 +6022,11 @@ async function initProductPage() {
                 const data = await resp.json();
                 if (data && data.success && data.product) {
                     product = data.product;
+                    if (product.primaryImg) product.primaryImg = getOptimizedImgUrl(product.primaryImg);
+                    if (product.hoverImg) product.hoverImg = getOptimizedImgUrl(product.hoverImg);
+                    if (Array.isArray(product.gallery)) {
+                        product.gallery = product.gallery.map(g => getOptimizedImgUrl(g));
+                    }
                     if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) {
                         PRODUCTS.push(product);
                     }
@@ -6198,7 +6240,7 @@ function renderCuratedBadges() {
             return `
                 <div class="curation-card" onclick="window.location.href='product.html?id=${p.id}'" role="button" tabindex="0" aria-label="${p.name}">
                     <div class="curation-media-wrap">
-                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.src='/api/img/773510AQ10CV91077.jpg';">
+                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
                         <div class="product-badges">
                             <span class="product-badge ${badgeClass}">${badgeIcon}${badgeLabel}</span>
                         </div>
