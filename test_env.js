@@ -4959,92 +4959,98 @@ function initProductPage() {
     const desc = document.getElementById('pdpDescription');
     if (desc) desc.innerHTML = product.description || "Continuous fire of handset round brilliant stones. Flexible, feather-light, and flawlessly secure.";
 
-    // Populate Unified Product Details List (Merged with Specifications)
-    const pdpDetailsList = document.getElementById('pdpDetailsList');
-    if (pdpDetailsList) {
-        const isSilver = (product.category === 'silver' || (product.subCategory && product.subCategory.toLowerCase().includes('silver')));
-        const platingStr = formatPlating(product.plating || product.finish || '24K Gold');
-        const stoneInfo = product.stoneColor 
-            ? `AAA+ Handset Austrian Cubic Zirconia (${escapeHtml(product.stoneColor)})` 
-            : 'AAA+ Handset Austrian Cubic Zirconia (Diamond Setting)';
+    // Render Unified Collapsible Accordions (Product Details, Shipping & Returns, Care Instructions)
+    const isSilver = (product.category === 'silver' || (product.subCategory && product.subCategory.toLowerCase().includes('silver')));
+    const platingStr = formatPlating(product.plating || product.finish || '24K Gold');
+    const stoneInfo = product.stoneColor 
+        ? `AAA+ Handset Austrian Cubic Zirconia (${escapeHtml(product.stoneColor)})` 
+        : 'AAA+ Handset Austrian Cubic Zirconia (Diamond Setting)';
 
-        let detailsHtml = `
+    let detailsHtml = `
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-award" style="color: var(--gold-accent); width: 16px;"></i> Plating / Finish:
+            </strong>
+            <span style="font-weight: 600; color: var(--gold-accent); background: rgba(197, 160, 89, 0.1); padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(197, 160, 89, 0.25);">
+                ${platingStr}
+            </span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-shield-halved" style="color: var(--gold-accent); width: 16px;"></i> Base Metal:
+            </strong>
+            <span style="color: var(--text-dark); font-weight: 500;">${isSilver ? '925 Sterling Silver' : 'Hypoallergenic Luxury Brass & Copper Alloy'}</span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-gem" style="color: var(--gold-accent); width: 16px;"></i> Stone Type:
+            </strong>
+            <span style="color: var(--text-dark); font-weight: 500;">${stoneInfo}</span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold-accent); width: 16px;"></i> Setting Technique:
+            </strong>
+            <span style="color: var(--text-dark); font-weight: 500;">Handcrafted 4-Prong Diamond Setting</span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-layer-group" style="color: var(--gold-accent); width: 16px;"></i> Collection:
+            </strong>
+            <span style="text-transform: capitalize; color: var(--text-dark); font-weight: 500;">${escapeHtml(product.category || 'Jewellery')} &bull; ${escapeHtml(product.subCategory || 'Bespoke')}</span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-check" style="color: #10b981; width: 16px;"></i> Skin Safety:
+            </strong>
+            <span style="color: #10b981; font-weight: 600;">100% Anti-Tarnish, Nickel-Free & Lead-Safe</span>
+        </li>
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+            <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-box" style="color: var(--gold-accent); width: 16px;"></i> Packaging:
+            </strong>
+            <span style="color: var(--text-dark); font-weight: 500;">Includes Signature Velvet-Lined Keepsake Box</span>
+        </li>
+    `;
+
+    if (product.stoneSize) {
+        detailsHtml += `
             <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
                 <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-award" style="color: var(--gold-accent); width: 16px;"></i> Plating / Finish:
+                    <i class="fa-solid fa-ruler-combined" style="color: var(--gold-accent); width: 16px;"></i> Stone Size:
                 </strong>
-                <span style="font-weight: 600; color: var(--gold-accent); background: rgba(197, 160, 89, 0.1); padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(197, 160, 89, 0.25);">
-                    ${platingStr}
-                </span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-shield-halved" style="color: var(--gold-accent); width: 16px;"></i> Base Metal:
-                </strong>
-                <span style="color: var(--text-dark); font-weight: 500;">${isSilver ? '925 Sterling Silver' : 'Hypoallergenic Luxury Brass & Copper Alloy'}</span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-gem" style="color: var(--gold-accent); width: 16px;"></i> Stone Type:
-                </strong>
-                <span style="color: var(--text-dark); font-weight: 500;">${stoneInfo}</span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold-accent); width: 16px;"></i> Setting Technique:
-                </strong>
-                <span style="color: var(--text-dark); font-weight: 500;">Handcrafted 4-Prong Diamond Setting</span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-layer-group" style="color: var(--gold-accent); width: 16px;"></i> Collection:
-                </strong>
-                <span style="text-transform: capitalize; color: var(--text-dark); font-weight: 500;">${escapeHtml(product.category || 'Jewellery')} &bull; ${escapeHtml(product.subCategory || 'Bespoke')}</span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-circle-check" style="color: #10b981; width: 16px;"></i> Skin Safety:
-                </strong>
-                <span style="color: #10b981; font-weight: 600;">100% Anti-Tarnish, Nickel-Free & Lead-Safe</span>
-            </li>
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-box" style="color: var(--gold-accent); width: 16px;"></i> Packaging:
-                </strong>
-                <span style="color: var(--text-dark); font-weight: 500;">Includes Signature Velvet-Lined Keepsake Box</span>
+                <span style="color: var(--text-dark); font-weight: 500;">${escapeHtml(String(product.stoneSize))}</span>
             </li>
         `;
-
-        if (product.stoneSize) {
-            detailsHtml += `
-                <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                    <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-ruler-combined" style="color: var(--gold-accent); width: 16px;"></i> Stone Size:
-                    </strong>
-                    <span style="color: var(--text-dark); font-weight: 500;">${escapeHtml(String(product.stoneSize))}</span>
-                </li>
-            `;
-        }
-
-        if (product.setContents) {
-            detailsHtml += `
-                <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
-                    <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-shapes" style="color: var(--gold-accent); width: 16px;"></i> Set Contents:
-                    </strong>
-                    <span style="color: var(--text-dark); font-weight: 500;">${escapeHtml(String(product.setContents))}</span>
-                </li>
-            `;
-        }
-
-        pdpDetailsList.innerHTML = detailsHtml;
     }
 
-    // Render Auxiliary Accordions (Shipping & Returns, Care Instructions)
+    if (product.setContents) {
+        detailsHtml += `
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+                <strong style="color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-shapes" style="color: var(--gold-accent); width: 16px;"></i> Set Contents:
+                </strong>
+                <span style="color: var(--text-dark); font-weight: 500;">${escapeHtml(String(product.setContents))}</span>
+            </li>
+        `;
+    }
+
+    // Render Auxiliary Accordions (Product Details, Shipping & Returns, Care Instructions)
     const moreDetails = document.getElementById('pdpMoreDetailsContainer');
     if (moreDetails) {
         moreDetails.innerHTML = `
             <div style="border-top: 1px solid var(--border-color); margin-top: 20px;">
+                <details style="padding: 16px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                    <summary style="font-weight: 600; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center; list-style: none;">
+                        <span style="display: inline-flex; align-items: center; gap: 8px;"><i class="fa-solid fa-list-check" style="color: var(--gold-accent);"></i> Product Details</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i>
+                    </summary>
+                    <div style="padding-top: 12px;">
+                        <ul id="pdpDetailsList" style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem; color: var(--text-dark); line-height: 1.8;">
+                            ${detailsHtml}
+                        </ul>
+                    </div>
+                </details>
                 <details style="padding: 16px 0; border-bottom: 1px solid var(--border-color); cursor: pointer;">
                     <summary style="font-weight: 600; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center; list-style: none;">
                         <span style="display: inline-flex; align-items: center; gap: 8px;"><i class="fa-solid fa-truck-fast" style="color: var(--gold-accent);"></i> Shipping & Returns</span>
@@ -5074,6 +5080,9 @@ function initProductPage() {
                 details summary .fa-chevron-down { transition: transform 0.3s ease; }
             </style>
         `;
+    } else {
+        const pdpDetailsList = document.getElementById('pdpDetailsList');
+        if (pdpDetailsList) pdpDetailsList.innerHTML = detailsHtml;
     }
 
     // Add to Cart and Buy Now Buttons (Disabled if Out of Stock)
