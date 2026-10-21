@@ -47,7 +47,26 @@ CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
 ADMIN_CREDS_PATH = os.path.join(DATA_DIR, 'admin-credentials.json')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
-os.makedirs(IMG_CACHE_DIR, exist_ok=True)
+STORE_METADATA_PATH = os.path.join(DATA_DIR, 'store-metadata.json')
+_STORE_METADATA_CACHE = None
+_STORE_METADATA_MTIME = 0
+
+def get_stored_metadata():
+    """Returns store configuration metadata (settings, categories, instagram, etc.) in 0.1ms without loading 18MB of products."""
+    global _STORE_METADATA_CACHE, _STORE_METADATA_MTIME
+    if os.path.exists(STORE_METADATA_PATH):
+        try:
+            mtime = os.path.getmtime(STORE_METADATA_PATH)
+            if _STORE_METADATA_CACHE is not None and mtime == _STORE_METADATA_MTIME:
+                return _STORE_METADATA_CACHE
+            with open(STORE_METADATA_PATH, 'r', encoding='utf-8') as f:
+                _STORE_METADATA_CACHE = json.load(f)
+                _STORE_METADATA_MTIME = mtime
+            return _STORE_METADATA_CACHE
+        except Exception as e:
+            print(f"[Error] Failed to read store-metadata.json: {e}")
+    # Fallback to get_stored_data if metadata file missing
+    return get_stored_data()
 
 _GZIP_STORE_DATA_CACHE = None
 _GZIP_STORE_DATA_MTIME = 0
@@ -548,6 +567,18 @@ def save_stored_data(data):
         _STORE_DATA_MTIME = os.path.getmtime(STORE_DATA_PATH)
     except Exception:
         pass
+
+    # Also keep store-metadata.json in sync
+    try:
+        meta = {k: v for k, v in data.items() if k != 'products'}
+        with open(STORE_METADATA_PATH, 'w', encoding='utf-8') as mf:
+            json.dump(meta, mf, indent=2, ensure_ascii=False)
+        global _STORE_METADATA_CACHE, _STORE_METADATA_MTIME
+        _STORE_METADATA_CACHE = meta
+        _STORE_METADATA_MTIME = os.path.getmtime(STORE_METADATA_PATH)
+    except Exception as me:
+        print(f"[Warning] Failed to sync store-metadata.json: {me}")
+
     return True
 
 
@@ -1431,7 +1462,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         # API: Get Instagram Video Feed & Status
         # ----------------------------------------------------
         if parsed.path == '/api/instagram/feed':
-            sd = get_stored_data() or {}
+            sd = get_stored_metadata() or {}
             items = sd.get('instagram', [])
             settings = sd.get('settings', {}).get('instagram', {
                 "handle": "soreva_jewels",
@@ -1651,27 +1682,19 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             clean_num = re.sub(r'^czm_', '', pid)
             czm_id = f"czm_{clean_num}"
 
-            # 1. First check in-memory store-data
-            data = get_stored_data()
-            if data and 'products' in data:
-                for p in data['products']:
-                    p_id = str(p.get('id', '')).strip()
-                    p_sku = str(p.get('sku', '')).strip()
-                    if p_id in (pid, czm_id, clean_num) or p_sku in (pid, clean_num):
-                        self._send_json({"success": True, "product": p})
-                        return
-
-            # 2. Check SQLite directly as high-speed fallback
+            # 1. High-speed zero-memory indexed lookup from SQLite directly
             try:
                 if os.path.exists(PB_DB_PATH):
                     conn = sqlite3.connect(PB_DB_PATH)
                     conn.row_factory = sqlite3.Row
                     cur = conn.cursor()
                     cur.execute("""
-                        SELECT * FROM products 
-                        WHERE id = ? OR id = ? OR id = ? 
+                        SELECT p.*, COALESCE(i.sku, p.id) as sku, COALESCE(i.status, 'In Stock') as stockStatus, COALESCE(i.stockQty, 15) as stockQty
+                        FROM products p
+                        LEFT JOIN inventory i ON p.id = i.id
+                        WHERE p.id = ? OR p.id = ? OR p.id = ? OR i.sku = ? OR i.sku = ?
                         LIMIT 1
-                    """, (pid, czm_id, clean_num))
+                    """, (pid, czm_id, clean_num, pid, f"SRV-{clean_num}"))
                     row = cur.fetchone()
                     conn.close()
                     if row:
@@ -1689,7 +1712,16 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         self._send_json({"success": True, "product": prod_dict})
                         return
             except Exception as e:
-                print(f"[Error] Single product lookup failed: {e}")
+                print(f"[Error] Single product SQLite lookup failed: {e}")
+
+            # 2. Fallback to cached products in RAM only if available
+            if _STORE_DATA_CACHE and 'products' in _STORE_DATA_CACHE:
+                for p in _STORE_DATA_CACHE['products']:
+                    p_id = str(p.get('id', '')).strip()
+                    p_sku = str(p.get('sku', '')).strip()
+                    if p_id in (pid, czm_id, clean_num) or p_sku in (pid, clean_num):
+                        self._send_json({"success": True, "product": p})
+                        return
 
             self._send_json({"success": False, "error": "Product not found"}, 404)
             return
@@ -1705,56 +1737,47 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 limit = 10
             limit = max(1, min(limit, 50))
 
-            data = get_stored_data()
-            if not data or 'products' not in data:
-                self._send_json({"total": 0, "results": [], "query": q})
-                return
-
             if not q:
                 self._send_json({"total": 0, "results": [], "query": ""})
                 return
 
-            q_lower = q.lower()
-            q_words = [w for w in q_lower.split() if w]
-            products = data.get('products', [])
-            matches = []
-
-            for p in products:
-                if p.get('disabled') or p.get('active') is False or p.get('active') == 0 or p.get('stockStatus') == 'Disabled':
-                    continue
-                name = (p.get('name') or '').lower()
-                cat = (p.get('category') or '').lower()
-                sub = (p.get('subCategory') or '').lower()
-                sku = (p.get('sku') or '').lower()
-                plating = (p.get('plating') or p.get('finish') or '').lower()
-                desc = (p.get('description') or '').lower()
-                tags = p.get('tags') or ''
-                if isinstance(tags, list):
-                    tags = ' '.join(str(t) for t in tags).lower()
-                else:
-                    tags = str(tags).lower()
-
-                haystack = f"{name} {cat} {sub} {sku} {plating} {desc} {tags}"
-                if all(w in haystack for w in q_words):
-                    matches.append({
-                        "id": p.get("id"),
-                        "sku": p.get("sku"),
-                        "name": p.get("name"),
-                        "category": p.get("category"),
-                        "subCategory": p.get("subCategory"),
-                        "priceINR": p.get("priceINR", 0),
-                        "mrpINR": p.get("mrpINR", 0),
-                        "primaryImg": p.get("primaryImg", ""),
-                        "plating": p.get("plating") or p.get("finish", "24K Gold"),
-                        "rating": p.get("rating", 4.9),
-                        "stockStatus": p.get("stockStatus", "In Stock")
+            try:
+                if os.path.exists(PB_DB_PATH):
+                    conn = sqlite3.connect(PB_DB_PATH)
+                    conn.row_factory = sqlite3.Row
+                    cur = conn.cursor()
+                    q_lower = q.lower()
+                    q_words = [w for w in q_lower.split() if w]
+                    
+                    where_clauses = ["(p.disabled = 0 AND p.active != 0)"]
+                    params = []
+                    for w in q_words:
+                        where_clauses.append("(p.name LIKE ? OR p.category LIKE ? OR p.subCategory LIKE ? OR i.sku LIKE ? OR p.plating LIKE ? OR p.description LIKE ?)")
+                        pat = f"%{w}%"
+                        params.extend([pat, pat, pat, pat, pat, pat])
+                    
+                    sql = f"""
+                        SELECT p.id, COALESCE(i.sku, p.id) as sku, p.name, p.category, p.subCategory, 
+                               p.priceINR, p.originalPriceINR as mrpINR, p.primaryImg, p.plating, p.rating,
+                               COALESCE(i.status, 'In Stock') as stockStatus
+                        FROM products p
+                        LEFT JOIN inventory i ON p.id = i.id
+                        WHERE {" AND ".join(where_clauses)}
+                        LIMIT {limit}
+                    """
+                    rows = cur.execute(sql, params).fetchall()
+                    conn.close()
+                    matches = [dict(r) for r in rows]
+                    self._send_json({
+                        "total": len(matches),
+                        "query": q,
+                        "results": matches
                     })
+                    return
+            except Exception as e:
+                print(f"[Error] Fast SQLite search failed: {e}")
 
-            self._send_json({
-                "total": len(matches),
-                "query": q,
-                "results": matches[:limit]
-            })
+            self._send_json({"total": 0, "results": [], "query": q})
             return
 
         # API: Database Information & Health Metrics
