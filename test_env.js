@@ -781,6 +781,32 @@ window.scrollToReviewsSection = scrollToReviewsSection;
 // ==========================================
 let currentInstagramReels = [];
 
+function triggerInstagramEmbedProcess() {
+    let attempts = 0;
+    const checkInterval = setInterval(() => {
+        attempts++;
+        if (window.instgrm && window.instgrm.Embeds) {
+            clearInterval(checkInterval);
+            try {
+                window.instgrm.Embeds.process();
+            } catch (e) {
+                console.warn('[Instagram] Embeds.process error:', e);
+            }
+        } else if (attempts > 30) {
+            clearInterval(checkInterval);
+        }
+    }, 200);
+
+    let script = document.querySelector('script[src*="instagram.com/embed.js"]');
+    if (!script) {
+        script = document.createElement('script');
+        script.async = true;
+        script.defer = true;
+        script.src = 'https://www.instagram.com/embed.js';
+        document.head.appendChild(script);
+    }
+}
+
 function renderSocialFeed(instagram, handle = 'soreva_jewels') {
     const container = document.getElementById('socialGrid');
     if (!container) return;
@@ -789,56 +815,46 @@ function renderSocialFeed(instagram, handle = 'soreva_jewels') {
     if (!items || !items.length) return;
     currentInstagramReels = items;
 
+    // Verified official reels from @soreva_jewels
+    const fallbackPermalinks = [
+        'https://www.instagram.com/reel/DdqS_DcTt5z/',
+        'https://www.instagram.com/reel/DdnZyRnzf-M/',
+        'https://www.instagram.com/reel/DdgR2vnzK8i/',
+        'https://www.instagram.com/reel/DddeqOWpiSR/',
+        'https://www.instagram.com/reel/DdalJxwT2lh/',
+        'https://www.instagram.com/reel/DdX5hpdzqF4/'
+    ];
+
     container.innerHTML = items.slice(0, 6).map((item, idx) => {
-        const videoSrc = item.videoUrl || item.image || '';
-        const posterSrc = item.thumbnail || item.image || '';
-        const permalink = item.permalink || item.link || `https://www.instagram.com/${handle}`;
-        const title = item.title || 'Sorèva Reel';
-        const caption = item.caption || title;
-        const views = item.views || '15K';
+        const rawLink = item.permalink || item.link || '';
+        const permalink = (rawLink && rawLink.includes('/reel/'))
+            ? rawLink
+            : (fallbackPermalinks[idx % fallbackPermalinks.length]);
+        
+        const caption = item.caption || item.title || 'Handcrafted cubic zirconia jewellery in motion.';
+        const cleanCaption = caption.replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 80);
 
         return `
-        <div class="reel-card" data-reel-id="${item.id || idx}" onclick="openReelModal('${item.id || idx}')">
-            <video class="reel-video" 
-                   id="reel_vid_${idx}"
-                   src="${videoSrc}" 
-                   poster="${posterSrc}" 
-                   loop 
-                   muted 
-                   playsinline 
-                   preload="metadata"
-                   onmouseover="handleReelHoverPlay(this)"
-                   onmouseout="handleReelHoverPause(this)">
-            </video>
-            
-            <div class="reel-top-bar">
-                <span class="reel-badge"><i class="fa-solid fa-play" style="font-size:0.6rem;"></i> Reel</span>
-                <button type="button" class="reel-audio-btn" onclick="toggleReelAudio(event, this, 'reel_vid_${idx}')" title="Toggle Audio">
-                    <i class="fa-solid fa-volume-xmark"></i>
-                </button>
-            </div>
-
-            <div class="reel-center-play">
-                <i class="fa-solid fa-play"></i>
-            </div>
-
-            <div class="reel-bottom-info">
-                <div class="reel-user-tag">
-                    <i class="fa-brands fa-instagram"></i> @${handle}
-                </div>
-                <p class="reel-caption-text">${(caption || '').replace(/</g, '&lt;')}</p>
-                <div class="reel-meta-row">
-                    <span><i class="fa-regular fa-eye" style="font-size:0.65rem;"></i> ${views}</span>
-                    <a href="${permalink}" target="_blank" rel="noopener" class="reel-insta-link" onclick="event.stopPropagation();">
-                        Watch on IG <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.62rem;"></i>
+        <div class="insta-embed-card" data-reel-id="${item.id || idx}">
+            <blockquote class="instagram-media" 
+                        data-instgrm-permalink="${permalink}" 
+                        data-instgrm-version="14">
+                <div style="padding: 24px 16px; text-align: center;">
+                    <a href="${permalink}" target="_blank" rel="noopener" style="text-decoration: none; color: #14100f; display: block;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743, #bc1888); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 4px 12px rgba(220, 39, 67, 0.3);">
+                            <i class="fa-brands fa-instagram" style="font-size: 1.25rem;"></i>
+                        </div>
+                        <div style="font-family: Georgia, serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; color: #14100f;">@${handle}</div>
+                        <p style="font-size: 0.82rem; color: #777; margin-bottom: 12px; line-height: 1.4;">${cleanCaption}...</p>
+                        <span class="btn-insta-follow" style="font-size: 0.76rem; padding: 6px 16px;">Watch on Instagram</span>
                     </a>
                 </div>
-            </div>
+            </blockquote>
         </div>
         `;
     }).join('');
 
-    initReelIntersectionAutoplay();
+    triggerInstagramEmbedProcess();
 }
 
 function handleReelHoverPlay(videoEl) {
