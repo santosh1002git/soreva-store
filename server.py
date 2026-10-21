@@ -946,14 +946,15 @@ def create_razorpay_order(amount_inr, receipt_str, notes=None):
             payload = {
                 "amount": amount_paise,
                 "currency": "INR",
-                "receipt": receipt_str,
+                "receipt": str(receipt_str)[:40],
                 "notes": notes or {}
             }
             data_bytes = json.dumps(payload).encode('utf-8')
             auth_str = base64.b64encode(f"{key_id}:{key_secret}".encode('utf-8')).decode('utf-8')
             req = urllib.request.Request(url, data=data_bytes, headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Basic {auth_str}"
+                "Authorization": f"Basic {auth_str}",
+                "User-Agent": "Soreva-Store/1.0"
             })
             ctx = ssl.create_default_context()
             with urllib.request.urlopen(req, context=ctx, timeout=12) as resp:
@@ -967,8 +968,21 @@ def create_razorpay_order(amount_inr, receipt_str, notes=None):
                     "merchantName": cfg.get("merchantName", "Sorèva Luxury Jewellery"),
                     "themeColor": cfg.get("themeColor", "#38302e")
                 }, None
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = json.loads(e.read().decode('utf-8'))
+                err_msg = err_body.get('error', {}).get('description', str(e))
+            except Exception:
+                err_msg = str(e)
+            print(f"[Razorpay API Error] HTTP {e.code}: {err_msg}")
+            if key_id.startswith("rzp_live"):
+                return None, f"Razorpay Payment Gateway Error: {err_msg}"
+            print(f"[Razorpay Test Warning] Falling back to sandbox order due to error: {err_msg}")
         except Exception as e:
-            print(f"[Razorpay Live API Error] {e}. Falling back to sandbox order.")
+            print(f"[Razorpay Connection Error] {e}")
+            if key_id.startswith("rzp_live"):
+                return None, f"Payment gateway connection error: {str(e)}"
+            print("[Razorpay Test Warning] Falling back to sandbox order.")
             
     # Mock/Sandbox Order for Instant Testing
     mock_order_id = f"order_{gen_pb_id()}"
@@ -986,11 +1000,23 @@ def create_razorpay_order(amount_inr, receipt_str, notes=None):
 
 def verify_razorpay_signature(order_id, payment_id, signature):
     """Verify HMAC SHA256 signature for Razorpay payment callback."""
-    if signature == 'sandbox_verified_signature':
-        return True
     cfg = get_razorpay_config()
     key_secret = cfg.get("keySecret", "").strip()
     key_id = cfg.get("keyId", "").strip()
+    is_live = bool(key_id and key_id.startswith("rzp_live"))
+
+    if is_live:
+        if not signature or signature == 'sandbox_verified_signature':
+            return False
+        if not key_secret:
+            return False
+        msg = f"{order_id}|{payment_id}".encode('utf-8')
+        expected = hmac.new(key_secret.encode('utf-8'), msg, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, signature)
+
+    # Sandbox / Demo mode
+    if signature == 'sandbox_verified_signature':
+        return True
     if not key_secret or not key_id or key_id.startswith("rzp_test_soreva_demo"):
         return True
     if not signature:

@@ -3615,7 +3615,7 @@ async function handlePlaceOrder(e) {
                     currency: orderData.currency || "INR",
                     name: orderData.merchantName || "Sorèva Luxury Jewellery",
                     description: `Atelier Order for ${name}`,
-                    image: "/assets/logo-black.png",
+                    image: (window.location.origin ? window.location.origin + '/assets/logo-black.png' : 'https://soreva.in/assets/logo-black.png'),
                     order_id: orderData.orderId,
                     handler: async function (response) {
                         btn.disabled = true;
