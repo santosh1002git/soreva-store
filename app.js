@@ -2257,9 +2257,25 @@ function clearAllFilters() {
 
     renderProducts();
     updateFilterUrl();
+    syncMobileQuickPills('all');
     closeMobileFilterDrawer();
 }
 window.clearAllFilters = clearAllFilters;
+
+function syncMobileQuickPills(catKey) {
+    const key = (catKey || 'all').toLowerCase().trim();
+    const pills = document.querySelectorAll('.mobile-quick-filter-pills .quick-pill');
+    pills.forEach(p => {
+        const pillCat = (p.getAttribute('data-category') || '').toLowerCase().trim();
+        if (pillCat === key) {
+            p.classList.add('active');
+            try { p.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch(e){}
+        } else {
+            p.classList.remove('active');
+        }
+    });
+}
+window.syncMobileQuickPills = syncMobileQuickPills;
 
 function selectCategoryFilter(catKey) {
     selectedCategory = catKey;
@@ -2270,6 +2286,7 @@ function selectCategoryFilter(catKey) {
     updateCatalogTitleDesc(catKey);
     renderProducts();
     updateFilterUrl();
+    syncMobileQuickPills(catKey);
 }
 window.selectCategoryFilter = selectCategoryFilter;
 
@@ -2596,7 +2613,7 @@ function renderProducts(isLoadMore = false) {
                         <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                     </button>
 
-                    <div class="product-quick-actions">
+                    <div class="product-quick-actions" onclick="event.stopPropagation();">
                         <button class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}')">
                             <i class="fa-regular fa-eye"></i> Quick View
                         </button>
@@ -5101,6 +5118,7 @@ function closeQuickView() {
         modalBackdrop.classList.remove('active');
         modalBackdrop.style.display = 'none';
     }
+    document.body.style.overflow = '';
 }
 
 function handleModalAddToCart() {
@@ -5182,11 +5200,22 @@ async function openQuickView(productId) {
     if (!productId) return;
     ensureQuickViewModalInDOM();
 
+    // Immediately open modal backdrop with scroll lock for instant tactile feedback
+    const modalBackdrop = document.getElementById('quickViewBackdrop');
+    if (modalBackdrop) {
+        modalBackdrop.style.display = 'flex';
+        modalBackdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
     const pid = String(productId).trim();
-    // 1. Fetch data asynchronously (or from memory)
-    let product = (typeof fetchProductData === 'function') 
-        ? await fetchProductData(pid)
-        : ((typeof findProductById === 'function') ? findProductById(pid) : null);
+    // 1. Fetch data from memory first
+    let product = (typeof findProductById === 'function') ? findProductById(pid) : null;
+    
+    // 2. Fallback to fetchProductData or API endpoint
+    if (!product && typeof fetchProductData === 'function') {
+        product = await fetchProductData(pid);
+    }
 
     if (!product) {
         try {
@@ -5207,6 +5236,8 @@ async function openQuickView(productId) {
 
     if (!product) {
         console.warn('[QuickView] Product not found:', productId);
+        if (typeof showToast === 'function') showToast('Masterpiece details unavailable');
+        closeQuickView();
         return;
     }
 
@@ -6526,7 +6557,7 @@ function renderSimilarProducts(currentProduct) {
                         <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                     </button>
 
-                    <div class="product-quick-actions">
+                    <div class="product-quick-actions" onclick="event.stopPropagation();">
                         <button class="btn-quick-view" onclick="event.stopPropagation(); openQuickView('${product.id}')">
                             <i class="fa-regular fa-eye"></i> Quick View
                         </button>
@@ -6705,6 +6736,7 @@ function parseUrlAndSetTitle() {
     }
 
     updateCatalogTitleDesc(selectedCategory, sub, badge);
+    if (typeof syncMobileQuickPills === 'function') syncMobileQuickPills(selectedCategory);
 
     // Sync filter-tab active state
     const tabs = document.querySelectorAll(".filter-tab");
@@ -6801,7 +6833,7 @@ function renderCuratedBadges() {
                         <button class="curation-wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist('${p.id}'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
                             <i class="${isWishlisted ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                         </button>
-                        <div class="curation-quick-overlay">
+                        <div class="curation-quick-overlay" onclick="event.stopPropagation();">
                             <button class="curation-quick-btn" onclick="event.stopPropagation(); openQuickView('${p.id}');">
                                 <i class="fa-regular fa-eye"></i> Quick View
                             </button>

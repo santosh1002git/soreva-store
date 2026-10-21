@@ -438,13 +438,13 @@
                     <!-- LEFT FILTER SIDEBAR -->
                     <aside class="catalog-sidebar" id="catalogSidebar" aria-label="Product Filters">
                         <div class="sidebar-header">
-                            <div class="sidebar-title-row">
-                                <h3 class="sidebar-title"><i class="fa-solid fa-sliders"></i> Filters</h3>
+                            <h3 class="sidebar-title"><i class="fa-solid fa-sliders"></i> Filters</h3>
+                            <div class="sidebar-header-actions" style="display: flex; align-items: center; gap: 10px;">
                                 <button type="button" class="btn-clear-all-filters" id="sidebarClearAllBtn" onclick="clearAllFilters()">Reset All</button>
+                                <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" onclick="closeMobileFilterDrawer()" aria-label="Close Filters">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
                             </div>
-                            <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" onclick="closeMobileFilterDrawer()" aria-label="Close Filters">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
                         </div>
 
                         <div class="sidebar-scrollable-content">
@@ -543,9 +543,9 @@
                         <!-- Top Control Bar (Mobile Trigger, Results Count, Sort) -->
                         <div class="catalog-top-bar">
                             <div class="catalog-top-left">
-                                <button type="button" class="mobile-filter-btn" id="mobileFilterBtn" onclick="openMobileFilterDrawer()">
+                                <button type="button" class="mobile-filter-btn" id="mobileFilterBtn" onclick="openMobileFilterDrawer()" aria-label="Open Filter Drawer">
                                     <i class="fa-solid fa-sliders"></i>
-                                    <span>Filters</span>
+                                    <span>All Filters</span>
                                     <span class="filter-badge-num" id="filterBadgeNum" style="display: none;">0</span>
                                 </button>
                                 <div class="results-count-text" id="catalogResultsCount">
@@ -565,6 +565,18 @@
                                     </select>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- MOBILE QUICK-SCROLL CATEGORY FILTER PILLS -->
+                        <div class="mobile-quick-filter-pills" id="mobileQuickFilterPills" aria-label="Quick Category Filter">
+                            <button type="button" class="quick-pill active" data-category="all" onclick="selectCategoryFilter('all')">All</button>
+                            <button type="button" class="quick-pill" data-category="necklace" onclick="selectCategoryFilter('necklace')">Necklaces</button>
+                            <button type="button" class="quick-pill" data-category="earrings" onclick="selectCategoryFilter('earrings')">Earrings</button>
+                            <button type="button" class="quick-pill" data-category="rings" onclick="selectCategoryFilter('rings')">Finger Rings</button>
+                            <button type="button" class="quick-pill" data-category="pendants" onclick="selectCategoryFilter('pendants')">Pendants</button>
+                            <button type="button" class="quick-pill" data-category="wristwear" onclick="selectCategoryFilter('wristwear')">Wristwear</button>
+                            <button type="button" class="quick-pill" data-category="silver" onclick="selectCategoryFilter('silver')">925 Silver</button>
+                            <button type="button" class="quick-pill" data-category="accessories" onclick="selectCategoryFilter('accessories')">Accessories</button>
                         </div>
 
                         <!-- ACTIVE FILTER CHIPS ROW -->
