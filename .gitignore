@@ -5,8 +5,9 @@ data/czm-sync-status.json
 data/razorpay-config.json
 data/notifications-config.json
 data/inquiries.json
-*.env
-*.env.*
+.env
+.env.*
+!.env.*.example
 *.pem
 *.key
 
