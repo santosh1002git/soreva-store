@@ -46,6 +46,26 @@ CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
 os.makedirs(IMG_CACHE_DIR, exist_ok=True)
+
+def load_dotenv():
+    """Load key-value environment variables from .env if present."""
+    env_file = os.path.join(BASE_DIR, '.env')
+    if os.path.exists(env_file):
+        try:
+            with open(env_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        k = k.strip()
+                        v = v.strip().strip('"').strip("'")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+        except Exception as e:
+            print(f"[Dotenv] Error loading .env: {e}")
+
+load_dotenv()
+APP_ENV = os.environ.get('APP_ENV', 'development' if os.environ.get('DEBUG') == 'true' else 'production').lower()
 try:
     from PIL import Image
     HAS_PIL = True
@@ -1509,6 +1529,14 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 "merchantName": cfg.get("merchantName", "Sorèva Luxury Jewellery"),
                 "themeColor": cfg.get("themeColor", "#38302e"),
                 "mode": "live" if cfg.get("keyId", "").startswith("rzp_live") else ("test" if cfg.get("keyId", "").startswith("rzp_test") else "demo")
+            })
+            return
+
+        if parsed.path == '/api/env':
+            self._send_json({
+                "env": APP_ENV,
+                "isDevelopment": APP_ENV == "development",
+                "isProduction": APP_ENV == "production"
             })
             return
 
@@ -4802,8 +4830,9 @@ def run_server(port=8000):
         print(f"[DualStack Notice] Fallback to IPv4: {e}")
         httpd = ThreadedHTTPServer(('0.0.0.0', port), SorevaHandler)
 
+    env_tag = f"[{APP_ENV.upper()} MODE]"
     print(f"==================================================")
-    print(f"  💎 Sorèva Storefront & Database GUI Server running")
+    print(f"  💎 Sorèva Luxury Store {env_tag} running")
     print(f"  🌐 Store URL:    http://127.0.0.1:{port}/")
     print(f"  👥 Employee GUI: http://localhost:{port}/portal.html")
     print(f"  📡 Wi-Fi Share:  http://{lan_ip}:{port}/portal.html")
