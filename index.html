@@ -234,13 +234,12 @@
                 </button>
 
                 <!-- Wishlist Button -->
-                <button class="header-action-btn wishlist-open-btn" onclick="openWishlistDrawer()" aria-label="Saved Favourites" title="Saved Favourites">
+                <button type="button" class="header-action-btn wishlist-open-btn" id="headerWishlistBtn" onclick="openWishlistDrawer()" ontouchend="event.preventDefault(); openWishlistDrawer();" aria-label="Saved Favourites" title="Saved Favourites">
                     <i class="fa-regular fa-heart"></i>
                     <span class="badge-count wishlist-count-badge">0</span>
                 </button>
 
-                <!-- Shopping Cart Button -->
-                                <!-- User Account / Sign In Pill (E-Commerce Standard) -->
+                <!-- User Account / Sign In Pill (E-Commerce Standard) -->
                 <div class="user-account-container" id="userAccountContainer">
                     <button class="header-auth-pill" id="headerAuthBtn" onclick="handleHeaderAuthClick(event)" aria-label="Sign In / Client Account" title="Sign In to Sorèva">
                         <i class="fa-regular fa-user" id="userAuthIcon"></i>
@@ -256,6 +255,12 @@
                             </div>
                         </div>
                         <ul class="user-dropdown-items">
+                            <li>
+                                <button type="button" class="user-dropdown-link" onclick="if (typeof closeUserDropdown === 'function') closeUserDropdown(); openWishlistDrawer();">
+                                    <i class="fa-solid fa-heart" style="color: #e02424;"></i>
+                                    <span>Saved Favourites (<strong class="wishlist-count-badge">0</strong>)</span>
+                                </button>
+                            </li>
                             <li>
                                 <button type="button" class="user-dropdown-link" onclick="openCartDrawerFromAccount()">
                                     <i class="fa-solid fa-cart-shopping"></i>
@@ -671,7 +676,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51134'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51134" onclick="event.stopPropagation(); toggleWishlist('czm_51134');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -703,7 +708,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51139'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51139" onclick="event.stopPropagation(); toggleWishlist('czm_51139');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -735,7 +740,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51148'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51148" onclick="event.stopPropagation(); toggleWishlist('czm_51148');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -767,7 +772,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41673'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41673" onclick="event.stopPropagation(); toggleWishlist('czm_41673');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -799,7 +804,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41527'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41527" onclick="event.stopPropagation(); toggleWishlist('czm_41527');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -831,7 +836,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_23589'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_23589" onclick="event.stopPropagation(); toggleWishlist('czm_23589');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -863,7 +868,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51860'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51860" onclick="event.stopPropagation(); toggleWishlist('czm_51860');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -895,7 +900,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51696'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51696" onclick="event.stopPropagation(); toggleWishlist('czm_51696');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -927,7 +932,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51700'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51700" onclick="event.stopPropagation(); toggleWishlist('czm_51700');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -959,7 +964,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50554'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50554" onclick="event.stopPropagation(); toggleWishlist('czm_50554');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -991,7 +996,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51589'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51589" onclick="event.stopPropagation(); toggleWishlist('czm_51589');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1023,7 +1028,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-new-launch"><i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>New Launch</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50737'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50737" onclick="event.stopPropagation(); toggleWishlist('czm_50737');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1081,7 +1086,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41674'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41674" onclick="event.stopPropagation(); toggleWishlist('czm_41674');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1113,7 +1118,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41263'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41263" onclick="event.stopPropagation(); toggleWishlist('czm_41263');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1145,7 +1150,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41231'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41231" onclick="event.stopPropagation(); toggleWishlist('czm_41231');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1177,7 +1182,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51132'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51132" onclick="event.stopPropagation(); toggleWishlist('czm_51132');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1209,7 +1214,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51137'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51137" onclick="event.stopPropagation(); toggleWishlist('czm_51137');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1241,7 +1246,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51143'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51143" onclick="event.stopPropagation(); toggleWishlist('czm_51143');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1273,7 +1278,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_46519'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_46519" onclick="event.stopPropagation(); toggleWishlist('czm_46519');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1305,7 +1310,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_44719'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_44719" onclick="event.stopPropagation(); toggleWishlist('czm_44719');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1337,7 +1342,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_46082'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_46082" onclick="event.stopPropagation(); toggleWishlist('czm_46082');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1369,7 +1374,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51205'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51205" onclick="event.stopPropagation(); toggleWishlist('czm_51205');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1401,7 +1406,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51211'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51211" onclick="event.stopPropagation(); toggleWishlist('czm_51211');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1433,7 +1438,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-trending"><i class="fa-solid fa-fire" style="margin-right: 4px; font-size: 0.65rem;"></i>Trending</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50913'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50913" onclick="event.stopPropagation(); toggleWishlist('czm_50913');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1491,7 +1496,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_51152'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_51152" onclick="event.stopPropagation(); toggleWishlist('czm_51152');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1523,7 +1528,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50505'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50505" onclick="event.stopPropagation(); toggleWishlist('czm_50505');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1555,7 +1560,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50507'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50507" onclick="event.stopPropagation(); toggleWishlist('czm_50507');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1587,7 +1592,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_52541'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_52541" onclick="event.stopPropagation(); toggleWishlist('czm_52541');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1619,7 +1624,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50755'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50755" onclick="event.stopPropagation(); toggleWishlist('czm_50755');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1651,7 +1656,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_50756'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_50756" onclick="event.stopPropagation(); toggleWishlist('czm_50756');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1683,7 +1688,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_41258'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_41258" onclick="event.stopPropagation(); toggleWishlist('czm_41258');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1715,7 +1720,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_37478'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_37478" onclick="event.stopPropagation(); toggleWishlist('czm_37478');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1747,7 +1752,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_34580'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_34580" onclick="event.stopPropagation(); toggleWishlist('czm_34580');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1779,7 +1784,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_46100'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_46100" onclick="event.stopPropagation(); toggleWishlist('czm_46100');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1811,7 +1816,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_44715'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_44715" onclick="event.stopPropagation(); toggleWishlist('czm_44715');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -1843,7 +1848,7 @@
                                 <div class="product-badges">
                                     <span class="product-badge badge-bestseller"><i class="fa-solid fa-crown" style="margin-right: 4px; font-size: 0.65rem;"></i>Best Seller</span>
                                 </div>
-                                <button class="curation-wishlist-btn" onclick="event.stopPropagation(); toggleWishlist('czm_46079'); this.classList.toggle('active');" title="Save to Wishlist" aria-label="Save to Wishlist">
+                                <button type="button" class="curation-wishlist-btn btn-wishlist" data-id="czm_46079" onclick="event.stopPropagation(); toggleWishlist('czm_46079');" title="Save to Wishlist" aria-label="Save to Wishlist">
                                     <i class="fa-regular fa-heart"></i>
                                 </button>
                                 <div class="curation-quick-overlay" onclick="event.stopPropagation();">
@@ -2281,6 +2286,9 @@
                         </button>
                         <button class="btn-buy-now" id="modalBuyNowBtn" type="button" onclick="handleModalBuyNow()" style="flex: 1.2; min-width: 170px; padding: 14px; background: linear-gradient(135deg, #c5a059, #967537); color: #120e0d; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <i class="fa-solid fa-shield-halved"></i> Buy Now
+                        </button>
+                        <button type="button" class="btn-wishlist-modal" id="modalWishlistBtn" onclick="handleModalWishlistClick()" title="Save to Favourites" aria-label="Save to Favourites">
+                            <i class="fa-regular fa-heart"></i>
                         </button>
                         <a id="modalFullDetailsBtn" href="#" style="padding: 14px 18px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s;">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> Details

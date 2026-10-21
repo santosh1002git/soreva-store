@@ -235,13 +235,12 @@
                 </button>
 
                 <!-- Wishlist Button -->
-                <button class="header-action-btn wishlist-open-btn" onclick="openWishlistDrawer()" aria-label="Saved Favourites" title="Saved Favourites">
+                <button type="button" class="header-action-btn wishlist-open-btn" id="headerWishlistBtn" onclick="openWishlistDrawer()" ontouchend="event.preventDefault(); openWishlistDrawer();" aria-label="Saved Favourites" title="Saved Favourites">
                     <i class="fa-regular fa-heart"></i>
                     <span class="badge-count wishlist-count-badge">0</span>
                 </button>
 
-                <!-- Shopping Cart Button -->
-                                <!-- User Account / Sign In Pill (E-Commerce Standard) -->
+                <!-- User Account / Sign In Pill (E-Commerce Standard) -->
                 <div class="user-account-container" id="userAccountContainer">
                     <button class="header-auth-pill" id="headerAuthBtn" onclick="handleHeaderAuthClick(event)" aria-label="Sign In / Client Account" title="Sign In to Sorèva">
                         <i class="fa-regular fa-user" id="userAuthIcon"></i>
@@ -257,6 +256,12 @@
                             </div>
                         </div>
                         <ul class="user-dropdown-items">
+                            <li>
+                                <button type="button" class="user-dropdown-link" onclick="if (typeof closeUserDropdown === 'function') closeUserDropdown(); openWishlistDrawer();">
+                                    <i class="fa-solid fa-heart" style="color: #e02424;"></i>
+                                    <span>Saved Favourites (<strong class="wishlist-count-badge">0</strong>)</span>
+                                </button>
+                            </li>
                             <li>
                                 <button type="button" class="user-dropdown-link" onclick="openCartDrawerFromAccount()">
                                     <i class="fa-solid fa-cart-shopping"></i>
@@ -838,6 +843,9 @@
                         </button>
                         <button class="btn-buy-now" id="modalBuyNowBtn" type="button" onclick="handleModalBuyNow()" style="flex: 1.2; min-width: 170px; padding: 14px; background: linear-gradient(135deg, #c5a059, #967537); color: #120e0d; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <i class="fa-solid fa-shield-halved"></i> Buy Now
+                        </button>
+                        <button type="button" class="btn-wishlist-modal" id="modalWishlistBtn" onclick="handleModalWishlistClick()" title="Save to Favourites" aria-label="Save to Favourites">
+                            <i class="fa-regular fa-heart"></i>
                         </button>
                         <a id="modalFullDetailsBtn" href="#" style="padding: 14px 18px; text-align: center; text-decoration: none; border: 1px solid var(--gold-badge); border-radius: 8px; color: var(--gold-badge); font-weight: 600; display: inline-flex; justify-content: center; align-items: center; gap: 6px; transition: all 0.2s;">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
