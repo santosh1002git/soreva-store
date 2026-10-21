@@ -7,9 +7,17 @@ set -e
 
 echo "💎 Setting up Sorèva Luxury Store (Production & Development) on AWS Lightsail..."
 
-# 1. Update OS and install prerequisites
+# 1. Clear any stale apt locks and disable interactive restart prompts
+sudo killall -9 apt apt-get dpkg 2>/dev/null || true
+sudo rm -f /var/lib/dpkg/lock* /var/cache/apt/archives/lock 2>/dev/null || true
+sudo dpkg --configure -a 2>/dev/null || true
+sudo sed -i "s/#\$nrconf{restart} = 'i';/\$nrconf{restart} = 'a';/g" /etc/needrestart/needrestart.conf 2>/dev/null || true
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+# 2. Update OS and install prerequisites
 sudo apt-get update -y
-sudo apt-get install -y python3 python3-pip git nginx curl ufw unzip certbot python3-certbot-nginx
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" python3 python3-pip git nginx curl ufw unzip certbot python3-certbot-nginx
 
 # 2. Setup Directories
 sudo mkdir -p /var/www/soreva-production
