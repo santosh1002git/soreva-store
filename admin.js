@@ -573,20 +573,29 @@ function renderHeroSlides() {
         return;
     }
 
-    container.innerHTML = slides.map((slide, idx) => `
+    container.innerHTML = slides.map((slide, idx) => {
+        const targetUrl = slide.linkUrl || slide.ctaLink || (slide.productId ? `product.html?id=${slide.productId}` : '');
+        return `
         <div class="hero-slide-admin-card" data-id="${slide.id}">
             <div class="slide-img-preview" onclick="inspectImageDetails('${(slide.image || '').replace(/'/g, "\\'")}', 'heroPreviewImg', 'Hero Slide: ${(slide.name || 'Banner').replace(/'/g, "\\'")}')" style="cursor: pointer;" title="Click to inspect slide resolution & specs">
-                <img src="${slide.image}" alt="${slide.name}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-${(idx % 8) + 1}.jpg';">
-                <span class="slide-tag-pill">${slide.tag}</span>
+                <img src="${slide.image}" alt="${slide.name || 'Hero slide'}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-${(idx % 8) + 1}.jpg';">
+                <span class="slide-tag-pill">${slide.tag || `Look 0${idx + 1}`}</span>
             </div>
             <div class="slide-card-body">
-                <h4>${slide.headline.replace(/<[^>]*>?/gm, '')}</h4>
-                <p>${slide.subtitle}</p>
+                <h4>${(slide.headline || '').replace(/<[^>]*>?/gm, '')}</h4>
+                <p>${slide.subtitle || ''}</p>
                 <div class="slide-card-meta">
-                    <span>${slide.name}</span>
-                    <span>₹${slide.priceINR.toLocaleString('en-IN')} • ${slide.finish}</span>
+                    <span>${slide.name || 'Featured Look'}</span>
+                    <span style="color: var(--gold-light); font-weight: 500;">${slide.finish || 'Signature Look'}</span>
                 </div>
-                <div class="slide-card-actions">
+                <div class="slide-card-link" style="margin-top: 8px; padding: 6px 10px; background: rgba(197, 160, 89, 0.08); border: 1px dashed rgba(197, 160, 89, 0.25); border-radius: var(--radius-sm); font-size: 0.78rem; display: flex; align-items: center; gap: 6px; word-break: break-all;">
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="color: var(--gold); font-size: 0.75rem;"></i>
+                    <span style="color: var(--admin-text-muted);">Jump:</span>
+                    <a href="${targetUrl || '#'}" target="_blank" onclick="event.stopPropagation();" style="color: var(--gold); text-decoration: underline;">
+                        ${targetUrl || 'None set (click to edit)'}
+                    </a>
+                </div>
+                <div class="slide-card-actions" style="margin-top: 14px;">
                     <button class="btn-admin-outline btn-sm" onclick="openHeroSlideModal(${slide.id})">
                         <i class="fa-regular fa-pen-to-square"></i> Edit
                     </button>
@@ -598,7 +607,8 @@ function renderHeroSlides() {
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function openHeroSlideModal(id = null) {
@@ -608,8 +618,8 @@ function openHeroSlideModal(id = null) {
     const productSelect = document.getElementById('heroPieceProductId');
 
     // Populate products dropdown
-    productSelect.innerHTML = (storeData.products || []).slice(0, 100).map(p => `
-        <option value="${p.id}">${p.name} (₹${p.priceINR})</option>
+    productSelect.innerHTML = `<option value="">-- Custom Link / None --</option>` + (storeData.products || []).slice(0, 150).map(p => `
+        <option value="${p.id}">${p.name} (${p.category || 'Jewellery'})</option>
     `).join('');
 
     if (id) {
@@ -617,14 +627,15 @@ function openHeroSlideModal(id = null) {
         const slide = storeData.heroSlides.find(s => s.id === id);
         if (slide) {
             document.getElementById('editHeroSlideId').value = slide.id;
-            document.getElementById('heroSlideTag').value = slide.tag;
-            document.getElementById('heroHeadlineInput').value = slide.headline;
-            document.getElementById('heroSubtitleInput').value = slide.subtitle;
-            document.getElementById('heroImageInput').value = slide.image;
-            document.getElementById('heroPieceName').value = slide.name;
-            document.getElementById('heroPiecePrice').value = slide.priceINR;
-            document.getElementById('heroPieceFinish').value = slide.finish;
-            document.getElementById('heroPieceProductId').value = slide.productId || (storeData.products[0]?.id || 1);
+            document.getElementById('heroSlideTag').value = slide.tag || '';
+            document.getElementById('heroHeadlineInput').value = slide.headline || '';
+            document.getElementById('heroSubtitleInput').value = slide.subtitle || '';
+            document.getElementById('heroImageInput').value = slide.image || '';
+            document.getElementById('heroSlideLinkUrl').value = slide.linkUrl || slide.ctaLink || (slide.productId ? `product.html?id=${slide.productId}` : '');
+            document.getElementById('heroPieceName').value = slide.name || '';
+            document.getElementById('heroPieceFinish').value = slide.finish || '';
+            document.getElementById('heroPieceProductId').value = slide.productId || '';
+            document.getElementById('heroCtaText').value = slide.ctaText || 'Explore Collection';
             previewImg(slide.image, 'heroPreviewImg');
         }
     } else {
@@ -633,6 +644,8 @@ function openHeroSlideModal(id = null) {
         document.getElementById('editHeroSlideId').value = "";
         const nextNum = (storeData.heroSlides?.length || 0) + 1;
         document.getElementById('heroSlideTag').value = `0${nextNum} / 0${Math.max(8, nextNum)} • SIGNATURE EDIT`;
+        document.getElementById('heroSlideLinkUrl').value = "catalog.html";
+        document.getElementById('heroCtaText').value = "Explore Collection";
         previewImg('', 'heroPreviewImg');
     }
 
@@ -650,10 +663,11 @@ function handleSaveHeroSlide(e) {
     const headline = document.getElementById('heroHeadlineInput').value.trim();
     const subtitle = document.getElementById('heroSubtitleInput').value.trim();
     const image = document.getElementById('heroImageInput').value.trim();
+    const linkUrl = document.getElementById('heroSlideLinkUrl').value.trim();
     const name = document.getElementById('heroPieceName').value.trim();
-    const priceINR = parseInt(document.getElementById('heroPiecePrice').value, 10);
     const finish = document.getElementById('heroPieceFinish').value.trim();
-    const productId = parseInt(document.getElementById('heroPieceProductId').value, 10);
+    const productId = document.getElementById('heroPieceProductId').value.trim();
+    const ctaText = (document.getElementById('heroCtaText')?.value || '').trim() || 'Explore Collection';
 
     if (editId) {
         const slide = storeData.heroSlides.find(s => s.id === parseInt(editId, 10));
@@ -662,8 +676,10 @@ function handleSaveHeroSlide(e) {
             slide.headline = headline;
             slide.subtitle = subtitle;
             slide.image = image;
+            slide.linkUrl = linkUrl;
+            slide.ctaLink = linkUrl;
+            slide.ctaText = ctaText;
             slide.name = name;
-            slide.priceINR = priceINR;
             slide.finish = finish;
             slide.productId = productId;
         }
@@ -676,12 +692,12 @@ function handleSaveHeroSlide(e) {
             headline,
             subtitle,
             image,
+            linkUrl,
+            ctaLink: linkUrl,
+            ctaText,
             name,
-            priceINR,
             finish,
-            productId,
-            ctaText: "Explore Catalog",
-            ctaLink: "#products-catalog"
+            productId
         });
         showToast("New hero slide created!");
     }
@@ -690,6 +706,29 @@ function handleSaveHeroSlide(e) {
     saveAllStoreData();
     renderHeroSlides();
 }
+
+function fillHeroLinkWithProduct() {
+    const sel = document.getElementById('heroPieceProductId');
+    if (!sel || !sel.value) {
+        showToast("Please select a Linked Product first");
+        return;
+    }
+    const linkInput = document.getElementById('heroSlideLinkUrl');
+    if (linkInput) {
+        linkInput.value = `product.html?id=${encodeURIComponent(sel.value)}`;
+        showToast("Applied linked product URL!");
+    }
+}
+
+function onHeroProductSelect(productId) {
+    if (!productId) return;
+    const linkInput = document.getElementById('heroSlideLinkUrl');
+    if (linkInput && (!linkInput.value || linkInput.value === 'catalog.html' || linkInput.value.startsWith('product.html?id='))) {
+        linkInput.value = `product.html?id=${encodeURIComponent(productId)}`;
+    }
+}
+window.fillHeroLinkWithProduct = fillHeroLinkWithProduct;
+window.onHeroProductSelect = onHeroProductSelect;
 
 function moveHeroSlide(idx, delta) {
     const slides = storeData.heroSlides;
@@ -4592,7 +4631,13 @@ async function uploadDirectToInput(fileInput, targetInputId, previewImgId) {
     if (!fileInput.files || !fileInput.files[0]) return;
     const file = fileInput.files[0];
     try {
-        const section = (targetInputId === 'catModalImage') ? 'category' : 'boutique';
+        let section = 'boutique';
+        if (targetInputId === 'catModalImage') section = 'category';
+        else if (targetInputId === 'heroImageInput') section = 'hero';
+        else if (targetInputId.includes('spotlight')) section = 'spotlight';
+        else if (targetInputId.includes('logo') || targetInputId.includes('Logo')) section = 'branding';
+        else if (targetInputId.includes('Banner') || targetInputId.includes('banner')) section = 'banners';
+
         const url = await uploadImageFile(file, section);
         const input = document.getElementById(targetInputId);
         if (input) {

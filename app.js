@@ -282,11 +282,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Handcrafted with Austrian AAA+ Cubic Zirconia crystals and 24K gold micro-finish. Designed for regal celebrations.",
         image: "assets/hero/hero-slide-1.jpg",
         name: "Aurelia Pavé Heritage Collar Necklace",
-        priceINR: 6599,
         finish: "24K Gold Plated",
         productId: "czm_41673",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_41673",
+        linkUrl: "product.html?id=czm_41673"
     },
     {
         id: 2,
@@ -295,11 +295,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Diamond-cut multi-faceted cascading teardrops in Rhodium Silver finish with fiery diamond dispersion.",
         image: "assets/hero/hero-slide-2.jpg",
         name: "Isabella Graduated Cascading Crystal Earrings",
-        priceINR: 2349,
         finish: "Rhodium Silver",
         productId: "czm_51860",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_51860",
+        linkUrl: "product.html?id=czm_51860"
     },
     {
         id: 3,
@@ -308,11 +308,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "An opulent heirloom statement choker layered with brilliant cut round and baguette stones.",
         image: "assets/hero/hero-slide-3.jpg",
         name: "Primavera Baguette Royal Heritage Collar",
-        priceINR: 6449,
         finish: "24K Gold Plated",
         productId: "czm_41674",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_41674",
+        linkUrl: "product.html?id=czm_41674"
     },
     {
         id: 4,
@@ -321,11 +321,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Crown-cut solitary center stone with micro-pave encrusted shoulders for effortless everyday glamour.",
         image: "assets/hero/hero-slide-4.jpg",
         name: "Floriana Sculpted Blossom Pavé Ring",
-        priceINR: 1199,
         finish: "Rhodium Silver",
         productId: "czm_51132",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_51132",
+        linkUrl: "product.html?id=czm_51132"
     },
     {
         id: 5,
@@ -334,11 +334,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Continuous fire of handset round brilliant stones. Flexible, feather-light, and flawlessly secure.",
         image: "assets/hero/hero-slide-5.jpg",
         name: "Honoria Flawless Hathphool Bangle & Ring Suite",
-        priceINR: 2199,
         finish: "24K Gold Plated",
         productId: "czm_46519",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_46519",
+        linkUrl: "product.html?id=czm_46519"
     },
     {
         id: 6,
@@ -347,11 +347,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Delicate floating solitaire pendant set in micro-halo setting on an adjustable fine chain.",
         image: "assets/hero/hero-slide-6.jpg",
         name: "Novella Pear-Cut Teardrop Pendant & Earrings Set",
-        priceINR: 1199,
         finish: "24K Gold Plated",
         productId: "czm_50550",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_50550",
+        linkUrl: "product.html?id=czm_50550"
     },
     {
         id: 7,
@@ -360,11 +360,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Filigree bells encrusted with pave crystals and delicate pearl drops for regal festive evenings.",
         image: "assets/hero/hero-slide-7.jpg",
         name: "Zephyrina Floral Statement Chandelier Drops",
-        priceINR: 2349,
         finish: "24K Gold Plated",
         productId: "czm_51696",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_51696",
+        linkUrl: "product.html?id=czm_51696"
     },
     {
         id: 8,
@@ -373,11 +373,11 @@ const DEFAULT_HERO_SLIDES = [
         subtitle: "Grand bridal combo wristwear set with hand-faceted cubic zirconia and safety clasp.",
         image: "assets/hero/hero-slide-8.jpg",
         name: "Querida Dainty Hand-Harness Crystal Parure",
-        priceINR: 2599,
         finish: "24K Gold Plated",
         productId: "czm_46520",
         ctaText: "Explore Catalog",
-        ctaLink: "#products-catalog"
+        ctaLink: "product.html?id=czm_46520",
+        linkUrl: "product.html?id=czm_46520"
     }
 ];
 let HERO_SLIDES = [...DEFAULT_HERO_SLIDES];
@@ -6333,12 +6333,60 @@ function initPatreonHero() {
         HERO_SLIDES = (typeof DEFAULT_HERO_SLIDES !== 'undefined' && DEFAULT_HERO_SLIDES.length) ? [...DEFAULT_HERO_SLIDES] : [];
     }
 
-    // 1. Render all 8 full-bleed background slide images for instant crossfading
+    // 1. Render all full-bleed background slide images for instant crossfading & click navigation
     slidesWrapper.innerHTML = HERO_SLIDES.map((slide, idx) => `
-        <div class="hero-slide-item ${idx === currentHeroIndex ? 'active' : ''}" data-index="${idx}">
-            <img class="hero-slide-bg" src="${slide.image}" alt="${slide.name}" loading="${idx === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-${(idx % 8) + 1}.jpg';">
+        <div class="hero-slide-item ${idx === currentHeroIndex ? 'active' : ''}" data-index="${idx}" style="cursor: pointer;" title="Click to view ${slide.name || 'this collection'}">
+            <img class="hero-slide-bg" src="${slide.image}" alt="${slide.name || 'Hero slide'}" loading="${idx === 0 ? 'eager' : 'lazy'}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-${(idx % 8) + 1}.jpg';">
         </div>
     `).join('');
+
+    // Jump navigation handler for hero clicks
+    function navigateToHeroSlideUrl(slide) {
+        if (!slide) return;
+        const targetUrl = (slide.linkUrl || slide.ctaLink || (slide.productId ? `product.html?id=${encodeURIComponent(slide.productId)}` : '#categoryGrid')).trim();
+        if (!targetUrl) return;
+        if (targetUrl.startsWith('#')) {
+            const targetEl = document.querySelector(targetUrl);
+            if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+            else window.location.hash = targetUrl;
+        } else {
+            window.location.href = targetUrl;
+        }
+    }
+
+    let heroTouchDidSwipe = false;
+
+    const handleHeroBannerClick = (e) => {
+        // Prevent navigation if interacting with control buttons
+        if (e.target.closest('#heroArrowPrev') || 
+            e.target.closest('#heroArrowNext') || 
+            e.target.closest('#heroDotsNav') || 
+            e.target.closest('#heroQuickViewBtn') ||
+            e.target.closest('.hero-cta-actions a') ||
+            e.target.closest('button')) {
+            return;
+        }
+        if (heroTouchDidSwipe) {
+            heroTouchDidSwipe = false;
+            return;
+        }
+        const currentSlide = HERO_SLIDES[currentHeroIndex];
+        navigateToHeroSlideUrl(currentSlide);
+    };
+
+    slidesWrapper.onclick = handleHeroBannerClick;
+
+    const activePieceBadge = document.getElementById('heroActivePieceBadge');
+    if (activePieceBadge) {
+        activePieceBadge.style.cursor = 'pointer';
+        activePieceBadge.onclick = handleHeroBannerClick;
+    }
+
+    const heroTopPill = document.getElementById('heroTopPill');
+    if (heroTopPill) {
+        heroTopPill.style.cursor = 'pointer';
+        heroTopPill.onclick = handleHeroBannerClick;
+    }
 
     // 2. Render Clickable Navigation Dots
     if (dotsNav) {
@@ -6416,6 +6464,7 @@ function initPatreonHero() {
         let heroTouchStartX = 0;
         let heroTouchStartY = 0;
         heroSection.addEventListener('touchstart', (e) => {
+            heroTouchDidSwipe = false;
             if (e.touches && e.touches[0]) {
                 heroTouchStartX = e.touches[0].clientX;
                 heroTouchStartY = e.touches[0].clientY;
@@ -6426,6 +6475,7 @@ function initPatreonHero() {
                 const diffX = heroTouchStartX - e.changedTouches[0].clientX;
                 const diffY = heroTouchStartY - e.changedTouches[0].clientY;
                 if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                    heroTouchDidSwipe = true;
                     if (diffX > 0) {
                         handleNext();
                     } else {
@@ -6496,14 +6546,33 @@ function updateHeroUI() {
     const activeNameEl = document.getElementById('heroActiveName');
     const activePriceEl = document.getElementById('heroActivePrice');
     const counterEl = document.getElementById('heroSlideCounter');
+    const ctaBtn = document.querySelector('.hero-cta-actions .btn-primary');
 
-    if (tagEl) tagEl.textContent = slide.tag;
-    if (headlineEl) headlineEl.innerHTML = slide.headline;
-    if (subtitleEl) subtitleEl.textContent = slide.subtitle;
+    if (tagEl) tagEl.textContent = slide.tag || '';
+    if (headlineEl) headlineEl.innerHTML = slide.headline || '';
+    if (subtitleEl) subtitleEl.textContent = slide.subtitle || '';
     if (counterEl) counterEl.textContent = `0${currentHeroIndex + 1} / 0${HERO_SLIDES.length}`;
 
-    if (activeNameEl) activeNameEl.textContent = slide.name;
-    if (activePriceEl) activePriceEl.textContent = `${formatPrice(slide.priceINR)} • ${slide.finish}`;
+    if (activeNameEl) activeNameEl.textContent = slide.name || 'Featured Piece';
+    if (activePriceEl) {
+        // Pricing completely removed per user request: only show finish/edition if present
+        if (slide.finish && slide.finish.trim()) {
+            activePriceEl.textContent = slide.finish.trim();
+            activePriceEl.style.display = 'block';
+        } else {
+            activePriceEl.textContent = '';
+            activePriceEl.style.display = 'none';
+        }
+    }
+
+    if (ctaBtn) {
+        const targetUrl = (slide.linkUrl || slide.ctaLink || (slide.productId ? `product.html?id=${encodeURIComponent(slide.productId)}` : '#categoryGrid')).trim();
+        ctaBtn.href = targetUrl;
+        if (slide.ctaText) {
+            const textSpan = ctaBtn.querySelector('span');
+            if (textSpan) textSpan.textContent = slide.ctaText;
+        }
+    }
 }
 
 
