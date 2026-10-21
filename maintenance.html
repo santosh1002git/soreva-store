@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorèva Luxury Jewellery | Private Atelier Upgrade</title>
+    <meta name="description" content="Sorèva is currently refining its digital boutique with our newest luxury jewellery collections and elevated concierge experience. Returning shortly.">
+    <link rel="icon" type="image/png" href="/assets/logo-white-clean.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-obsidian: #090807;
+            --bg-card: rgba(22, 19, 17, 0.72);
+            --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-gradient: linear-gradient(135deg, #f9e8b2 0%, #d4af37 50%, #aa7c11 100%);
+            --gold-text-grad: linear-gradient(135deg, #fff7d6 0%, #e8c766 45%, #b8860b 100%);
+            --text-primary: #fcfbf9;
+            --text-muted: rgba(252, 251, 249, 0.65);
+            --border-subtle: rgba(212, 175, 55, 0.22);
+            --border-glow: rgba(212, 175, 55, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            font-family: 'Outfit', -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 30px 20px;
+        }
+
+        /* Ambient Light & Glowing Orbs */
+        .ambient-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, rgba(170, 124, 17, 0.04) 45%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            animation: pulseGlow 8s ease-in-out infinite alternate;
+        }
+
+        .ambient-secondary {
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(197, 160, 89, 0.08) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(70px);
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        }
+
+        /* Subtle Shimmer Canvas Overlay */
+        .stars-bg {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.4), rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, rgba(212, 175, 55, 0.35), rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 90px 40px, rgba(255, 255, 255, 0.3), rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 160px 120px, rgba(212, 175, 55, 0.4), rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header / Brand */
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-wrap:hover {
+            transform: scale(1.02);
+        }
+
+        .logo-img {
+            height: 48px;
+            width: auto;
+            filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.25));
+        }
+
+        .brand-text {
+            font-family: 'Cinzel', serif;
+            font-size: 1.85rem;
+            letter-spacing: 0.35em;
+            color: var(--text-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Main Container Card */
+        main {
+            position: relative;
+            z-index: 10;
+            max-width: 720px;
+            width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 28px;
+            padding: 55px 45px;
+            text-align: center;
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.6),
+                0 0 40px rgba(212, 175, 55, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: cardAppear 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(24px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 18px;
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.32);
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--gold-light);
+            margin-bottom: 28px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+            animation: dotBlink 2s infinite ease-in-out;
+        }
+
+        @keyframes dotBlink {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.5; }
+        }
+
+        /* Headings */
+        .main-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.1rem;
+            line-height: 1.15;
+            font-weight: 400;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .main-title em {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-weight: 600;
+            background: var(--gold-text-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .tagline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.88rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold-primary);
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        .description {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            max-width: 580px;
+            margin: 0 auto 36px auto;
+            font-weight: 300;
+        }
+
+        /* Divider */
+        .gold-divider {
+            width: 70px;
+            height: 1px;
+            background: var(--gold-gradient);
+            margin: 0 auto 36px auto;
+            opacity: 0.6;
+        }
+
+        /* Priority Concierge Callouts */
+        .concierge-box {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 34px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .concierge-heading {
+            font-size: 0.85rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        .cta-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn-gold {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--gold-gradient);
+            color: #0e0c0a;
+            padding: 13px 26px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.45);
+            filter: brightness(1.06);
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            padding: 13px 24px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.88rem;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            transition: all 0.3s ease;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--gold-primary);
+            color: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* VIP Notify Form */
+        .notify-form {
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .notify-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: block;
+            letter-spacing: 0.04em;
+        }
+
+        .input-group {
+            display: flex;
+            border: 1px solid var(--border-subtle);
+            border-radius: 50px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+        }
+
+        .email-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 20px;
+            color: #fff;
+            font-size: 0.92rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .email-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .submit-btn {
+            background: var(--gold-gradient);
+            border: none;
+            color: #0e0c0a;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .submit-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(28, 25, 23, 0.95);
+            border: 1px solid var(--gold-primary);
+            color: #fff;
+            padding: 14px 26px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 10;
+            margin-top: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .footer-socials {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .social-icon:hover {
+            color: var(--gold-primary);
+            border-color: var(--gold-primary);
+            background: rgba(212, 175, 55, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .copyright {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.05em;
+        }
+
+        .staff-link {
+            font-size: 0.76rem;
+            color: rgba(212, 175, 55, 0.65);
+            text-decoration: none;
+            letter-spacing: 0.08em;
+            transition: color 0.2s ease;
+        }
+
+        .staff-link:hover {
+            color: var(--gold-light);
+            text-decoration: underline;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 640px) {
+            main {
+                padding: 40px 24px;
+                border-radius: 22px;
+            }
+
+            .main-title {
+                font-size: 2.35rem;
+            }
+
+            .description {
+                font-size: 0.95rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-gold, .btn-ghost {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Ambient Glow Backdrop -->
+    <div class="ambient-glow"></div>
+    <div class="ambient-secondary"></div>
+    <div class="stars-bg"></div>
+
+    <!-- Header / Brand -->
+    <header>
+        <a href="/" class="logo-wrap" title="Sorèva Luxury Jewellery">
+            <img src="/assets/logo-white-clean.png" alt="Sorèva Emblem" class="logo-img" onerror="this.style.display='none'">
+            <span class="brand-text">SORÈVA</span>
+        </a>
+    </header>
+
+    <!-- Main Card -->
+    <main>
+        <div class="status-badge">
+            <span class="pulse-dot"></span>
+            Private Atelier Upgrade in Progress
+        </div>
+
+        <h1 class="main-title">
+            Refining Our Maison <em>For You</em>
+        </h1>
+
+        <p class="tagline">Everyday Luxury • Timeless Elegance</p>
+
+        <div class="gold-divider"></div>
+
+        <p class="description">
+            We are currently enhancing the Sorèva digital boutique with our newest haute-demi fine jewellery suites, curated gemstones, and an elevated personal concierge experience. We look forward to welcoming you back shortly.
+        </p>
+
+        <!-- Immediate Contact / Concierge Section -->
+        <div class="concierge-box">
+            <span class="concierge-heading">Bespoke Orders & Immediate Inquiries</span>
+            <div class="cta-buttons">
+                <a href="https://wa.me/919741118940?text=Hi%20Sor%C3%A8va%2C%20I%20would%20like%20to%20inquire%20about%20your%20jewellery%20collection." target="_blank" rel="noopener" class="btn-gold" title="Connect on WhatsApp">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 1.15rem;"></i>
+                    Chat with Concierge
+                </a>
+                <a href="https://www.instagram.com/soreva_jewels" target="_blank" rel="noopener" class="btn-ghost" title="Follow us on Instagram">
+                    <i class="fa-brands fa-instagram" style="font-size: 1.1rem;"></i>
+                    @soreva_jewels
+                </a>
+            </div>
+        </div>
+
+        <!-- VIP Guestlist Notification -->
+        <div class="notify-form">
+            <span class="notify-label">Be the first to experience our unveiling:</span>
+            <form id="vipForm" onsubmit="handleVipSubmit(event)">
+                <div class="input-group">
+                    <input type="email" id="vipEmail" class="email-input" placeholder="Enter your email for private preview access" required autocomplete="email">
+                    <button type="submit" class="submit-btn">Notify Me</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-socials">
+            <a href="https://www.instagram.com/soreva_jewels" target="_blank" rel="noopener" class="social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://wa.me/919741118940" target="_blank" rel="noopener" class="social-icon" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="mailto:concierge@soreva.in" class="social-icon" aria-label="Email Concierge"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+
+        <p class="copyright">
+            © 2026 Sorèva Luxury Jewellery. All Rights Reserved.
+        </p>
+
+        <!-- Discreet Team Link -->
+        <a href="/portal.html" class="staff-link">
+            Staff & Atelier Portal Access →
+        </a>
+    </footer>
+
+    <!-- Interactive Toast -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check" style="color: var(--gold-primary); font-size: 1.1rem;"></i>
+        <span>Thank you. You've been added to our VIP preview guestlist.</span>
+    </div>
+
+    <script>
+        function handleVipSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('vipEmail');
+            const email = input.value.trim();
+            if (!email) return;
+
+            // Save to localStorage
+            try {
+                const list = JSON.parse(localStorage.getItem('soreva_vip_list') || '[]');
+                if (!list.includes(email)) list.push(email);
+                localStorage.setItem('soreva_vip_list', JSON.stringify(list));
+            } catch(err) {}
+
+            // Show Toast
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            input.value = '';
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4500);
+        }
+    </script>
+</body>
+</html>
