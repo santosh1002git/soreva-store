@@ -185,6 +185,9 @@ def main():
                 fn, status, sz = res
                 if status == 'cached':
                     cached_count += 1
+                elif status == 'downloaded+webp':
+                    downloaded_count += 1
+                    converted_count += 1
                 elif 'downloaded' in status:
                     downloaded_count += 1
                 elif 'converted' in status:
