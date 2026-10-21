@@ -174,7 +174,19 @@ async function handleAdminLogin(e) {
     errorBox.style.display = 'none';
 
     try {
-        const inputHash = await sha256(password);
+        let inputHash = '';
+        try {
+            if (typeof sha256 === 'function') {
+                inputHash = await sha256(password);
+            } else if (typeof sha256Sync === 'function') {
+                inputHash = sha256Sync(password);
+            }
+        } catch (hashErr) {
+            console.warn('[SHA-256 Fallback Notice]', hashErr);
+            if (typeof sha256Sync === 'function') {
+                inputHash = sha256Sync(password);
+            }
+        }
 
         // Try server API first
         let authenticated = false;
@@ -182,16 +194,33 @@ async function handleAdminLogin(e) {
             const resp = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passwordHash: inputHash })
+                body: JSON.stringify({ 
+                    password: password, 
+                    passwordHash: inputHash 
+                })
             });
-            const res = await resp.json();
-            if (res.success) {
-                authenticated = true;
+            if (resp.ok) {
+                const res = await resp.json();
+                if (res.success) {
+                    authenticated = true;
+                }
             }
         } catch (err) {
-            // If server offline, verify against local/stored hash
+            console.warn('[Admin Server API Notice]', err);
+        }
+
+        // Client-side hash verification fallback if offline or backend error
+        if (!authenticated && inputHash) {
             const cached = localStorage.getItem('soreva_store_data');
-            const targetHash = cached ? (JSON.parse(cached).settings?.adminPasswordHash || DEFAULT_PASSWORD_HASH) : DEFAULT_PASSWORD_HASH;
+            let targetHash = DEFAULT_PASSWORD_HASH;
+            if (cached) {
+                try {
+                    const parsedData = JSON.parse(cached);
+                    if (parsedData && parsedData.settings && parsedData.settings.adminPasswordHash) {
+                        targetHash = parsedData.settings.adminPasswordHash;
+                    }
+                } catch (e) {}
+            }
             if (inputHash === targetHash) {
                 authenticated = true;
             }
@@ -207,7 +236,7 @@ async function handleAdminLogin(e) {
             pwInput.select();
         }
     } catch (err) {
-        errorBox.textContent = `Authentication error: ${err.message}`;
+        errorBox.textContent = `Authentication error: ${err.message || 'Verification failed'}`;
         errorBox.style.display = 'block';
     } finally {
         submitBtn.disabled = false;

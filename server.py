@@ -44,6 +44,7 @@ NOTIFICATIONS_CONFIG_PATH = os.path.join(DATA_DIR, 'notifications-config.json')
 CZM_COOKIE_PATH = os.path.join(DATA_DIR, 'czm-cookie.json')
 CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
+ADMIN_CREDS_PATH = os.path.join(DATA_DIR, 'admin-credentials.json')
 IMG_CACHE_DIR = os.path.join(DATA_DIR, 'img_cache')
 os.makedirs(IMG_CACHE_DIR, exist_ok=True)
 
@@ -74,6 +75,36 @@ except ImportError:
 
 # Default password: soreva@2026
 DEFAULT_PW_HASH = "3779c849af88128e466010f799175ce3344f2392947810fa4501766c0664d846"
+
+def get_admin_password_hash():
+    """Safely get admin password hash without loading the full 18MB store-data.json."""
+    if os.path.exists(ADMIN_CREDS_PATH):
+        try:
+            with open(ADMIN_CREDS_PATH, 'r', encoding='utf-8') as f:
+                c = json.load(f)
+                h = c.get('adminPasswordHash')
+                if h:
+                    return h
+        except Exception:
+            pass
+    try:
+        global _STORE_DATA_CACHE
+        if _STORE_DATA_CACHE and isinstance(_STORE_DATA_CACHE, dict):
+            h = _STORE_DATA_CACHE.get('settings', {}).get('adminPasswordHash')
+            if h:
+                return h
+    except Exception:
+        pass
+    return DEFAULT_PW_HASH
+
+def set_admin_password_hash(new_hash):
+    """Save admin password hash in dedicated lightweight credentials file."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    try:
+        with open(ADMIN_CREDS_PATH, 'w', encoding='utf-8') as f:
+            json.dump({"adminPasswordHash": new_hash, "updatedAt": int(time.time())}, f, indent=2)
+    except Exception as e:
+        print(f"[Admin Creds Error] {e}")
 
 def perform_czm_login():
     """Logs into CZMakers using saved credentials and returns the cookie string, or None if failed."""
@@ -2247,34 +2278,29 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
         # API: Admin Login
         if parsed.path == '/api/admin/login':
-            password = payload.get('password', '')
-            req_hash = payload.get('passwordHash', '')
-            if password:
-                req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+            try:
+                password = payload.get('password', '')
+                req_hash = payload.get('passwordHash', '')
+                if password:
+                    req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-            data = get_stored_data() or {}
-            saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
 
-            if req_hash == saved_hash:
-                token = hashlib.sha256(f"{saved_hash}_{int(time.time() / 86400)}".encode()).hexdigest()
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    "success": True,
-                    "token": token,
-                    "message": "Authentication successful"
-                }).encode())
-            else:
-                self.send_response(401)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    "success": False,
-                    "error": "Incorrect password"
-                }).encode())
+                if req_hash and req_hash == saved_hash:
+                    token = hashlib.sha256(f"{saved_hash}_{int(time.time() / 86400)}".encode()).hexdigest()
+                    self._send_json({
+                        "success": True,
+                        "token": token,
+                        "message": "Authentication successful"
+                    })
+                else:
+                    self._send_json({
+                        "success": False,
+                        "error": "Incorrect password"
+                    }, 401)
+            except Exception as e:
+                print(f"[Admin Login Error] {e}")
+                self._send_json({"success": False, "error": str(e)}, 500)
             return
 
         # API: Save Store Data
@@ -2309,36 +2335,39 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
         # API: Change Password
         if parsed.path == '/api/admin/change-password':
-            old_pw = payload.get('oldPassword', '')
-            new_pw = payload.get('newPassword', '')
-            old_hash = hashlib.sha256(old_pw.encode('utf-8')).hexdigest()
+            try:
+                old_pw = payload.get('oldPassword', '')
+                new_pw = payload.get('newPassword', '')
+                old_hash = hashlib.sha256(old_pw.encode('utf-8')).hexdigest()
 
-            data = get_stored_data() or {}
-            saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
 
-            if old_hash != saved_hash:
-                self.send_response(401)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "Current password is incorrect"}).encode())
-                return
+                if old_hash != saved_hash:
+                    self._send_json({"success": False, "error": "Current password is incorrect"}, 401)
+                    return
 
-            if len(new_pw) < 6:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": "New password must be at least 6 characters"}).encode())
-                return
+                if len(new_pw) < 6:
+                    self._send_json({"success": False, "error": "New password must be at least 6 characters"}, 400)
+                    return
 
-            new_hash = hashlib.sha256(new_pw.encode('utf-8')).hexdigest()
-            if 'settings' not in data:
-                data['settings'] = {}
-            data['settings']['adminPasswordHash'] = new_hash
-            save_stored_data(data)
+                new_hash = hashlib.sha256(new_pw.encode('utf-8')).hexdigest()
+                set_admin_password_hash(new_hash)
 
-            self._send_json({"success": True, "message": "Admin password updated successfully"})
+                # Also update store-data cache if present
+                try:
+                    data = get_stored_data()
+                    if data and isinstance(data, dict):
+                        if 'settings' not in data:
+                            data['settings'] = {}
+                        data['settings']['adminPasswordHash'] = new_hash
+                        save_stored_data(data)
+                except Exception:
+                    pass
+
+                self._send_json({"success": True, "message": "Admin password updated successfully"})
+            except Exception as e:
+                print(f"[Admin Change Password Error] {e}")
+                self._send_json({"success": False, "error": str(e)}, 500)
             return
 
         # ----------------------------------------------------
@@ -3530,8 +3559,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             # Check if logging in via Owner Master Password
             if password:
                 req_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                data = get_stored_data() or {}
-                saved_hash = data.get('settings', {}).get('adminPasswordHash', DEFAULT_PW_HASH)
+                saved_hash = get_admin_password_hash()
                 if req_hash == saved_hash:
                     owner_profile = {
                         "id": "emp_owner_master",
