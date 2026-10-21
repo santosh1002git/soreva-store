@@ -4396,21 +4396,62 @@ html.skip-intro .logo-intro-experience {
 
 .reels-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+    align-items: start;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .reels-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
     }
 }
-@media (max-width: 640px) {
+
+@media (max-width: 680px) {
     .reels-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 440px;
+        margin: 0 auto;
+        gap: 24px;
     }
+}
+
+.insta-embed-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(20, 16, 15, 0.06);
+    border: 1px solid rgba(197, 160, 89, 0.25);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 480px;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
+}
+
+.insta-embed-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(197, 160, 89, 0.2);
+    border-color: #c5a059;
+}
+
+.insta-embed-card blockquote.instagram-media {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border-radius: 16px !important;
+}
+
+.insta-embed-card iframe.instagram-media {
+    border-radius: 16px !important;
+    border: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
 }
 
 .reel-card {
