@@ -2157,42 +2157,55 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Full-Bleed Landscape Image URL *</label>
+                    <label>Full-Bleed Landscape Image *</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="url" id="heroImageInput" required class="admin-input" style="flex: 1;" placeholder="https://..." onchange="previewImg(this.value, 'heroPreviewImg')" oninput="previewImg(this.value, 'heroPreviewImg')">
-                        <label class="btn-admin-outline" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
-                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'heroImageInput', 'heroPreviewImg')">
+                        <input type="text" id="heroImageInput" required class="admin-input" style="flex: 1;" placeholder="assets/hero/... or https://..." onchange="previewImg(this.value, 'heroPreviewImg')" oninput="previewImg(this.value, 'heroPreviewImg')">
+                        <label class="btn-admin-primary" style="cursor: pointer; margin: 0; white-space: nowrap; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Image
+                            <input type="file" id="heroFileInput" accept="image/*" style="display: none;" onchange="uploadDirectToInput(this, 'heroImageInput', 'heroPreviewImg')">
                         </label>
                     </div>
-                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Target: <strong>1920 × 1080 px (16:9 Widescreen)</strong> • JPG/WebP • &lt; 500 KB</div>
+                    <div class="img-spec-guide"><i class="fa-solid fa-ruler-combined"></i> Recommended: <strong>1920 × 1080 px (16:9 Widescreen)</strong> • JPG / PNG / WebP • Directly upload from computer or paste URL</div>
                     <div class="img-preview-box" style="height: 140px;">
                         <img id="heroPreviewImg" src="" alt="Slide Preview">
                     </div>
                     <div id="meta_heroPreviewImg"></div>
                 </div>
 
+                <div class="form-group">
+                    <label>Click Destination URL (Jump Link when clicked) *</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="heroSlideLinkUrl" required class="admin-input" style="flex: 1;" placeholder="e.g. product.html?id=czm_41673 or catalog.html?cat=Necklaces or https://...">
+                        <button type="button" class="btn-admin-outline" style="white-space: nowrap; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;" onclick="fillHeroLinkWithProduct()" title="Auto-fill with currently selected Linked Product">
+                            <i class="fa-solid fa-link"></i> Use Product Link
+                        </button>
+                    </div>
+                    <small style="display: block; margin-top: 4px; color: var(--admin-text-muted); font-size: 0.78rem;">
+                        <i class="fa-solid fa-arrow-turn-down-right"></i> When a customer clicks on this hero banner slide, they will immediately be directed to this link.
+                    </small>
+                </div>
+
                 <div class="form-row-2">
                     <div class="form-group">
-                        <label>Featured Piece Name *</label>
+                        <label>Featured Piece / Collection Name *</label>
                         <input type="text" id="heroPieceName" required class="admin-input" placeholder="Traditional Royal CZ Choker">
                     </div>
                     <div class="form-group">
-                        <label>Price (INR ₹) *</label>
-                        <input type="number" id="heroPiecePrice" required min="1" class="admin-input" placeholder="6599">
+                        <label>Metal Finish / Edition Label</label>
+                        <input type="text" id="heroPieceFinish" class="admin-input" placeholder="e.g. 24K Gold Plated or Rhodium Silver">
                     </div>
                 </div>
 
                 <div class="form-row-2">
                     <div class="form-group">
-                        <label>Metal Finish Label *</label>
-                        <input type="text" id="heroPieceFinish" required class="admin-input" placeholder="24K Gold Plated">
-                    </div>
-                    <div class="form-group">
-                        <label>Linked Product ID (for Quick View)</label>
-                        <select id="heroPieceProductId" class="admin-select">
+                        <label>Linked Product (for Quick View)</label>
+                        <select id="heroPieceProductId" class="admin-select" onchange="onHeroProductSelect(this.value)">
                             <!-- Populated dynamically -->
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label>CTA Button Text</label>
+                        <input type="text" id="heroCtaText" class="admin-input" placeholder="Explore Collection">
                     </div>
                 </div>
 
