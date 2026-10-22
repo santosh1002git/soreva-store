@@ -363,39 +363,107 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
         if wholesale_inr <= 0:
             is_card_oos = True
 
-        # Extract PID and Slug from product link
-        pid_m = re.search(r'product/(\d+)/([^\"\'>\s]+)', part)
+        # Extract PID and Slug from product link (supports with or without trailing slug)
+        pid_m = re.search(r'product/(\d+)(?:/([^\"\'>\s]+))?', part)
         if not pid_m:
             continue
-        pid, slug = pid_m.groups()
+        pid = pid_m.group(1)
+        slug = pid_m.group(2) or ''
 
         # Extract Title
         title_m = re.search(r'class=[\"\']product_titles[\"\'][^>]*>[\s\S]*?<a[^>]*>([^<]+)</a>', part)
-        title = title_m.group(1).strip() if title_m else slug.replace('___', ' | ').replace('_', ' ').strip()
+        if title_m:
+            title = title_m.group(1).strip()
+        elif slug:
+            title = slug.replace('___', ' | ').replace('_', ' ').strip()
+        else:
+            title = f"{subcat_default} - Model {model_sku}"
         title = title.replace('&amp;', '&').replace('&quot;', '"').replace('&#039;', "'")
+        title = re.sub(r'[\s_]+', ' ', title).strip()
 
         # Extract primary image and high-resolution URL
-        img_m = re.search(r'<img[^>]+src=[\"\']([^\"\']+)[\"\']', part)
+        img_m = re.search(r'<img[^>]+(?:src|data-src)=[\"\']([^\"\']+)[\"\']', part)
         img_thumb = img_m.group(1) if img_m else ''
         primary_img = img_thumb.replace('/product_medium_images/', '/product_images/') if img_thumb else ''
         hover_img = primary_img.replace('.jpg', 'A.jpg') if primary_img else ''
-        video_url = primary_img.replace('.jpg', 'V1.mp4') if primary_img else ''
+        # High-definition video URL mapping pointing to supplier video repository
+        video_url = primary_img.replace('/product_medium_images/', '/product_videos/').replace('/product_images/', '/product_videos/').replace('.jpg', 'V1.mp4') if primary_img else ''
+        gallery = [primary_img, hover_img] if hover_img else [primary_img]
 
         retail_inr, orig_inr = calculate_retail_pricing(wholesale_inr, profit_markup, profit_flat)
+        title_lower = title.lower()
+
         if cat_default == 'silver' or 'silver' in cat_slug.lower() or 'sterling' in cat_slug.lower():
             plating = 'silver'
-        elif any(w in title.lower() for w in ['rose gold', 'rosegold', 'pink gold']):
+        elif any(w in title_lower for w in ['rose gold', 'rosegold', 'pink gold']):
             plating = 'rosegold'
-        elif any(w in title.lower() for w in ['two tone', 'two-tone', 'dual tone']):
+        elif any(w in title_lower for w in ['two tone', 'two-tone', 'dual tone']):
             plating = 'two-tone'
-        elif any(w in title.lower() for w in ['oxidise', 'oxidize']):
+        elif any(w in title_lower for w in ['oxidise', 'oxidize']):
             plating = 'oxidised'
-        elif any(w in title.lower() for w in ['antique', 'mehndi', 'mehendi']):
+        elif any(w in title_lower for w in ['antique', 'mehndi', 'mehendi']):
             plating = 'antique'
-        elif any(w in title.lower() for w in ['silver', 'rhodium', 'sterling', '925']):
+        elif any(w in title_lower for w in ['silver', 'rhodium', 'sterling', '925']):
             plating = 'silver'
         else:
             plating = 'gold'
+
+        # Stone Colour detection
+        if any(w in title_lower for w in ['ruby', 'red', 'garnet', 'maroon']):
+            stone_color = 'Ruby'
+        elif any(w in title_lower for w in ['emerald', 'green']):
+            stone_color = 'Green'
+        elif any(w in title_lower for w in ['sapphire', 'blue']):
+            stone_color = 'Blue'
+        elif any(w in title_lower for w in ['mint', 'mint green', 'pista']):
+            stone_color = 'Mint Green'
+        elif any(w in title_lower for w in ['multi', 'rainbow', 'navratna']):
+            stone_color = 'Multi Color'
+        else:
+            stone_color = 'Full White'
+
+        # Stone Size detection
+        if 'big' in subcat_default.lower() or 'big' in title_lower:
+            stone_size = 'All Big'
+        elif 'small' in subcat_default.lower() or 'small' in title_lower:
+            stone_size = 'All Small'
+        else:
+            stone_size = 'Mix'
+
+        # Set Contents detection
+        if 'mangtika' in title_lower or subcat_default == 'Mangtika':
+            set_contents = 'With Mangtika'
+        elif any(w in title_lower for w in ['choker', 'round neck', 'collar']):
+            set_contents = 'Full Round Neck'
+        elif cat_default == 'necklace' or 'set' in title_lower or 'combo' in title_lower:
+            set_contents = 'Necklace & Earrings Only'
+        elif cat_default == 'pendants' or 'pendant set' in subcat_default.lower():
+            set_contents = 'Pendant Set'
+        else:
+            set_contents = 'Solo Piece'
+
+        desc = (
+            f"Exquisitely crafted from the Sorèva Haute Joaillerie collection, the {title} features "
+            f"hand-selected diamond-grade Austrian cubic zirconia crystals micro-set in enduring 24K gold plating with "
+            f"anti-tarnish protective sealing. Authenticity Reference: SRV-{model_sku}."
+        )
+
+        more_details = {
+            "sku": f"SRV-{model_sku}",
+            "modelNo": model_sku,
+            "czmId": str(pid),
+            "category": cat_default,
+            "subCategory": subcat_default,
+            "plating": plating,
+            "stoneColor": stone_color,
+            "stoneSize": stone_size,
+            "setContents": set_contents,
+            "material": "AAA+ Austrian Cubic Zirconia",
+            "coating": "Micro-Plated Anti-Tarnish Protective Shield",
+            "dispatch": "1-3 Business Days",
+            "warranty": "Lifetime Polish & Anti-Tarnish Assurance",
+            "origin": "Crafted in India"
+        }
 
         products.append({
             'pid': pid,
@@ -412,6 +480,12 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
             'primaryImg': primary_img,
             'hoverImg': hover_img,
             'videoUrl': video_url,
+            'gallery': gallery,
+            'stoneColor': stone_color,
+            'stoneSize': stone_size,
+            'setContents': set_contents,
+            'more_details': more_details,
+            'description': desc,
             'badge': '',
             'isOutOfStock': is_card_oos,
         })
@@ -895,29 +969,59 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     sd_item['lastRefreshed'] = sync_time_iso
                 out_of_stock_count += 1
             else:
-                # MATCHED & LIVE: Existing product in inventory. Update pricing, category/subCategory, and mark In Stock!
+                # MATCHED & LIVE: Existing product in inventory. Full refresh of details, images, video, pricing, and category
                 c.execute("""
                     UPDATE products 
-                    SET disabled = 0, active = 1, usdWholesale = ?, priceINR = ?, originalPriceINR = ?,
+                    SET name = ?,
                         category = CASE WHEN ? != '' THEN ? ELSE category END,
                         subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        priceINR = ?,
+                        originalPriceINR = ?,
+                        usdWholesale = ?,
+                        plating = ?,
+                        primaryImg = ?,
+                        hoverImg = ?,
+                        videoUrl = ?,
+                        gallery = ?,
+                        description = ?,
+                        setContents = ?,
+                        stoneColor = ?,
+                        stoneSize = ?,
+                        more_details = ?,
+                        disabled = 0,
+                        active = 1,
                         lastRefreshed = ?
                     WHERE id = ?
-                """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id))
+                """, (
+                    p['name'],
+                    p['category'], p['category'],
+                    p['subCategory'], p['subCategory'],
+                    p['priceINR'], p['originalPriceINR'], p['wholesaleINR'],
+                    p['plating'],
+                    p['primaryImg'], p['hoverImg'], p['videoUrl'],
+                    json.dumps(p['gallery']),
+                    p['description'],
+                    p['setContents'], p['stoneColor'], p['stoneSize'],
+                    json.dumps(p['more_details']),
+                    sync_time_iso,
+                    matched_id
+                ))
 
                 c.execute("""
                     UPDATE inventory 
-                    SET status = 'In Stock', 
+                    SET productName = ?,
+                        status = 'In Stock', 
                         stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END, 
                         usdWholesale = ?,
                         category = CASE WHEN ? != '' THEN ? ELSE category END,
                         subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
                         lastRefreshed = ?
                     WHERE id = ? OR sku = ? OR sku = ?
-                """, (p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                """, (p['name'], p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
 
                 sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
                 if sd_item:
+                    sd_item['name'] = p['name']
                     sd_item['priceINR'] = p['priceINR']
                     sd_item['originalPriceINR'] = p['originalPriceINR']
                     sd_item['usdWholesale'] = p['wholesaleINR']
@@ -925,6 +1029,16 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         sd_item['category'] = p['category']
                     if p.get('subCategory'):
                         sd_item['subCategory'] = p['subCategory']
+                    sd_item['plating'] = p['plating']
+                    sd_item['primaryImg'] = p['primaryImg']
+                    sd_item['hoverImg'] = p['hoverImg']
+                    sd_item['videoUrl'] = p['videoUrl']
+                    sd_item['gallery'] = p['gallery']
+                    sd_item['description'] = p['description']
+                    sd_item['setContents'] = p['setContents']
+                    sd_item['stoneColor'] = p['stoneColor']
+                    sd_item['stoneSize'] = p['stoneSize']
+                    sd_item['more_details'] = p['more_details']
                     sd_item['disabled'] = 0
                     sd_item['active'] = 1
                     sd_item['stockStatus'] = 'In Stock'
@@ -936,21 +1050,21 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
 
                 updated_price_count += 1
         elif not p.get('isOutOfStock'):
-            # UNMATCHED & LIVE: Newly discovered stock on CZMakers. Just add new stock!
-            desc = (
-                f"Sculpted with haute joaillerie precision, the {p['name']} features diamond-grade Austrian cubic zirconia "
-                f"crystals hand-finished in enduring 24K gold plating with anti-tarnish protective sealing. Authenticity Ref: {p['sku']}."
-            )
+            # UNMATCHED & LIVE: Newly discovered stock on CZMakers. Insert all fields fresh!
             c.execute("""
                 INSERT OR IGNORE INTO products (
                     id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale,
-                    plating, primaryImg, hoverImg, videoUrl, badge, description, disabled, active, rating, reviews, gallery,
+                    plating, primaryImg, hoverImg, videoUrl, badge, description, disabled, active, rating, reviews,
+                    gallery, setContents, stoneColor, stoneSize, more_details,
                     lastRefreshed, dateAdded
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New Launch', ?, 0, 1, 4.9, 14, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New Launch', ?, 0, 1, 4.9, 14, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 p['id'], p['name'], p['category'], p['subCategory'], p['priceINR'], p['originalPriceINR'],
                 p['wholesaleINR'], p['plating'], p['primaryImg'], p['hoverImg'], p['videoUrl'],
-                desc, json.dumps([p['primaryImg'], p['hoverImg']]), sync_time_iso, sync_time_iso
+                p['description'], json.dumps(p['gallery']),
+                p['setContents'], p['stoneColor'], p['stoneSize'],
+                json.dumps(p['more_details']),
+                sync_time_iso, sync_time_iso
             ))
 
             c.execute("""
@@ -980,8 +1094,12 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                 "primaryImg": p['primaryImg'],
                 "hoverImg": p['hoverImg'],
                 "videoUrl": p['videoUrl'],
-                "gallery": [p['primaryImg'], p['hoverImg']],
-                "description": desc,
+                "gallery": p['gallery'],
+                "description": p['description'],
+                "setContents": p['setContents'],
+                "stoneColor": p['stoneColor'],
+                "stoneSize": p['stoneSize'],
+                "more_details": p['more_details'],
                 "lastRefreshed": sync_time_iso,
                 "dateAdded": sync_time_iso
             }
