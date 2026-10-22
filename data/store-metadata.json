@@ -215,6 +215,14 @@
   },
   "coupons": [
     {
+      "code": "FLAT200",
+      "discountAmountINR": 200,
+      "discountPercent": 0,
+      "minSpendINR": 0,
+      "active": true,
+      "description": "FLAT ₹200 OFF on your first luxury order"
+    },
+    {
       "code": "LAUNCH15",
       "discountPercent": 15,
       "minSpendINR": 0,
