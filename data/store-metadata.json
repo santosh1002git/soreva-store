@@ -22,7 +22,9 @@
     "gstRate": 3,
     "gstEnabled": true,
     "lastStockSync": "2026-10-13T02:18:43.634897Z",
-    "newLaunchCapacity": 30
+    "newLaunchCapacity": 30,
+    "profitMarkup": 2.2,
+    "profitFlat": 0
   },
   "announcements": [
     "✨ Launch Celebration: Use code <strong>LAUNCH15</strong> for 15% OFF your first royal order",
@@ -189,7 +191,7 @@
   "currencies": {
     "INR": {
       "symbol": "₹",
-      "rate": 1.0,
+      "rate": 1,
       "label": "INR (₹)"
     },
     "USD": {
