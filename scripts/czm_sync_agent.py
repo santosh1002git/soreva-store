@@ -524,12 +524,13 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
 
 
 # ─── Main Co-Worker Agent Execution ──────────────────────────────────
-def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False):
+def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False, wipe_products=False):
     """
     Main entry point for the CZMakers Co-Worker Agent.
     - Matches existing stock by ID and SKU, updating prices and marking In Stock while preserving inventory.
-    - Only adds newly discovered stock (never replaces the whole stock).
-    - Unmatched pieces are safely marked as Out of Stock (never deleted).
+    - If mode is 'complete_refresh' or wipe_products is True, deletes all products & inventory and performs a fresh reload.
+    - Categorizes, sub-categorizes, and applies pricing markup across all 32 categories.
+    - Unmatched pieces are safely marked as Out of Stock (never deleted in normal modes).
     """
     email, _ = get_stored_credentials()
     tracker = AgentStatusTracker(mode=mode, user_email=email)
@@ -618,6 +619,23 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
 
     initial_catalog_size = len(existing_db_products)
     tracker.log(f"📦 Current catalog size in Sorèva store: {initial_catalog_size} pieces.")
+
+    # Complete Stock Refresh: wipe products & inventory first, then reload fresh
+    if mode == "complete_refresh" or wipe_products:
+        tracker.log("⚠️ COMPLETE STOCK REFRESH INITIATED: Deleting all existing products from catalog & inventory...")
+        c.execute("DELETE FROM products")
+        c.execute("DELETE FROM inventory")
+        conn.commit()
+        existing_db_products.clear()
+        existing_by_sku.clear()
+        inventory_by_id.clear()
+        sd_products = []
+        sd_by_id.clear()
+        sd_by_sku.clear()
+        if 'products' in sd:
+            sd['products'] = []
+        initial_catalog_size = 0
+        tracker.log("🗑️ All prior products and inventory items cleared. Starting fresh loading of all products from CZMakers...")
 
     # Select categories to scan
     if mode == "refresh_stock" and max_pages > 0 and max_pages <= 3:
@@ -875,7 +893,7 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     except Exception:
                         pass
         else:
-            if max_pages == 0 or mode == "full_discovery":
+            if max_pages == 0 or mode in ["full_discovery", "complete_refresh"]:
                 # Full scan of every stock: any piece not matched is Out of Stock
                 missing_to_mark = unmatched_db_ids
             else:
@@ -973,19 +991,22 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Sorèva CZMakers Stock & Price Refresh Co-Worker Agent")
-    parser.add_argument('--mode', choices=['refresh_stock', 'full_discovery'], default='full_discovery',
-                        help="Operation mode: 'full_discovery' (scans every stock across all categories), 'refresh_stock' (fast refresh)")
+    parser.add_argument('--mode', choices=['refresh_stock', 'full_discovery', 'complete_refresh'], default='full_discovery',
+                        help="Operation mode: 'full_discovery' (scans every stock across all categories), 'refresh_stock' (fast refresh), 'complete_refresh' (deletes all products and does a full fresh load)")
     parser.add_argument('--max-pages', type=int, default=0,
                         help="Maximum pages to scan per category (0 = UNLIMITED, scans every page until category ends)")
     parser.add_argument('--remove-missing', action='store_true',
                         help="Permanently delete products that are 404 on CZMakers instead of marking Out of Stock")
     parser.add_argument('--verify-unseen', action='store_true',
                         help="Directly verify HTTP 200/404 for pieces not seen during category crawl")
+    parser.add_argument('--wipe-products', action='store_true',
+                        help="Delete all products before loading fresh catalog")
     args = parser.parse_args()
 
     run_czm_coworker_agent(
         mode=args.mode,
         max_pages=args.max_pages,
         remove_missing=args.remove_missing,
-        verify_unseen=args.verify_unseen
+        verify_unseen=args.verify_unseen,
+        wipe_products=args.wipe_products
     )

@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Admin Stylesheet -->
-    <link rel="stylesheet" href="admin.css?v=v23_bulk_disable">
+    <link rel="stylesheet" href="admin.css?v=v24_modal_zindex">
 
     <!-- Polyfill window.crypto.subtle and pure JS SHA-256 for non-secure HTTP / raw IP access -->
     <script>
@@ -514,6 +514,9 @@
                             <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn-admin-danger" id="btnCompleteStockRefresh" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35)); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; cursor: pointer;" title="Delete all existing products and perform a 100% fresh loading from CZMakers with full category and subcategory mapping">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh
+                            </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer;" title="Delete all out of stock products">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock
                             </button>
@@ -873,6 +876,9 @@
                                 <option value="price_desc">Price: High to Low</option>
                             </select>
                             <span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px; margin-right: 8px;" title="Available In Stock Pieces"><i class="fa-solid fa-circle-check"></i> Available: <span id="inStockProductCount">0</span></span>
+                            <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35)); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Delete all existing products and perform a complete stock refresh from CZMakers">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh
+                            </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Permanently delete all out of stock products from catalog">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock (<span id="oosProductBadge">0</span>)
                             </button>
@@ -3404,6 +3410,21 @@
                                 </span>
                             </div>
                         </label>
+
+                        <label id="lblModeCompleteRefresh" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.06); cursor: pointer; grid-column: span 2;">
+                            <input type="radio" name="coworkerSyncMode" value="complete_refresh" style="margin-top: 3px;" onchange="handleCoworkerModeChange()">
+                            <div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <strong style="font-size: 0.88rem; color: #fca5a5; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-arrows-rotate" style="color: #ef4444;"></i> Complete Stock Refresh (Delete & Reload All Products)
+                                    </strong>
+                                    <span class="badge" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
+                                </div>
+                                <span style="font-size: 0.76rem; color: #e4e4e7; line-height: 1.4; display: block; margin-top: 4px;">
+                                    Wipes all existing products from the catalog and inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories. Accurately maps each piece to its canonical category (Necklaces, Earrings, Rings, Wristwear, Pendants, Silver, Accessories), assigns specific sub-categories, and applies 2.2x retail markup. Customer accounts & orders remain 100% untouched.
+                                </span>
+                            </div>
+                        </label>
                     </div>
 
                     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
@@ -3498,7 +3519,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v37_save_all_fix"></script>
+    <script src="admin.js?v=v38_complete_refresh"></script>
 
     </body>
 </html>

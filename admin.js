@@ -6190,6 +6190,8 @@ let coworkerPollInterval = null;
 function openCzmCoworkerModal() {
     const modal = document.getElementById('czmCoworkerModalBackdrop');
     if (modal) modal.classList.add('active');
+    const toastContainer = document.getElementById('adminToastContainer');
+    if (toastContainer) toastContainer.innerHTML = '';
     fetchCoworkerStatus();
     if (!coworkerPollInterval) {
         coworkerPollInterval = setInterval(fetchCoworkerStatus, 2000);
@@ -6213,30 +6215,90 @@ function closeCzmCoworkerModal() {
 window.closeCzmCoworkerModal = closeCzmCoworkerModal;
 
 function handleCoworkerModeChange() {
-    const selectedMode = document.querySelector('input[name="coworkerSyncMode"]:checked')?.value || 'refresh_stock';
+    const selectedMode = document.querySelector('input[name="coworkerSyncMode"]:checked')?.value || 'full_discovery';
     const lblRefresh = document.getElementById('lblModeRefresh');
     const lblDiscovery = document.getElementById('lblModeDiscovery');
+    const lblComplete = document.getElementById('lblModeCompleteRefresh');
+    const btnStart = document.getElementById('btnStartCoworker');
     
-    if (lblRefresh && lblDiscovery) {
-        if (selectedMode === 'refresh_stock') {
+    [lblRefresh, lblDiscovery, lblComplete].forEach(l => {
+        if (l) {
+            l.style.borderColor = 'rgba(255,255,255,0.1)';
+            l.style.background = 'rgba(255,255,255,0.02)';
+        }
+    });
+
+    if (selectedMode === 'complete_refresh') {
+        if (lblComplete) {
+            lblComplete.style.borderColor = 'rgba(239,68,68,0.55)';
+            lblComplete.style.background = 'rgba(239,68,68,0.1)';
+        }
+        if (btnStart) {
+            btnStart.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh';
+            btnStart.style.background = 'linear-gradient(135deg, #dc2626, #991b1b)';
+            btnStart.style.borderColor = '#ef4444';
+        }
+    } else if (selectedMode === 'refresh_stock') {
+        if (lblRefresh) {
             lblRefresh.style.borderColor = 'rgba(197,160,89,0.35)';
             lblRefresh.style.background = 'rgba(197,160,89,0.06)';
-            lblDiscovery.style.borderColor = 'rgba(255,255,255,0.1)';
-            lblDiscovery.style.background = 'rgba(255,255,255,0.02)';
-        } else {
+        }
+        if (btnStart) {
+            btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+            btnStart.style.background = '';
+            btnStart.style.borderColor = '';
+        }
+    } else {
+        if (lblDiscovery) {
             lblDiscovery.style.borderColor = 'rgba(197,160,89,0.35)';
             lblDiscovery.style.background = 'rgba(197,160,89,0.06)';
-            lblRefresh.style.borderColor = 'rgba(255,255,255,0.1)';
-            lblRefresh.style.background = 'rgba(255,255,255,0.02)';
+        }
+        if (btnStart) {
+            btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+            btnStart.style.background = '';
+            btnStart.style.borderColor = '';
         }
     }
 }
 window.handleCoworkerModeChange = handleCoworkerModeChange;
 
-async function startCzmCoworkerAgent() {
+function confirmCompleteStockRefresh() {
+    const confirmed = confirm(
+        "⚠️ COMPLETE STOCK REFRESH CONFIRMATION\n\n" +
+        "This action will:\n" +
+        "1. DELETE ALL current products from the catalog and inventory database.\n" +
+        "2. Perform a complete, fresh loading of all products directly from CZMakers.\n" +
+        "3. Accurately place every piece under its appropriate Category, Sub-Category, and price mappings.\n\n" +
+        "🛡️ EXCLUSIVE DATA GUARANTEE:\n" +
+        "All customer accounts and past order records will remain 100% preserved.\n\n" +
+        "Do you want to proceed with the Complete Stock Refresh?"
+    );
+    if (!confirmed) return;
+
+    openCzmCoworkerModal();
+    const radComplete = document.querySelector('input[name="coworkerSyncMode"][value="complete_refresh"]');
+    if (radComplete) {
+        radComplete.checked = true;
+        handleCoworkerModeChange();
+    }
+    startCzmCoworkerAgent(true);
+}
+window.confirmCompleteStockRefresh = confirmCompleteStockRefresh;
+
+async function startCzmCoworkerAgent(skipConfirm = false) {
     const mode = document.querySelector('input[name="coworkerSyncMode"]:checked')?.value || 'full_discovery';
     const maxPages = parseInt(document.getElementById('coworkerMaxPages')?.value || '0', 10);
     const removeMissing = false; // Always preserve existing stock; unmatched pieces marked Out of Stock
+
+    if (mode === 'complete_refresh' && !skipConfirm) {
+        const confirmed = confirm(
+            "⚠️ COMPLETE STOCK REFRESH CONFIRMATION\n\n" +
+            "This will delete ALL existing products in the store and perform a fresh, full loading from CZMakers.\n" +
+            "All customer accounts and past order records are 100% safe.\n\n" +
+            "Do you want to continue?"
+        );
+        if (!confirmed) return;
+    }
 
     const btnStart = document.getElementById('btnStartCoworker');
     const btnStop = document.getElementById('btnStopCoworker');
@@ -6254,7 +6316,8 @@ async function startCzmCoworkerAgent() {
                 mode,
                 maxPages,
                 removeMissing,
-                verifyUnseen: (mode === 'full_discovery')
+                verifyUnseen: (mode === 'full_discovery'),
+                wipeProducts: (mode === 'complete_refresh')
             })
         });
         const data = await res.json();
@@ -6271,14 +6334,18 @@ async function startCzmCoworkerAgent() {
             showToast("Error starting agent: " + (data.error || "Unknown error"));
             if (btnStart) {
                 btnStart.disabled = false;
-                btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+                btnStart.innerHTML = (mode === 'complete_refresh') 
+                    ? '<i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh'
+                    : '<i class="fa-solid fa-play"></i> Start Co-Worker';
             }
         }
     } catch (err) {
         showToast("Failed to connect to server: " + err.message);
         if (btnStart) {
             btnStart.disabled = false;
-            btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+            btnStart.innerHTML = (mode === 'complete_refresh') 
+                ? '<i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh'
+                : '<i class="fa-solid fa-play"></i> Start Co-Worker';
         }
     }
 }
@@ -6398,7 +6465,16 @@ async function fetchCoworkerStatus() {
             if (btnStart) {
                 btnStart.style.display = 'inline-flex';
                 btnStart.disabled = false;
-                btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+                const curMode = document.querySelector('input[name="coworkerSyncMode"]:checked')?.value;
+                if (curMode === 'complete_refresh') {
+                    btnStart.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh';
+                    btnStart.style.background = 'linear-gradient(135deg, #dc2626, #991b1b)';
+                    btnStart.style.borderColor = '#ef4444';
+                } else {
+                    btnStart.innerHTML = '<i class="fa-solid fa-play"></i> Start Co-Worker';
+                    btnStart.style.background = '';
+                    btnStart.style.borderColor = '';
+                }
             }
             if (btnStop) btnStop.style.display = 'none';
 

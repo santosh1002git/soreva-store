@@ -1343,7 +1343,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    z-index: 12000;
+    z-index: 9990;
 }
 
 .toast {
