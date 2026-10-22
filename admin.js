@@ -402,6 +402,7 @@ function switchTab(tabName) {
         announcements: "Promotional Announcement Ticker",
         coupons: "Promo Coupons & Discount Codes",
         'welcome-popup': "Festive Offer Pop-Up & Client Email",
+        newsletter: "Sorèva Circle Newsletter & Welcome Offer",
         currencies: "Currency & Exchange Rates",
         spotlight: "Brand Story & Craftsmanship",
         testimonials: "Customer Testimonials",
@@ -423,6 +424,7 @@ function switchTab(tabName) {
     if (tabName === 'settings' || tabName === 'payments') loadRazorpaySettings();
     if (tabName === 'notifications') loadNotificationSettings();
     if (tabName === 'welcome-popup') loadPopupOfferSettings();
+    if (tabName === 'newsletter') loadNewsletterSettings();
     
     // Close mobile sidebar if open
     const sidebar = document.getElementById('adminSidebar');
@@ -4621,6 +4623,236 @@ window.updatePopupPreview = updatePopupPreview;
 window.savePopupOfferSettings = savePopupOfferSettings;
 window.handlePopupImageFile = handlePopupImageFile;
 window.sendPopupTestEmail = sendPopupTestEmail;
+
+/* ==========================================================================
+   SORÈVA CIRCLE NEWSLETTER & WELCOME OFFER CONTROLLER
+   ========================================================================== */
+
+let activeNewsletterConfig = null;
+let currentNewsletterSubscribers = [];
+
+async function loadNewsletterSettings(isRefresh = false) {
+    try {
+        const resp = await fetch('/api/admin/newsletter/config');
+        if (!resp.ok) throw new Error('Failed to fetch newsletter settings');
+        const data = await resp.json();
+        const cfg = data.config || {};
+        activeNewsletterConfig = cfg;
+        currentNewsletterSubscribers = data.recentSubscribers || [];
+
+        const chkEnabled = document.getElementById('newsletterConfigEnabled');
+        if (chkEnabled) chkEnabled.checked = cfg.enabled !== false;
+
+        const inpTitle = document.getElementById('newsletterConfigTitle');
+        if (inpTitle) inpTitle.value = cfg.title || 'Join The Sorèva Circle';
+
+        const inpDesc = document.getElementById('newsletterConfigDesc');
+        if (inpDesc) inpDesc.value = cfg.description || 'Subscribe for private seasonal sales, new collection drops, and receive 15% OFF on your first order.';
+
+        const inpCoupon = document.getElementById('newsletterConfigCouponCode');
+        if (inpCoupon) inpCoupon.value = cfg.couponCode || 'WELCOME15';
+
+        const inpPct = document.getElementById('newsletterConfigDiscountPercent');
+        if (inpPct) inpPct.value = cfg.discountPercent !== undefined ? cfg.discountPercent : 15;
+
+        const inpDiscText = document.getElementById('newsletterConfigDiscountText');
+        if (inpDiscText) inpDiscText.value = cfg.discountText || 'Flat 15% Off Your First Order';
+
+        const chkAutoApply = document.getElementById('newsletterConfigAutoApply');
+        if (chkAutoApply) chkAutoApply.checked = cfg.autoApply !== false;
+
+        const inpSubj = document.getElementById('newsletterEmailSubject');
+        if (inpSubj) inpSubj.value = cfg.emailSubject || '✨ Welcome to The Sorèva Circle — Your 15% OFF Voucher (WELCOME15)';
+
+        const inpHd = document.getElementById('newsletterEmailHeading');
+        if (inpHd) inpHd.value = cfg.emailHeading || 'Welcome to The Sorèva Circle';
+
+        const inpBody = document.getElementById('newsletterEmailBody');
+        if (inpBody) inpBody.value = cfg.emailBody || 'Thank you for joining our private inner circle. As a valued member, enjoy an exclusive 15% discount on your first acquisition of handcrafted demi-fine luxury jewellery.';
+
+        const badge = document.getElementById('newsletterSubscribersBadge');
+        if (badge) badge.textContent = `${data.subscribersCount || 0} Subscribers`;
+
+        const subList = document.getElementById('newsletterSubscribersList');
+        if (subList) {
+            const subs = data.recentSubscribers || [];
+            if (subs.length === 0) {
+                subList.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-muted);">No subscribers yet. Leads from \'Join The Sorèva Circle\' will appear here.</div>';
+            } else {
+                subList.innerHTML = subs.slice().reverse().map(s => `
+                    <div style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #fff;">${escapeHtml(s.email)}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.dateFormatted || s.timestamp || ''} • Source: Footer</div>
+                        </div>
+                        <span style="font-size: 0.72rem; background: rgba(197,160,89,0.2); color: var(--gold-light); padding: 3px 8px; border-radius: 4px; font-weight: 700;">
+                            ${escapeHtml(s.offerCode || 'WELCOME15')}
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        updateNewsletterPreview();
+
+        if (isRefresh && typeof showToast === 'function') {
+            showToast('Sorèva Circle settings refreshed!');
+        }
+    } catch (err) {
+        console.error('[loadNewsletterSettings Error]', err);
+        if (typeof showToast === 'function') showToast('Failed to load newsletter settings: ' + err.message);
+    }
+}
+
+function updateNewsletterPreview() {
+    const title = document.getElementById('newsletterConfigTitle')?.value || 'Join The Sorèva Circle';
+    const desc = document.getElementById('newsletterConfigDesc')?.value || 'Subscribe for private seasonal sales, new collection drops, and receive 15% OFF on your first order.';
+    const enabled = document.getElementById('newsletterConfigEnabled')?.checked;
+
+    const prevCard = document.getElementById('adminNewsletterPreviewCard');
+    if (prevCard) {
+        prevCard.style.opacity = enabled ? '1' : '0.4';
+    }
+
+    const prevTitle = document.getElementById('previewNewsletterTitle');
+    if (prevTitle) prevTitle.textContent = title;
+
+    const prevDesc = document.getElementById('previewNewsletterDesc');
+    if (prevDesc) {
+        if (desc.includes('<strong>') || desc.includes('<b>')) {
+            prevDesc.innerHTML = desc;
+        } else {
+            prevDesc.innerHTML = desc.replace(/([0-9]+%\s*OFF)/gi, '<strong style="color: #fff; font-weight: 700;">$1</strong>');
+        }
+    }
+}
+
+async function saveNewsletterSettings() {
+    const enabled = document.getElementById('newsletterConfigEnabled')?.checked ?? true;
+    const title = (document.getElementById('newsletterConfigTitle')?.value || '').trim();
+    const description = (document.getElementById('newsletterConfigDesc')?.value || '').trim();
+    const couponCode = (document.getElementById('newsletterConfigCouponCode')?.value || 'WELCOME15').trim().toUpperCase();
+    const discountPercent = parseInt(document.getElementById('newsletterConfigDiscountPercent')?.value || '15', 10);
+    const discountText = (document.getElementById('newsletterConfigDiscountText')?.value || 'Flat 15% Off Your First Order').trim();
+    const autoApply = document.getElementById('newsletterConfigAutoApply')?.checked ?? true;
+    const emailSubject = (document.getElementById('newsletterEmailSubject')?.value || '').trim();
+    const emailHeading = (document.getElementById('newsletterEmailHeading')?.value || '').trim();
+    const emailBody = (document.getElementById('newsletterEmailBody')?.value || '').trim();
+
+    const payload = {
+        enabled,
+        title,
+        description,
+        couponCode,
+        discountPercent,
+        discountText,
+        autoApply,
+        emailSubject,
+        emailHeading,
+        emailBody
+    };
+
+    try {
+        const resp = await fetch('/api/admin/newsletter/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+            activeNewsletterConfig = data.config;
+            if (typeof showToast === 'function') {
+                showToast('✨ Sorèva Circle Newsletter settings saved successfully!');
+            }
+        } else {
+            throw new Error(data.error || 'Save failed');
+        }
+    } catch (err) {
+        console.error('[saveNewsletterSettings Error]', err);
+        if (typeof showToast === 'function') {
+            showToast('Error saving newsletter settings: ' + err.message);
+        }
+    }
+}
+
+async function sendNewsletterTestEmail() {
+    const recipient = document.getElementById('newsletterTestEmailRecipient')?.value?.trim() || 'support@soreva.in';
+    const emailSubject = document.getElementById('newsletterEmailSubject')?.value?.trim();
+    const emailBody = document.getElementById('newsletterEmailBody')?.value?.trim();
+    const btn = document.getElementById('btnSendNewsletterTestEmail');
+    const statusBox = document.getElementById('newsletterTestEmailStatus');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    }
+    if (statusBox) {
+        statusBox.innerHTML = 'Sending welcome email from support@soreva.in...';
+        statusBox.style.color = 'var(--text-muted)';
+    }
+
+    try {
+        const resp = await fetch('/api/admin/newsletter/test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: recipient, emailSubject, emailBody })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            if (statusBox) {
+                statusBox.innerHTML = `<span style="color: #34d399;"><i class="fa-solid fa-check"></i> ${data.message}</span>`;
+            }
+            if (typeof showToast === 'function') showToast(data.message);
+        } else {
+            if (statusBox) {
+                statusBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-triangle-exclamation"></i> ${data.error || 'Failed to dispatch email'}</span>`;
+            }
+        }
+    } catch (err) {
+        if (statusBox) {
+            statusBox.innerHTML = `<span style="color: #f87171;">Error: ${err.message}</span>`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Test';
+        }
+    }
+}
+
+function exportNewsletterSubscribers() {
+    if (!currentNewsletterSubscribers || currentNewsletterSubscribers.length === 0) {
+        if (typeof showToast === 'function') showToast('No subscribers available to export.');
+        return;
+    }
+
+    let csvContent = 'data:text/csv;charset=utf-8,Email,Coupon Code,Source,Date Subscribed,Email Delivered\r\n';
+    currentNewsletterSubscribers.forEach(sub => {
+        const row = [
+            `"${sub.email || ''}"`,
+            `"${sub.offerCode || 'WELCOME15'}"`,
+            `"${sub.source || 'footer_newsletter'}"`,
+            `"${sub.dateFormatted || sub.timestamp || ''}"`,
+            `"${sub.emailDelivered ? 'Yes' : 'No'}"`
+        ].join(',');
+        csvContent += row + '\r\n';
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `soreva_circle_subscribers_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+window.loadNewsletterSettings = loadNewsletterSettings;
+window.updateNewsletterPreview = updateNewsletterPreview;
+window.saveNewsletterSettings = saveNewsletterSettings;
+window.sendNewsletterTestEmail = sendNewsletterTestEmail;
+window.exportNewsletterSubscribers = exportNewsletterSubscribers;
 
 
 async function resendAlertForModalOrder(channel) {

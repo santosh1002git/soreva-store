@@ -8339,3 +8339,107 @@ window.addEventListener('load', () => {
     }
 });
 
+/* ==========================================================================
+   SORÈVA CIRCLE NEWSLETTER & WELCOME15 COUPON DISPATCHER
+   ========================================================================== */
+
+async function handleNewsletterSubscribe(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    const form = event && event.target ? event.target.closest('form') : document.querySelector('.newsletter-form');
+    if (!form) return;
+
+    const input = form.querySelector('.newsletter-input') || form.querySelector('input[type="email"]');
+    const submitBtn = form.querySelector('.newsletter-btn') || form.querySelector('button[type="submit"]');
+    const email = input ? input.value.trim().toLowerCase() : '';
+
+    if (!email || !email.includes('@') || !email.includes('.')) {
+        if (typeof showToast === 'function') showToast('Please enter a valid email address.');
+        return;
+    }
+
+    const originalBtnHtml = submitBtn ? submitBtn.innerHTML : 'Subscribe';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Subscribing...';
+    }
+
+    try {
+        const resp = await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            const code = data.couponCode || 'WELCOME15';
+            const discPct = data.discountPercent || 15;
+
+            // 1. Auto-apply coupon to customer's active session
+            appliedCoupon = {
+                code: code,
+                discountPercent: discPct,
+                minSpendINR: 0,
+                active: true,
+                description: `${discPct}% OFF (The Sorèva Circle)`
+            };
+            window.appliedCoupon = appliedCoupon;
+            try {
+                localStorage.setItem('soreva_applied_coupon', JSON.stringify(appliedCoupon));
+            } catch (e) {}
+
+            if (typeof updateCartTotals === 'function') updateCartTotals();
+            if (typeof renderCheckoutSummary === 'function') renderCheckoutSummary();
+            if (typeof renderCartSummary === 'function') renderCartSummary();
+
+            // 2. Celebratory Toast
+            if (typeof showToast === 'function') {
+                showToast(`✨ Welcome to The Sorèva Circle! Coupon ${code} (${discPct}% OFF) sent to ${email} & applied to your bag!`);
+            }
+
+            // 3. Inline feedback under the form
+            let feedbackEl = form.parentElement.querySelector('.newsletter-feedback-msg');
+            if (!feedbackEl) {
+                feedbackEl = document.createElement('div');
+                feedbackEl.className = 'newsletter-feedback-msg';
+                feedbackEl.style.cssText = 'color: #c5a059; font-size: 0.85rem; margin-top: 10px; font-weight: 600; display: flex; align-items: center; gap: 6px;';
+                form.parentElement.appendChild(feedbackEl);
+            }
+            feedbackEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> 15% OFF coupon (<strong>${code}</strong>) sent to your inbox & applied to your bag!`;
+            setTimeout(() => {
+                if (feedbackEl && feedbackEl.parentElement) {
+                    feedbackEl.style.transition = 'opacity 0.6s ease';
+                    feedbackEl.style.opacity = '0';
+                    setTimeout(() => feedbackEl.remove(), 600);
+                }
+            }, 8000);
+
+            if (input) input.value = '';
+        } else {
+            if (typeof showToast === 'function') {
+                showToast(data.error || 'Subscription could not be processed. Please try again.');
+            }
+        }
+    } catch (err) {
+        console.error('[Newsletter Subscribe Error]', err);
+        if (typeof showToast === 'function') {
+            showToast('Unable to reach server. Please check your connection.');
+        }
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+window.handleNewsletterSubscribe = handleNewsletterSubscribe;
+
+// Auto-bind to all .newsletter-form elements across any page
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.newsletter-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            handleNewsletterSubscribe(e);
+        });
+    });
+});
+

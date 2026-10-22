@@ -644,7 +644,7 @@
                     <p class="newsletter-desc">
                         Subscribe for private seasonal sales, new collection drops, and receive <strong>15% OFF</strong> on your first order.
                     </p>
-                    <form class="newsletter-form" onsubmit="event.preventDefault(); showToast('Thank you for subscribing to Sorèva!'); this.reset();">
+                    <form class="newsletter-form" onsubmit="handleNewsletterSubscribe(event)">
                         <input type="email" class="newsletter-input" placeholder="Your email address" required>
                         <button type="submit" class="newsletter-btn">Subscribe</button>
                     </form>

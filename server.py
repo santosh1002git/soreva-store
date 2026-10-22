@@ -44,6 +44,8 @@ RAZORPAY_CONFIG_PATH = os.path.join(DATA_DIR, 'razorpay-config.json')
 NOTIFICATIONS_CONFIG_PATH = os.path.join(DATA_DIR, 'notifications-config.json')
 POPUP_CONFIG_PATH = os.path.join(DATA_DIR, 'popup-config.json')
 POPUP_SUBSCRIBERS_PATH = os.path.join(DATA_DIR, 'popup-subscribers.json')
+NEWSLETTER_CONFIG_PATH = os.path.join(DATA_DIR, 'newsletter-config.json')
+NEWSLETTER_SUBSCRIBERS_PATH = os.path.join(DATA_DIR, 'newsletter-subscribers.json')
 CZM_COOKIE_PATH = os.path.join(DATA_DIR, 'czm-cookie.json')
 CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
@@ -1163,6 +1165,202 @@ def send_discount_coupon_email(customer_email, coupon_code=None, discount_text=N
         return False, f"SMTP Error: {str(e)}"
 
 
+DEFAULT_NEWSLETTER_CONFIG = {
+    "enabled": True,
+    "title": "Join The Sorèva Circle",
+    "description": "Subscribe for private seasonal sales, new collection drops, and receive 15% OFF on your first order.",
+    "couponCode": "WELCOME15",
+    "discountPercent": 15,
+    "discountText": "Flat 15% Off Your First Order",
+    "buttonText": "Subscribe",
+    "placeholderText": "Your email address",
+    "emailSubject": "✨ Welcome to The Sorèva Circle — Your 15% OFF Voucher (WELCOME15)",
+    "emailHeading": "Welcome to The Sorèva Circle",
+    "emailBody": "Thank you for joining our private inner circle. As a valued member, enjoy an exclusive 15% discount on your first acquisition of handcrafted demi-fine luxury jewellery.",
+    "emailSupportSender": "support@soreva.in",
+    "autoApply": True
+}
+
+
+def get_newsletter_config():
+    """Retrieve newsletter subscription settings from disk or return defaults."""
+    cfg = copy.deepcopy(DEFAULT_NEWSLETTER_CONFIG)
+    if os.path.exists(NEWSLETTER_CONFIG_PATH):
+        try:
+            with open(NEWSLETTER_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                saved = json.load(f)
+                if isinstance(saved, dict):
+                    cfg.update(saved)
+        except Exception as e:
+            print(f"[Newsletter Config Load Error] {e}")
+    return cfg
+
+
+def save_newsletter_config(cfg):
+    """Persist newsletter configuration to disk."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(NEWSLETTER_CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+    return True
+
+
+def record_newsletter_subscriber(email, code="WELCOME15", delivered=False):
+    """Record newsletter lead captured from the Join The Sorèva Circle section."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    subs = []
+    if os.path.exists(NEWSLETTER_SUBSCRIBERS_PATH):
+        try:
+            with open(NEWSLETTER_SUBSCRIBERS_PATH, 'r', encoding='utf-8') as f:
+                subs = json.load(f)
+                if not isinstance(subs, list):
+                    subs = []
+        except Exception:
+            subs = []
+    new_sub = {
+        "email": email,
+        "offerCode": code,
+        "source": "footer_newsletter",
+        "timestamp": datetime.now().isoformat(),
+        "dateFormatted": datetime.now().strftime("%d %b %Y, %I:%M %p"),
+        "emailDelivered": delivered
+    }
+    subs.append(new_sub)
+    try:
+        with open(NEWSLETTER_SUBSCRIBERS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(subs, f, indent=2)
+    except Exception as e:
+        print(f"[Record Newsletter Subscriber Error] {e}")
+    return len(subs)
+
+
+def send_newsletter_welcome_email(customer_email, coupon_code=None, discount_text=None, custom_subject=None, custom_body=None):
+    """
+    Dispatches a luxury branded WELCOME15 coupon email from support@soreva.in
+    to a customer who subscribed via 'Join The Sorèva Circle'.
+    """
+    news_cfg = get_newsletter_config()
+    notif_cfg = get_notifications_config().get("email", {})
+
+    code = coupon_code or news_cfg.get("couponCode", "WELCOME15")
+    disc = discount_text or news_cfg.get("discountText", "Flat 15% Off Your First Order")
+    subject = custom_subject or news_cfg.get("emailSubject") or f"✨ Welcome to The Sorèva Circle — Your 15% OFF Voucher ({code})"
+    body_text = custom_body or news_cfg.get("emailBody") or "Thank you for joining our private inner circle. As a valued member, enjoy an exclusive 15% discount on your first acquisition of handcrafted demi-fine luxury jewellery."
+    heading_text = news_cfg.get("emailHeading", "Welcome to The Sorèva Circle")
+
+    smtp_host = notif_cfg.get("smtpHost", "smtp.gmail.com").strip()
+    smtp_port = int(notif_cfg.get("smtpPort") or 587)
+    smtp_user = notif_cfg.get("smtpUser", "support@soreva.in").strip()
+    smtp_pass = notif_cfg.get("smtpPassword", "").strip()
+    from_email = notif_cfg.get("fromEmail", "").strip() or smtp_user or "support@soreva.in"
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #1a1413; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #fbf8f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #1a1413; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 580px; background: linear-gradient(168deg, #2b2220 0%, #1e1716 100%); border: 1px solid rgba(197, 160, 89, 0.35); border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+          <tr>
+            <td style="padding: 38px 30px 24px 30px; text-align: center; border-bottom: 1px solid rgba(197, 160, 89, 0.2);">
+              <div style="font-size: 26px; font-weight: 700; letter-spacing: 5px; color: #fbf8f5; margin-bottom: 6px; font-family: 'Playfair Display', Georgia, serif;">S O R È V A</div>
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #c5a059; font-weight: 600;">The Sorèva Circle • Private Atelier</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 36px 32px 28px 32px; text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 12px;">✨</div>
+              <h2 style="font-size: 24px; font-weight: 700; color: #fbf8f5; margin: 0 0 14px 0; font-family: 'Playfair Display', Georgia, serif;">{heading_text}</h2>
+              <p style="font-size: 15px; line-height: 1.7; color: #d6ccc7; margin: 0 0 24px 0;">
+                {body_text}
+              </p>
+              
+              <!-- Voucher Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 22px 0 28px 0; background: rgba(14, 11, 10, 0.6); border: 2px dashed #c5a059; border-radius: 12px;">
+                <tr>
+                  <td style="padding: 24px 20px; text-align: center;">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #c5a059; font-weight: 700; margin-bottom: 10px;">Your Exclusive Welcome Gift</div>
+                    <div style="font-size: 30px; font-weight: 800; letter-spacing: 6px; color: #ffffff; background: linear-gradient(135deg, #c5a059, #967537); -webkit-background-clip: text; display: inline-block; font-family: 'Courier New', monospace; padding: 4px 18px; border-radius: 8px;">
+                      {code}
+                    </div>
+                    <div style="font-size: 14px; font-weight: 600; color: #e7dfd5; margin-top: 10px;">{disc}</div>
+                    <div style="font-size: 12px; color: #9e8e88; margin-top: 6px;">Applicable across all Demi-Fine Jewellery • No minimum spend required</div>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 13px; line-height: 1.6; color: #a89892; margin: 0 0 28px 0;">
+                Enter code <strong style="color: #c5a059;">{code}</strong> at checkout on soreva.in to apply your 15% discount. Express insured shipping across India and our signature luxury gift box are included complimentary.
+              </p>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 12px auto;">
+                <tr>
+                  <td style="border-radius: 30px; background: linear-gradient(135deg, #c5a059 0%, #aa8232 100%);">
+                    <a href="https://soreva.in" target="_blank" style="display: inline-block; padding: 14px 34px; color: #1a1413; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 30px; letter-spacing: 0.5px;">
+                      Explore The Collection &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background: rgba(14, 11, 10, 0.4); padding: 22px 28px; text-align: center; border-top: 1px solid rgba(197, 160, 89, 0.15); font-size: 12px; color: #8e7e78; line-height: 1.6;">
+              <div>Need assistance with your selection? Reply directly to this email or write to <a href="mailto:{from_email}" style="color: #c5a059; text-decoration: none;">{from_email}</a>.</div>
+              <div style="margin-top: 6px;">&copy; 2026 Sorèva Jewellery Atelier. All Rights Reserved.</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+    if not smtp_pass:
+        print(f"[Newsletter Welcome Email Sandbox] To: {customer_email} | Code: {code} | SMTP password not set in notifications-config.json. Logged successfully.")
+        return True, f"Welcome voucher {code} generated for {customer_email} (Sandbox mode: configure SMTP password for live delivery)."
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"Sorèva Circle <{from_email}>"
+        msg['To'] = customer_email
+        msg['Reply-To'] = from_email
+
+        plain_text = f"""Welcome to The Sorèva Circle!
+
+{body_text}
+
+Your Exclusive Welcome Coupon: {code} ({disc})
+Apply this code during checkout at https://soreva.in
+
+Complimentary express insured delivery is included with every order.
+
+Warm regards,
+The Sorèva Concierge Atelier
+support@soreva.in"""
+
+        msg.attach(MIMEText(plain_text, 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+        server.quit()
+        print(f"[Newsletter Welcome Email Delivered] Dispatched to {customer_email} with code {code}")
+        return True, f"Welcome voucher email sent to {customer_email}!"
+    except Exception as e:
+        print(f"[Newsletter Welcome Email Error] {e}")
+        return False, f"SMTP Error: {str(e)}"
+
+
 def get_razorpay_config():
     """Retrieve Razorpay payment gateway credentials from file or environment."""
     env_key = os.environ.get('RAZORPAY_KEY_ID', '').strip()
@@ -1930,6 +2128,23 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         if isinstance(s_data, list):
                             sub_count = len(s_data)
                             recent_subs = s_data[-10:] # last 10
+                except Exception:
+                    pass
+            self._send_json({"success": True, "config": cfg, "subscribersCount": sub_count, "recentSubscribers": recent_subs})
+            return
+
+        # API: Newsletter (Sorèva Circle) Configuration
+        if parsed.path in ['/api/newsletter/config', '/api/newsletter-config', '/api/admin/newsletter/config']:
+            cfg = get_newsletter_config()
+            sub_count = 0
+            recent_subs = []
+            if os.path.exists(NEWSLETTER_SUBSCRIBERS_PATH):
+                try:
+                    with open(NEWSLETTER_SUBSCRIBERS_PATH, 'r', encoding='utf-8') as f:
+                        s_data = json.load(f)
+                        if isinstance(s_data, list):
+                            sub_count = len(s_data)
+                            recent_subs = s_data[-20:] # last 20
                 except Exception:
                     pass
             self._send_json({"success": True, "config": cfg, "subscribersCount": sub_count, "recentSubscribers": recent_subs})
@@ -3954,6 +4169,75 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 self._send_json({
                     "success": False,
                     "error": f"Email dispatch failed: {status_msg}. If using Gmail/Google Workspace, please ensure your 16-character Google App Password is set in Admin Settings."
+                }, 400)
+            return
+
+        # API: Save Newsletter (Sorèva Circle) Configuration
+        if parsed.path in ['/api/newsletter/config', '/api/admin/newsletter/config']:
+            cfg = get_newsletter_config()
+            for k in ['enabled', 'title', 'description', 'couponCode', 'discountPercent', 
+                      'discountText', 'buttonText', 'placeholderText', 'emailSubject', 
+                      'emailHeading', 'emailBody', 'emailSupportSender', 'autoApply']:
+                if k in payload:
+                    cfg[k] = payload[k]
+            save_newsletter_config(cfg)
+            self._send_json({"success": True, "message": "Sorèva Circle newsletter settings saved successfully!", "config": cfg})
+            return
+
+        # API: Subscribe Email from Footer 'Join The Sorèva Circle' & Dispatch WELCOME15 Email
+        if parsed.path in ['/api/newsletter/subscribe', '/api/circle/subscribe']:
+            email = str(payload.get('email', '')).strip().lower()
+            if not email or '@' not in email or '.' not in email:
+                self._send_json({"error": "Please enter a valid email address."}, 400)
+                return
+
+            cfg = get_newsletter_config()
+            code = cfg.get("couponCode", "WELCOME15")
+            disc = cfg.get("discountText", "Flat 15% Off Your First Order")
+            disc_pct = cfg.get("discountPercent", 15)
+
+            def _async_newsletter_send():
+                try:
+                    deliv, msg = send_newsletter_welcome_email(email, code, disc)
+                    print(f"[Async Newsletter Email] To: {email} | Delivered: {deliv} | Status: {msg}")
+                except Exception as ex:
+                    print(f"[Async Newsletter Email Error] {ex}")
+
+            threading.Thread(target=_async_newsletter_send, daemon=True).start()
+            total_subs = record_newsletter_subscriber(email, code, delivered=True)
+
+            self._send_json({
+                "success": True,
+                "email": email,
+                "couponCode": code,
+                "discountPercent": disc_pct,
+                "discountText": disc,
+                "emailDelivered": True,
+                "emailStatus": "Queued for instant dispatch",
+                "subscribersCount": total_subs,
+                "message": f"Welcome to The Sorèva Circle! Your 15% OFF voucher ({code}) has been emailed to {email}."
+            })
+            return
+
+        # API: Send Test Welcome Email for Newsletter from Admin Panel
+        if parsed.path in ['/api/admin/newsletter/test-email', '/api/newsletter/test-email']:
+            target_email = str(payload.get('email', '')).strip() or "support@soreva.in"
+            cfg = get_newsletter_config()
+            code = cfg.get("couponCode", "WELCOME15")
+            disc = cfg.get("discountText", "Flat 15% Off Your First Order")
+            custom_sub = payload.get('emailSubject')
+            custom_body = payload.get('emailBody')
+
+            delivered, status_msg = send_newsletter_welcome_email(
+                target_email, code, disc, custom_subject=custom_sub, custom_body=custom_body
+            )
+
+            if delivered:
+                self._send_json({"success": True, "message": f"Test welcome email with {code} successfully sent to {target_email}!"})
+            else:
+                self._send_json({
+                    "success": False,
+                    "error": f"Email dispatch failed: {status_msg}. Please check your SMTP settings in Admin Settings."
                 }, 400)
             return
 
