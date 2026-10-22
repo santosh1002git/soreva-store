@@ -4627,10 +4627,35 @@ html.skip-intro .logo-intro-experience {
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .social-section {
+        padding: 48px 0 64px;
+    }
+    .social-header-wrap {
+        margin-bottom: 20px;
+    }
     .reels-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        display: flex !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 14px !important;
+        padding: 8px 16px 20px !important;
+        margin-left: -16px !important;
+        margin-right: -16px !important;
+        scrollbar-width: none !important;
+    }
+    .reels-grid::-webkit-scrollbar {
+        display: none !important;
+    }
+    .reel-card {
+        flex: 0 0 240px !important;
+        width: 240px !important;
+        height: 395px !important;
+        max-height: 395px !important;
+        aspect-ratio: auto !important;
+        scroll-snap-align: center !important;
+        border-radius: 18px !important;
     }
 }
 
@@ -4647,6 +4672,9 @@ html.skip-intro .logo-intro-experience {
     border: 1px solid rgba(197, 160, 89, 0.25);
     display: flex;
     flex-direction: column;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .reel-card:hover {
@@ -4663,6 +4691,7 @@ html.skip-intro .logo-intro-experience {
     object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
+    background-color: #14100f;
 }
 
 .reel-card:hover .reel-video {
@@ -4677,7 +4706,7 @@ html.skip-intro .logo-intro-experience {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    z-index: 3;
+    z-index: 4;
     pointer-events: none;
 }
 
@@ -4696,10 +4725,18 @@ html.skip-intro .logo-intro-experience {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.reel-audio-btn {
+.reel-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     pointer-events: auto;
-    width: 28px;
-    height: 28px;
+}
+
+.reel-audio-btn,
+.reel-expand-btn {
+    pointer-events: auto;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
@@ -4714,7 +4751,8 @@ html.skip-intro .logo-intro-experience {
     transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
-.reel-audio-btn:hover {
+.reel-audio-btn:hover,
+.reel-expand-btn:hover {
     background: rgba(197, 160, 89, 0.9);
     color: #1a1412;
     transform: scale(1.1);
@@ -4725,31 +4763,33 @@ html.skip-intro .logo-intro-experience {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(1);
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
-    opacity: 0.9;
+    font-size: 1.1rem;
+    opacity: 0.95;
     transition: opacity 0.25s ease, transform 0.25s ease;
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .reel-card.is-playing .reel-center-play {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
+    transform: translate(-50%, -50%) scale(0.7);
+    pointer-events: none;
 }
 
 .reel-card.is-paused .reel-center-play {
-    opacity: 0.9;
+    opacity: 0.95;
     transform: translate(-50%, -50%) scale(1);
 }
 
@@ -4758,10 +4798,10 @@ html.skip-intro .logo-intro-experience {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 28px 12px 12px;
-    background: linear-gradient(180deg, transparent 0%, rgba(20, 16, 15, 0.85) 55%, rgba(20, 16, 15, 0.96) 100%);
+    padding: 32px 12px 12px;
+    background: linear-gradient(180deg, transparent 0%, rgba(20, 16, 15, 0.85) 50%, rgba(20, 16, 15, 0.98) 100%);
     color: #ffffff;
-    z-index: 3;
+    z-index: 4;
     pointer-events: none;
 }
 
@@ -4783,8 +4823,8 @@ html.skip-intro .logo-intro-experience {
 .reel-caption-text {
     font-size: 0.76rem;
     line-height: 1.35;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 6px;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 8px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -4795,37 +4835,45 @@ html.skip-intro .logo-intro-experience {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.8);
+    gap: 8px;
 }
 
-.reel-insta-link {
+.btn-reel-ig {
     pointer-events: auto;
-    color: var(--gold-light);
-    text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: #ffffff !important;
+    font-size: 0.72rem;
     font-weight: 600;
-    transition: color var(--transition-fast);
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(220, 39, 67, 0.35);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    flex-shrink: 0;
 }
 
-.reel-insta-link:hover {
-    color: #ffffff;
+.btn-reel-ig:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(220, 39, 67, 0.5);
 }
 
 /* Fullscreen / Modal Reel Lightbox */
 .reel-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(18, 14, 13, 0.9);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    z-index: 10000;
+    background: rgba(14, 11, 10, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 2147483648; /* Strictly above chatbot-container (2147483647) */
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -4845,15 +4893,25 @@ html.skip-intro .logo-intro-experience {
     width: 100%;
     max-height: 90vh;
     overflow: hidden;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
     position: relative;
 }
 
 @media (max-width: 768px) {
     .reel-modal-card {
         flex-direction: column;
-        max-height: 94vh;
+        max-height: 92vh;
+        width: 95%;
+        border-radius: 16px;
         overflow-y: auto;
+    }
+    .reel-modal-video-wrap {
+        min-height: 320px !important;
+        max-height: 52vh !important;
+        flex: none !important;
+    }
+    .reel-modal-side {
+        padding: 20px 16px !important;
     }
 }
 
@@ -4872,6 +4930,33 @@ html.skip-intro .logo-intro-experience {
     height: 100%;
     max-height: 85vh;
     object-fit: contain;
+    background-color: #000;
+}
+
+.reel-modal-sound-btn {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    z-index: 5;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.reel-modal-sound-btn:hover {
+    background: rgba(197, 160, 89, 0.9);
+    color: #1a1412;
 }
 
 .reel-modal-side {
@@ -4891,13 +4976,16 @@ html.skip-intro .logo-intro-experience {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.18);
     border: none;
     color: #ffffff;
     font-size: 1.1rem;
     cursor: pointer;
-    z-index: 5;
+    z-index: 10;
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .reel-modal-close:hover {
