@@ -5467,15 +5467,20 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         # ----------------------------------------------------
         # API: CZMakers Stock & Pricing Co-Worker Agent Control
         # ----------------------------------------------------
-        if parsed.path == '/api/admin/czm-agent/start' or parsed.path == '/api/admin/sync-catalog':
+        if parsed.path in ('/api/admin/czm-agent/start', '/api/admin/sync-catalog', '/api/admin/czm-agent/complete-refresh'):
             mode = payload.get('mode', 'full_discovery')
+            if parsed.path == '/api/admin/czm-agent/complete-refresh':
+                mode = 'complete_refresh'
             max_pages = int(payload.get('maxPages', 0))
             verify_unseen = bool(payload.get('verifyUnseen', False))
+            wipe_products = bool(payload.get('wipeProducts', False)) or (mode == 'complete_refresh')
 
             script_path = os.path.join(DATA_DIR, '..', 'scripts', 'czm_sync_agent.py')
             cmd = [sys.executable, script_path, '--mode', mode, '--max-pages', str(max_pages)]
-            if verify_unseen:
+            if verify_unseen and mode != 'complete_refresh':
                 cmd.append('--verify-unseen')
+            if wipe_products:
+                cmd.append('--wipe-products')
 
             # Clear stop flag if present
             stop_flag = os.path.join(DATA_DIR, 'czm-sync-stop.flag')
@@ -5485,9 +5490,13 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
             subprocess.Popen(cmd)
             page_desc = "all pages" if max_pages == 0 else f"{max_pages} pages/cat"
+            if mode == 'complete_refresh':
+                msg = f"CZMakers Complete Stock Refresh launched! Clearing all previous catalog pieces and performing a 100% fresh loading across all categories and mappings ({page_desc})."
+            else:
+                msg = f"CZMakers Stock Co-Worker launched in '{mode}' mode ({page_desc}). Matching existing inventory, adding new stock, and marking unmatched as Out of Stock."
             self._send_json({
                 "success": True, 
-                "message": f"CZMakers Stock Co-Worker launched in '{mode}' mode ({page_desc}). Matching existing inventory, adding new stock, and marking unmatched as Out of Stock."
+                "message": msg
             })
             return
 
