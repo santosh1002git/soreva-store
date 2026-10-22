@@ -7669,15 +7669,15 @@ button:disabled.btn-out-of-stock {
 }
 
 /* ========================================================
-   FESTIVE DIWALI EMAIL OFFER POP-UP MODAL (ATTACHED SCREEN)
+   FESTIVE DIWALI EMAIL OFFER POP-UP MODAL (SOREVA LUXURY ATELIER THEME)
    ======================================================== */
 .festive-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(14, 5, 8, 0.78);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 10050;
+    background: rgba(14, 11, 10, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100050;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
@@ -7693,16 +7693,17 @@ button:disabled.btn-out-of-stock {
 }
 
 .festive-popup-card {
-    background: #4d1520; /* Deep rich wine / burgundy matching user screenshot */
+    background: linear-gradient(168deg, #2b2220 0%, #1e1716 100%);
     width: 100%;
     max-width: 440px;
-    border-radius: 16px;
-    padding: 32px 24px 26px 24px;
+    border-radius: 20px;
+    border: 1px solid rgba(197, 160, 89, 0.35);
+    padding: 26px 24px 26px 24px;
     position: relative;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 40px rgba(197, 160, 89, 0.12);
     transform: scale(0.92) translateY(12px);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-    color: #ffffff;
+    color: #fbf8f5;
     text-align: center;
     overflow: hidden;
     box-sizing: border-box;
@@ -7712,24 +7713,41 @@ button:disabled.btn-out-of-stock {
     transform: scale(1) translateY(0);
 }
 
+/* Brand Sorèva Logo Header */
+.festive-popup-logo-wrap {
+    text-align: center;
+    margin-bottom: 12px;
+    padding-top: 4px;
+}
+
+.festive-popup-logo-img {
+    height: 32px;
+    max-width: 160px;
+    width: auto;
+    object-fit: contain;
+    display: inline-block;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+
 .festive-popup-close {
     position: absolute;
     top: 14px;
     right: 16px;
     background: transparent;
     border: none;
-    color: #ffffff;
-    font-size: 1.45rem;
+    color: #e5ded9;
+    font-size: 1.35rem;
     cursor: pointer;
     line-height: 1;
-    opacity: 0.85;
-    transition: opacity 0.2s, transform 0.2s;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s, color 0.2s;
     padding: 6px;
     z-index: 10;
 }
 
 .festive-popup-close:hover {
     opacity: 1;
+    color: var(--gold-accent, #c5a059);
     transform: scale(1.1);
 }
 
@@ -7738,34 +7756,36 @@ button:disabled.btn-out-of-stock {
 }
 
 .festive-popup-title-1 {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.65rem;
+    font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
+    font-size: 1.6rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #fbf8f5;
     margin: 0 0 4px 0;
     line-height: 1.25;
-    letter-spacing: -0.2px;
+    letter-spacing: 0.2px;
 }
 
 .festive-popup-title-2 {
-    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.85rem;
+    font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
+    font-size: 1.8rem;
     font-weight: 400;
-    color: #ffffff;
+    color: var(--gold-accent, #c5a059);
     margin: 0;
     line-height: 1.25;
 }
 
 .festive-popup-title-2 strong {
-    font-weight: 800;
+    font-weight: 700;
+    color: #dfbd7c;
 }
 
 .festive-popup-media {
     width: 100%;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 16px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    margin-bottom: 14px;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .festive-popup-media img {
@@ -7776,12 +7796,13 @@ button:disabled.btn-out-of-stock {
 }
 
 .festive-popup-desc {
-    font-size: 1rem;
-    line-height: 1.42;
-    color: rgba(255, 255, 255, 0.95);
-    margin: 0 0 18px 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #d6ceca;
+    margin: 0 0 16px 0;
     padding: 0 6px;
     font-weight: 400;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
 }
 
 .festive-popup-input-box {
@@ -7790,40 +7811,42 @@ button:disabled.btn-out-of-stock {
 
 .festive-popup-input {
     width: 100%;
-    background: #3e111a;
-    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: #181211;
+    border: 1px solid rgba(197, 160, 89, 0.45);
     border-radius: 8px;
     padding: 13px 16px;
-    color: #ffffff;
+    color: #fbf8f5;
     font-size: 0.95rem;
-    font-family: inherit;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     box-sizing: border-box;
 }
 
 .festive-popup-input::placeholder {
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(251, 248, 245, 0.5);
 }
 
 .festive-popup-input:focus {
-    border-color: #ffffff;
-    background: #46131e;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    border-color: var(--gold-accent, #c5a059);
+    background: #201716;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.25);
 }
 
 .festive-popup-submit-btn {
     width: 100%;
-    background: #ffffff;
-    color: #4d1520;
+    background: linear-gradient(135deg, #c5a059 0%, #aa8232 100%);
+    color: #1a1413;
     border: none;
     border-radius: 999px;
     padding: 13px 20px;
     font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    letter-spacing: 0.3px;
     transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 18px rgba(197, 160, 89, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7831,9 +7854,9 @@ button:disabled.btn-out-of-stock {
 }
 
 .festive-popup-submit-btn:hover {
-    background: #f8f6f2;
+    background: linear-gradient(135deg, #dfbd7c 0%, #c5a059 100%);
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 24px rgba(197, 160, 89, 0.48);
 }
 
 .festive-popup-submit-btn:active {
@@ -7855,43 +7878,46 @@ button:disabled.btn-out-of-stock {
 .festive-success-sparkle {
     font-size: 2.2rem;
     margin-bottom: 6px;
+    color: var(--gold-accent, #c5a059);
 }
 
 .festive-success-title {
-    font-size: 1.35rem;
+    font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
+    font-size: 1.45rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #fbf8f5;
     margin: 0 0 8px 0;
 }
 
 .festive-success-desc {
     font-size: 0.92rem;
-    color: rgba(255, 255, 255, 0.88);
+    color: #d6ceca;
     line-height: 1.45;
     margin: 0 0 16px 0;
 }
 
 .festive-code-pill {
-    background: #390e17;
-    border: 1.5px dashed #ffd700;
+    background: #181211;
+    border: 1.5px dashed var(--gold-accent, #c5a059);
     border-radius: 12px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     margin-bottom: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .festive-code-label {
     font-size: 0.72rem;
-    color: #ffd700;
-    letter-spacing: 1.5px;
-    font-weight: 600;
+    color: var(--gold-accent, #c5a059);
+    letter-spacing: 1.8px;
+    font-weight: 700;
 }
 
 .festive-code-val {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: #ffffff;
     font-weight: 800;
     letter-spacing: 3px;
@@ -7899,31 +7925,33 @@ button:disabled.btn-out-of-stock {
 }
 
 .festive-code-discount {
-    font-size: 0.85rem;
-    color: #fbcfe8;
+    font-size: 0.88rem;
+    color: #dfbd7c;
 }
 
 .festive-popup-shop-btn {
     width: 100%;
-    background: #ffffff;
-    color: #4d1520;
+    background: linear-gradient(135deg, #c5a059 0%, #aa8232 100%);
+    color: #1a1413;
     border: none;
     border-radius: 999px;
     padding: 13px 20px;
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+    box-shadow: 0 4px 18px rgba(197, 160, 89, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: transform 0.15s ease, background 0.2s;
+    transition: transform 0.15s ease, background 0.2s, box-shadow 0.2s;
 }
 
 .festive-popup-shop-btn:hover {
-    background: #f8f6f2;
+    background: linear-gradient(135deg, #dfbd7c 0%, #c5a059 100%);
     transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(197, 160, 89, 0.48);
 }
 
 /* ==========================================================================

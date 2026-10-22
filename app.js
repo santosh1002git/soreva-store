@@ -4794,10 +4794,28 @@ function applyFestivePopupConfig(cfg) {
 window.applyFestivePopupConfig = applyFestivePopupConfig;
 
 function openFestivePopup() {
+    if (typeof closeEntryPrologue === 'function') closeEntryPrologue();
+    const entry = document.getElementById('entryExperience');
+    if (entry) {
+        entry.classList.add('unveiled');
+    }
+
     const backdrop = document.getElementById('festivePopupBackdrop');
     if (!backdrop) return;
     backdrop.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // Restore initial form view if previously submitted
+    const formWrap = document.getElementById('festivePopupFormWrap');
+    if (formWrap) formWrap.style.display = '';
+    const media = document.querySelector('.festive-popup-media');
+    if (media) media.style.display = '';
+    const desc = document.getElementById('festivePopupDesc');
+    if (desc) desc.style.display = '';
+    const header = document.querySelector('.festive-popup-header');
+    if (header) header.style.display = '';
+    const successWrap = document.getElementById('festivePopupSuccess');
+    if (successWrap) successWrap.style.display = 'none';
 
     // If config was already fetched, make sure it is applied
     if (_festivePopupConfig) applyFestivePopupConfig(_festivePopupConfig);
@@ -4863,6 +4881,15 @@ async function handleFestivePopupSubmit(e) {
 
             const formWrap = document.getElementById('festivePopupFormWrap');
             if (formWrap) formWrap.style.display = 'none';
+
+            const media = document.querySelector('.festive-popup-media');
+            if (media) media.style.display = 'none';
+
+            const desc = document.getElementById('festivePopupDesc');
+            if (desc) desc.style.display = 'none';
+
+            const header = document.querySelector('.festive-popup-header');
+            if (header) header.style.display = 'none';
 
             const successWrap = document.getElementById('festivePopupSuccess');
             if (successWrap) successWrap.style.display = 'block';
