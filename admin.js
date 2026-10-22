@@ -2964,6 +2964,7 @@ inventoryData = [];
 let currentInventoryPage = 1;
 let inventoryPageSize = 50;
 let inventoryFilteredItems = [];
+let adminSelectedInventoryIds = new Set();
 
 async function fetchInventory() {
     try {
@@ -3028,13 +3029,18 @@ function handleInventoryFilter(resetPage = false) {
         // Status filter
         const qty = Number(item.stockQty) || 0;
         const thresh = Number(item.lowStockThreshold) || 5;
+        const isDisabled = (item.disabled == 1 || item.status === 'Disabled' || item.active === 0);
 
-        if (status === 'in_stock') {
-            if (qty <= thresh) return false;
+        if (status === 'hidden') {
+            if (!isDisabled) return false;
+        } else if (status === 'visible') {
+            if (isDisabled) return false;
+        } else if (status === 'in_stock') {
+            if (qty <= thresh || isDisabled) return false;
         } else if (status === 'low_stock') {
-            if (qty <= 0 || qty > thresh) return false;
+            if (qty <= 0 || qty > thresh || isDisabled) return false;
         } else if (status === 'out_of_stock') {
-            if (qty > 0) return false;
+            if (qty > 0 || isDisabled) return false;
         }
 
         return true;
@@ -3077,14 +3083,22 @@ function renderInventoryMetrics() {
     let inStock = 0;
     let lowStock = 0;
     let outStock = 0;
+    let hiddenCount = 0;
 
     (inventoryData || []).forEach(item => {
         const qty = Number(item.stockQty) || 0;
         const thresh = Number(item.lowStockThreshold) || 5;
+        const isDisabled = (item.disabled == 1 || item.status === 'Disabled' || item.active === 0);
         totalUnits += qty;
-        if (qty <= 0) outStock++;
-        else if (qty <= thresh) lowStock++;
-        else inStock++;
+        if (isDisabled) {
+            hiddenCount++;
+        } else if (qty <= 0) {
+            outStock++;
+        } else if (qty <= thresh) {
+            lowStock++;
+        } else {
+            inStock++;
+        }
     });
 
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toLocaleString(); };
@@ -3092,6 +3106,7 @@ function renderInventoryMetrics() {
     setVal('invSummaryInStock', inStock);
     setVal('invSummaryLowStock', lowStock);
     setVal('invSummaryOutOfStock', outStock);
+    setVal('invSummaryHidden', hiddenCount);
     setVal('statTotalInventory', totalUnits);
 
     const countHeader = document.getElementById('inventoryCountHeader');
@@ -3136,19 +3151,22 @@ function renderInventoryTable() {
     if (pageItems.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align: center; padding: 48px 20px; color: var(--admin-muted);">
+                <td colspan="11" style="text-align: center; padding: 48px 20px; color: var(--admin-muted);">
                     <i class="fa-solid fa-boxes-stacked" style="font-size: 2.2rem; margin-bottom: 12px; display: block; color: var(--gold-light); opacity: 0.5;"></i>
                     <strong style="display: block; font-size: 1rem; color: var(--admin-text); margin-bottom: 4px;">No matching inventory pieces found</strong>
                     <span style="font-size: 0.85rem;">Try adjusting your search query, category selection, or availability filter.</span>
                 </td>
             </tr>
         `;
+        updateInventoryBulkBar();
         return;
     }
 
     tbody.innerHTML = pageItems.map(item => {
         const qty = Number(item.stockQty) || 0;
         const thresh = Number(item.lowStockThreshold) || 5;
+        const isSelected = adminSelectedInventoryIds.has(String(item.id));
+        const isDisabled = (item.disabled == 1 || item.status === 'Disabled' || item.active === 0);
 
         let statusClass = 'in-stock';
         let statusIcon = 'fa-check';
@@ -3165,10 +3183,12 @@ function renderInventoryTable() {
         }
 
         const safeName = (item.productName || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const encName = encodeURIComponent(item.productName || '');
 
         return `
-            <tr>
+            <tr style="${isSelected ? 'background: rgba(197, 160, 89, 0.08);' : ''}">
+                <td style="text-align: center;">
+                    <input type="checkbox" class="inv-row-checkbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="handleInventoryRowSelect('${item.id}', this.checked)" style="cursor: pointer; width: 16px; height: 16px;">
+                </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <strong style="color: var(--admin-text); font-size: 0.92rem;">${item.productName}</strong>
@@ -3210,21 +3230,329 @@ function renderInventoryTable() {
                     </span>
                 </td>
                 <td>
+                    ${isDisabled ? `
+                        <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); font-size: 0.74rem; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="Hidden from customer storefront catalog">
+                            <i class="fa-solid fa-eye-slash"></i> Hidden
+                        </span>
+                    ` : `
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.74rem; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="Visible to customers on storefront catalog">
+                            <i class="fa-solid fa-eye"></i> Live
+                        </span>
+                    `}
+                </td>
+                <td>
                     <div style="font-size: 0.82rem; color: #e4e4e7; white-space: nowrap; display: flex; align-items: center; gap: 5px;">
                         <i class="fa-regular fa-clock" style="color: var(--gold); font-size: 0.85rem;"></i>
                         <span>${formatRefreshDate(item.lastRefreshed)}</span>
                     </div>
                     ${item.dateAdded ? `<div style="font-size: 0.72rem; color: var(--admin-muted); margin-top: 2px;" title="Date first imported/added">Added: ${formatRefreshDate(item.dateAdded)}</div>` : ''}
                 </td>
-                <td style="text-align: right;">
-                    <button class="btn-admin-outline btn-sm" onclick="openStockModal('${item.id}')" title="Adjust piece stock quantity and alert threshold">
-                        <i class="fa-solid fa-pen-to-square"></i> Adjust
-                    </button>
+                <td style="text-align: right; white-space: nowrap;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                        ${isDisabled ? `
+                            <button type="button" class="btn-admin-outline btn-sm" onclick="toggleSingleInventoryVisibility('${item.id}', false)" title="Enable visibility (Show on website storefront)" style="color: #6ee7b7; border-color: rgba(16,185,129,0.3); padding: 5px 9px;">
+                                <i class="fa-solid fa-eye"></i> Show
+                            </button>
+                        ` : `
+                            <button type="button" class="btn-admin-outline btn-sm" onclick="toggleSingleInventoryVisibility('${item.id}', true)" title="Disable visibility (Hide from website storefront)" style="color: #fca5a5; border-color: rgba(239,68,68,0.3); padding: 5px 9px;">
+                                <i class="fa-solid fa-eye-slash"></i> Hide
+                            </button>
+                        `}
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="openStockModal('${item.id}')" title="Adjust piece stock quantity and alert threshold" style="padding: 5px 9px;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="confirmDeleteSingleInventoryProduct('${item.id}', '${safeName}')" title="Permanently delete product from catalog and inventory" style="color: #ef4444; border-color: rgba(239,68,68,0.3); padding: 5px 9px;">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
     }).join('');
+
+    updateInventoryBulkBar();
 }
+
+// Bulk Selection and Update Logic for Inventory
+function handleInventoryRowSelect(id, checked) {
+    if (checked) {
+        adminSelectedInventoryIds.add(String(id));
+    } else {
+        adminSelectedInventoryIds.delete(String(id));
+    }
+    updateInventoryBulkBar();
+}
+
+function toggleSelectAllInventory(checked) {
+    const checkboxes = document.querySelectorAll('.inv-row-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checked;
+        if (checked) {
+            adminSelectedInventoryIds.add(String(cb.value));
+        } else {
+            adminSelectedInventoryIds.delete(String(cb.value));
+        }
+    });
+    updateInventoryBulkBar();
+}
+
+function updateInventoryBulkBar() {
+    const bar = document.getElementById('adminBulkInventoryBar');
+    const countEl = document.getElementById('invBulkSelectedCount');
+    const badgeEl = document.getElementById('invBulkDeleteBadge');
+    const selectAllCb = document.getElementById('selectAllInventoryCheckbox');
+    const count = adminSelectedInventoryIds.size;
+    
+    if (countEl) countEl.textContent = count.toLocaleString('en-IN');
+    if (badgeEl) badgeEl.textContent = count.toLocaleString('en-IN');
+    if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
+
+    if (selectAllCb) {
+        const checkboxes = document.querySelectorAll('.inv-row-checkbox');
+        selectAllCb.checked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+    }
+
+    const wrap = document.getElementById('invBulkSelectAllFilteredWrap');
+    const totalSpan = document.getElementById('invBulkFilteredTotalSpan');
+    if (wrap && totalSpan && inventoryFilteredItems) {
+        const totalMatching = inventoryFilteredItems.length;
+        if (count > 0 && count < totalMatching) {
+            wrap.style.display = 'inline';
+            totalSpan.textContent = totalMatching.toLocaleString('en-IN');
+        } else {
+            wrap.style.display = 'none';
+        }
+    }
+}
+
+function selectAllFilteredInventory() {
+    if (!inventoryFilteredItems || inventoryFilteredItems.length === 0) return;
+    inventoryFilteredItems.forEach(item => {
+        if (item.id) adminSelectedInventoryIds.add(String(item.id));
+    });
+    const checkboxes = document.querySelectorAll('.inv-row-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    const selectAllCb = document.getElementById('selectAllInventoryCheckbox');
+    if (selectAllCb) selectAllCb.checked = true;
+    updateInventoryBulkBar();
+}
+
+function deselectAllInventory() {
+    adminSelectedInventoryIds.clear();
+    const checkboxes = document.querySelectorAll('.inv-row-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    const selectAllCb = document.getElementById('selectAllInventoryCheckbox');
+    if (selectAllCb) selectAllCb.checked = false;
+    updateInventoryBulkBar();
+}
+
+// Single Item Visibility Toggle
+async function toggleSingleInventoryVisibility(id, disable) {
+    const item = (inventoryData || []).find(i => String(i.id) === String(id));
+    const name = item ? item.productName : id;
+    const actionVerb = disable ? 'disabled (hidden from storefront)' : 'enabled (live on storefront)';
+
+    try {
+        const res = await fetch('/api/db/products/bulk-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ids: [String(id)],
+                disabled: disable ? 1 : 0,
+                active: disable ? 0 : 1,
+                employeeName: 'Admin'
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (item) {
+                item.disabled = disable ? 1 : 0;
+                item.active = disable ? 0 : 1;
+                if (disable) {
+                    item.status = 'Disabled';
+                } else {
+                    const qty = Number(item.stockQty) || 0;
+                    item.status = qty > 0 ? 'In Stock' : 'Out of Stock';
+                }
+            }
+            if (window.storeData && Array.isArray(window.storeData.products)) {
+                const sp = window.storeData.products.find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+                if (sp) {
+                    sp.disabled = disable;
+                    sp.active = !disable;
+                    sp.stockStatus = disable ? 'Disabled' : ((sp.stockQty || 0) > 0 ? 'In Stock' : 'Out of Stock');
+                }
+            }
+            showToast(`Product "${name}" is now ${actionVerb}`);
+            handleInventoryFilter(false);
+        } else {
+            showToast('Error updating visibility: ' + (data.error || 'Server error'), 'error');
+        }
+    } catch (err) {
+        showToast('Failed to update visibility: ' + err.message, 'error');
+    }
+}
+
+// Bulk Inventory Visibility Toggle
+async function applyBulkInventoryVisibility(disabled = 1) {
+    const ids = Array.from(adminSelectedInventoryIds);
+    if (ids.length === 0) {
+        showToast('Please select at least one inventory item first');
+        return;
+    }
+
+    const actionWord = disabled === 1 ? 'disable visibility for (hide on website)' : 'enable visibility for (show on website)';
+    const confirmPrompt = `Are you sure you want to ${actionWord} ${ids.length} selected product(s)?\n\n${disabled === 1 ? 'Hidden pieces will not appear in the customer storefront catalog or search.' : 'Enabled pieces will be visible to customers on the storefront.'}`;
+    if (!confirm(confirmPrompt)) return;
+
+    const btnDisable = document.getElementById('btnBulkInvDisable');
+    const btnEnable = document.getElementById('btnBulkInvEnable');
+    if (btnDisable) btnDisable.disabled = true;
+    if (btnEnable) btnEnable.disabled = true;
+
+    try {
+        const res = await fetch('/api/db/products/bulk-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ids,
+                disabled: disabled,
+                active: disabled === 1 ? 0 : 1,
+                employeeName: 'Admin'
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const idSet = new Set(ids.map(String));
+            (inventoryData || []).forEach(item => {
+                if (idSet.has(String(item.id))) {
+                    item.disabled = disabled;
+                    item.active = (disabled === 0 ? 1 : 0);
+                    if (disabled === 1) {
+                        item.status = 'Disabled';
+                    } else {
+                        const qty = Number(item.stockQty) || 0;
+                        item.status = qty > 0 ? 'In Stock' : 'Out of Stock';
+                    }
+                }
+            });
+            if (window.storeData && Array.isArray(window.storeData.products)) {
+                window.storeData.products.forEach(p => {
+                    if (idSet.has(String(p.id)) || idSet.has(String(p.dbId))) {
+                        p.disabled = (disabled === 1);
+                        p.active = (disabled === 0);
+                        p.stockStatus = (disabled === 1 ? 'Disabled' : ((p.stockQty || 0) > 0 ? 'In Stock' : 'Out of Stock'));
+                    }
+                });
+            }
+            deselectAllInventory();
+            showToast(data.message || `Updated visibility for ${ids.length} product(s)`);
+            handleInventoryFilter(false);
+        } else {
+            showToast('Error: ' + (data.error || 'Server error'), 'error');
+        }
+    } catch (err) {
+        showToast('Failed to update inventory visibility: ' + err.message, 'error');
+    } finally {
+        if (btnDisable) btnDisable.disabled = false;
+        if (btnEnable) btnEnable.disabled = false;
+    }
+}
+
+// Single Item Product Deletion from Inventory
+async function confirmDeleteSingleInventoryProduct(id, name) {
+    const confirmed = confirm(
+        `Are you sure you want to permanently delete "${name}" (ID: ${id})?\n\n` +
+        `This will permanently remove the piece from the store catalog and inventory database.\n\n` +
+        `🛡️ EXCLUSIVE DATA GUARANTEE:\nAll customer accounts and past order records will remain 100% preserved.`
+    );
+    if (!confirmed) return;
+
+    try {
+        const resp = await fetch('/api/db/products/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: String(id), employeeName: 'Admin' })
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast(res.message || `Deleted "${name}"`);
+            inventoryData = (inventoryData || []).filter(i => String(i.id) !== String(id));
+            adminSelectedInventoryIds.delete(String(id));
+            if (window.storeData && Array.isArray(window.storeData.products)) {
+                window.storeData.products = window.storeData.products.filter(p => String(p.id) !== String(id) && String(p.dbId) !== String(id));
+            }
+            updateInventoryBulkBar();
+            handleInventoryFilter(false);
+        } else {
+            showToast('Delete error: ' + (res.error || 'Server error'), 'error');
+        }
+    } catch (err) {
+        showToast('Failed to delete product: ' + err.message, 'error');
+    }
+}
+
+// Batch Product Deletion from Inventory
+async function confirmDeleteBatchInventoryProducts() {
+    const ids = Array.from(adminSelectedInventoryIds);
+    if (ids.length === 0) {
+        showToast('Please select at least one product first');
+        return;
+    }
+
+    const confirmed = confirm(
+        `⚠️ PERMANENT DELETION WARNING:\n\n` +
+        `Are you sure you want to permanently delete all ${ids.length} selected product(s) from the website catalog and inventory?\n\n` +
+        `🛡️ EXCLUSIVE DATA GUARANTEE:\n` +
+        `All customer accounts and past order records will remain 100% preserved.`
+    );
+    if (!confirmed) return;
+
+    const btn = document.getElementById('btnBulkInvDelete');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+    }
+
+    try {
+        const resp = await fetch('/api/db/products/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: ids, employeeName: 'Admin' })
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast(res.message || `Deleted ${ids.length} pieces from catalog and inventory.`);
+            const idSet = new Set(ids.map(String));
+            inventoryData = (inventoryData || []).filter(i => !idSet.has(String(i.id)));
+            if (window.storeData && Array.isArray(window.storeData.products)) {
+                window.storeData.products = window.storeData.products.filter(p => !idSet.has(String(p.id)) && !idSet.has(String(p.dbId)));
+            }
+            deselectAllInventory();
+            handleInventoryFilter(false);
+        } else {
+            showToast('Delete error: ' + (res.error || 'Server error'), 'error');
+        }
+    } catch (err) {
+        showToast('Failed to delete selected products: ' + err.message, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="invBulkDeleteBadge">0</span>)';
+        }
+    }
+}
+
+// Window attachments for inline triggers
+window.handleInventoryRowSelect = handleInventoryRowSelect;
+window.toggleSelectAllInventory = toggleSelectAllInventory;
+window.updateInventoryBulkBar = updateInventoryBulkBar;
+window.selectAllFilteredInventory = selectAllFilteredInventory;
+window.deselectAllInventory = deselectAllInventory;
+window.toggleSingleInventoryVisibility = toggleSingleInventoryVisibility;
+window.applyBulkInventoryVisibility = applyBulkInventoryVisibility;
+window.confirmDeleteSingleInventoryProduct = confirmDeleteSingleInventoryProduct;
+window.confirmDeleteBatchInventoryProducts = confirmDeleteBatchInventoryProducts;
 
 function changeInventoryPage(delta) {
     const totalPages = Math.max(1, Math.ceil(inventoryFilteredItems.length / inventoryPageSize));
