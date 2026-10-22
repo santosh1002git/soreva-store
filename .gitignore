@@ -21,6 +21,7 @@ data/*.backup
 data/store-data.backup.*.json
 pb/pb_data/*.backup.*
 pb/pb_data/*.backup.*.db
+*backup_before_wipe*
 
 # Cache, Logs & SQLite Temp Files
 data/img_cache/
