@@ -2803,13 +2803,16 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             try:
                 c = conn.cursor()
                 rows = c.execute("""
-                    SELECT id, sku, productName, category, 
-                           COALESCE(NULLIF(subCategory, ''), '') as subCategory,
-                           stockQty, lowStockThreshold, status,
-                           COALESCE(usdWholesale, 0.0) as usdWholesale,
-                           lastRefreshed, dateAdded
-                    FROM inventory 
-                    ORDER BY rowid ASC
+                    SELECT i.id, i.sku, i.productName, i.category, 
+                           COALESCE(NULLIF(i.subCategory, ''), '') as subCategory,
+                           i.stockQty, i.lowStockThreshold, i.status,
+                           COALESCE(p.disabled, CASE WHEN i.status = 'Disabled' THEN 1 ELSE 0 END) as disabled,
+                           COALESCE(p.active, CASE WHEN i.status = 'Disabled' THEN 0 ELSE 1 END) as active,
+                           COALESCE(i.usdWholesale, 0.0) as usdWholesale,
+                           i.lastRefreshed, i.dateAdded
+                    FROM inventory i
+                    LEFT JOIN products p ON i.id = p.id
+                    ORDER BY i.rowid ASC
                 """).fetchall()
                 items = [dict(r) for r in rows]
                 self._send_json(items)
@@ -5778,7 +5781,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         c.execute("""
                             UPDATE inventory 
                             SET status = CASE WHEN stockQty > 0 THEN 'In Stock' ELSE 'Out of Stock' END 
-                            WHERE (id = ? OR sku = ? OR productName = ?) AND status = 'Disabled'
+                            WHERE id = ? OR sku = ? OR productName = ?
                         """, (pid_str, pid_str, pid_str))
 
                 action_verb = "Disabled" if disabled_val == 1 else "Enabled"
@@ -6256,45 +6259,70 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 self._send_json({"error": f"Target item '{item_id}' not found in section '{section_type}'"}, 404)
             return
 
-        # API: Delete Product from Database & Sync Storefront
-        # ----------------------------------------------------
-        if parsed.path == '/api/db/products/delete':
+        # API: Delete Product(s) from Database & Sync Storefront (Single or Batch)
+        # -------------------------------------------------------------------------
+        if parsed.path in ['/api/db/products/delete', '/api/admin/products/delete', '/api/admin/products/batch-delete']:
             conn = get_db()
             if not conn:
                 self._send_json({"error": "Database unavailable"}, 500)
                 return
             try:
-                prod_id = str(payload.get('id', '')).strip()
                 employee_name = payload.get('employeeName', 'Staff')
+                raw_ids = payload.get('ids')
+                if not raw_ids:
+                    single_id = payload.get('id')
+                    raw_ids = [single_id] if single_id else []
+
+                ids = [str(x).strip() for x in raw_ids if x is not None and str(x).strip()]
+                if not ids:
+                    self._send_json({"error": "Product ID(s) required for deletion"}, 400)
+                    conn.close()
+                    return
 
                 c = conn.cursor()
-                orig_row = c.execute("SELECT name FROM products WHERE id = ?", (prod_id,)).fetchone()
-                prod_name = orig_row['name'] if orig_row else prod_id
+                deleted_names = []
+                # Chunk into batches of 200 for SQLite parameter safety
+                for i in range(0, len(ids), 200):
+                    chunk = ids[i:i + 200]
+                    placeholders = ','.join(['?'] * len(chunk))
+                    try:
+                        name_rows = c.execute(f"SELECT name FROM products WHERE id IN ({placeholders})", chunk).fetchall()
+                        deleted_names.extend([r['name'] for r in name_rows if r['name']])
+                    except Exception:
+                        pass
+                    c.execute(f"DELETE FROM products WHERE id IN ({placeholders})", chunk)
+                    c.execute(f"DELETE FROM inventory WHERE id IN ({placeholders})", chunk)
 
-                c.execute("DELETE FROM products WHERE id = ?", (prod_id,))
-                c.execute("DELETE FROM inventory WHERE id = ? OR productName = ? OR sku = ?", (prod_id, prod_name, prod_id))
-
+                audit_detail = f"Deleted {len(ids)} product(s): {', '.join(deleted_names[:3])}{'...' if len(deleted_names) > 3 else ''}"
                 c.execute("""
                     INSERT INTO audit_log (id, employeeName, action, targetType, targetId, details)
-                    VALUES (?, ?, 'Delete Product', 'Product', ?, ?)
-                """, (f"log_{gen_pb_id()}", employee_name, prod_id, f"Deleted piece '{prod_name}' from database."))
+                    VALUES (?, ?, 'Delete Product Batch', 'Product', ?, ?)
+                """, (f"log_{gen_pb_id()}", employee_name, str(ids[0]), audit_detail))
 
                 conn.commit()
 
                 # Delete from store-data.json
                 sd = get_stored_data() or {}
                 if 'products' in sd:
+                    del_id_set = set(ids)
+                    del_name_set = set(deleted_names)
                     sd['products'] = [
                         p for p in sd['products'] 
-                        if str(p.get('id', '')) != prod_id 
-                        and str(p.get('dbId', '')) != prod_id 
-                        and str(p.get('sku', '')) != prod_id
-                        and str(p.get('sku', '')).replace('CZM-', '') != prod_id
-                        and p.get('name') != prod_name
+                        if str(p.get('id', '')) not in del_id_set 
+                        and str(p.get('dbId', '')) not in del_id_set 
+                        and str(p.get('sku', '')) not in del_id_set 
+                        and str(p.get('sku', '')).replace('CZM-', '') not in del_id_set
+                        and p.get('name') not in del_name_set
                     ]
                     save_stored_data(sd)
 
-                self._send_json({"success": True, "message": f"Product '{prod_name}' removed from database"})
+                msg = f"Successfully deleted {len(ids)} piece(s) from catalog and inventory." if len(ids) > 1 else f"Product '{deleted_names[0] if deleted_names else ids[0]}' removed from database."
+                self._send_json({
+                    "success": True, 
+                    "deletedCount": len(ids),
+                    "deletedIds": ids,
+                    "message": msg
+                })
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
             finally:

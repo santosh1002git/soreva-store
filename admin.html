@@ -536,6 +536,9 @@
                         <div class="metric-card" onclick="filterInventoryByStatus('out_of_stock')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Filter by Out of Stock items">
                             <div class="metric-data"><span class="metric-num" id="invSummaryOutOfStock" style="color: #ef9a9a;">0</span><span class="metric-label">Out of Stock</span></div>
                         </div>
+                        <div class="metric-card" onclick="filterInventoryByStatus('hidden')" style="padding: 16px; flex: 1; min-width: 160px; cursor: pointer; transition: transform 0.2s;" title="Filter by Hidden / Disabled pieces">
+                            <div class="metric-data"><span class="metric-num" id="invSummaryHidden" style="color: #fca5a5;">0</span><span class="metric-label">Hidden / Disabled</span></div>
+                        </div>
                     </div>
 
                     <!-- INVENTORY SEARCH & FILTER TOOLBAR -->
@@ -568,6 +571,8 @@
                                     <option value="in_stock">In Stock (&gt; Threshold)</option>
                                     <option value="low_stock">⚠️ Low Stock Alert</option>
                                     <option value="out_of_stock">❌ Out of Stock (0 units)</option>
+                                    <option value="hidden">🚫 Hidden / Disabled (Offline)</option>
+                                    <option value="visible">👁️ Visible on Website</option>
                                 </select>
                             </div>
                             <div style="min-width: 175px;">
@@ -590,11 +595,49 @@
                         </div>
                     </div>
 
+                    <!-- BULK INVENTORY ACTIONS BAR -->
+                    <div class="admin-bulk-badge-bar" id="adminBulkInventoryBar" style="display: none; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <span style="font-weight: 700; font-size: 0.88rem; color: var(--gold-light); display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-layer-group" style="color: var(--gold);"></i> 
+                                <span><strong id="invBulkSelectedCount" style="color: #ffffff; font-size: 0.95rem;">0</strong> piece(s) selected</span>
+                            </span>
+                            <span id="invBulkSelectAllFilteredWrap" style="display: none; font-size: 0.8rem; color: var(--admin-text-muted);">
+                                (<a href="javascript:void(0)" onclick="selectAllFilteredInventory()" style="color: var(--gold-light); text-decoration: underline;">Select all <span id="invBulkFilteredTotalSpan">0</span> matching pieces</a>)
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <!-- Bulk Visibility Toggles -->
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <button type="button" class="btn-bulk-disable" id="btnBulkInvDisable" onclick="applyBulkInventoryVisibility(1)" title="Disable visibility for selected pieces (hide from website storefront)">
+                                    <i class="fa-solid fa-eye-slash"></i> Disable Visibility (Hide)
+                                </button>
+                                <button type="button" class="btn-bulk-enable" id="btnBulkInvEnable" onclick="applyBulkInventoryVisibility(0)" title="Enable visibility for selected pieces (show on website storefront)">
+                                    <i class="fa-solid fa-eye"></i> Enable Visibility (Show)
+                                </button>
+                            </div>
+
+                            <span style="height: 20px; width: 1px; background: rgba(255,255,255,0.15); margin: 0 4px;"></span>
+
+                            <!-- Bulk Delete Button -->
+                            <button type="button" class="btn-admin-danger" id="btnBulkInvDelete" onclick="confirmDeleteBatchInventoryProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.82rem; background: rgba(239,68,68,0.22); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; cursor: pointer;" title="Permanently delete selected products from inventory and website">
+                                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="invBulkDeleteBadge">0</span>)
+                            </button>
+
+                            <button type="button" class="btn-icon" onclick="deselectAllInventory()" title="Deselect all" style="height: 32px; width: 32px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); cursor: pointer; color: var(--admin-text-muted);">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- INVENTORY TABLE -->
                     <div class="products-admin-table-wrap">
                         <table class="admin-table" id="inventoryTable">
                             <thead>
                                 <tr>
+                                    <th style="width: 44px; text-align: center;">
+                                        <input type="checkbox" id="selectAllInventoryCheckbox" onchange="toggleSelectAllInventory(this.checked)" title="Select all items on current page" style="cursor: pointer; width: 16px; height: 16px;">
+                                    </th>
                                     <th>Product / Piece</th>
                                     <th>SKU</th>
                                     <th>Category</th>
@@ -602,8 +645,9 @@
                                     <th>Stock Units</th>
                                     <th>Low Threshold</th>
                                     <th>Availability Status</th>
+                                    <th>Storefront Visibility</th>
                                     <th style="white-space: nowrap;"><i class="fa-regular fa-clock" style="color: var(--gold); margin-right: 4px;"></i> Last Refreshed</th>
-                                    <th style="text-align: right;">Adjust Stock</th>
+                                    <th style="text-align: right;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody">
