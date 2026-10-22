@@ -440,6 +440,246 @@ ul {
     background: rgba(197,160,89,0.08); color: var(--gold-accent); opacity: 1;
 }
 
+/* ==========================================================================
+   SWAROVSKI-STYLE LUXURY TRANSPARENT & FROSTED STICKY HEADER
+   Active exclusively on pages with body.has-transparent-header (Homepage)
+   ========================================================================== */
+
+/* 1. Base Layout Floating Over Full-Bleed Hero */
+body.has-transparent-header .announcement-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 38px;
+    z-index: 1001;
+    background: rgba(14, 11, 10, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
+
+body.has-transparent-header.is-scrolled .announcement-bar {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.has-transparent-header .site-header {
+    position: fixed;
+    top: 38px;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: linear-gradient(180deg, rgba(14, 11, 10, 0.6) 0%, rgba(14, 11, 10, 0.25) 60%, transparent 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: none;
+    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.35s ease, 
+                backdrop-filter 0.35s ease, 
+                box-shadow 0.35s ease, 
+                border-color 0.35s ease;
+}
+
+/* 2. Full Bleed Hero Canvas Dimensions & Padding */
+body.has-transparent-header .patreon-hero,
+body.has-transparent-header .patreon-hero-canvas {
+    min-height: 100vh;
+}
+
+body.has-transparent-header .hero-editorial-wrap {
+    padding-top: 195px !important;
+    padding-bottom: 110px !important;
+}
+
+@media (max-width: 768px) {
+    body.has-transparent-header .announcement-bar {
+        height: 34px;
+    }
+    body.has-transparent-header .site-header {
+        top: 34px;
+    }
+    body.has-transparent-header .hero-editorial-wrap {
+        padding-top: 160px !important;
+        padding-bottom: 85px !important;
+    }
+}
+
+/* 3. Transparent State (At Top): Pure White High-Contrast Icons & Wordmark */
+body.has-transparent-header .site-header:not(.scrolled) .brand-logo-img {
+    filter: brightness(0) invert(1);
+    transition: filter 0.35s ease, transform var(--transition-fast);
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .mobile-nav-toggle {
+    color: #ffffff !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .currency-btn {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .currency-btn i {
+    color: var(--gold-light) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .header-action-btn {
+    color: #ffffff !important;
+    transition: color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .header-action-btn:hover {
+    color: var(--gold-light) !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .header-auth-pill {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .header-auth-pill i {
+    color: var(--gold-light) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cart-open-btn {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cart-open-btn span {
+    color: #ffffff !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cart-open-btn i {
+    color: var(--gold-light) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cart-count-badge {
+    background: var(--gold-accent) !important;
+    color: #1a1412 !important;
+}
+
+/* Category Navigation in Transparent State */
+body.has-transparent-header .site-header:not(.scrolled) .header-category-bar {
+    background-color: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cat-nav-link {
+    color: #ffffff !important;
+    opacity: 0.95;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cat-nav-link:hover,
+body.has-transparent-header .site-header:not(.scrolled) .cat-nav-link.active {
+    opacity: 1;
+    color: var(--gold-light) !important;
+}
+
+body.has-transparent-header .site-header:not(.scrolled) .cat-nav-link::after {
+    background-color: var(--gold-accent) !important;
+}
+
+@media (max-width: 1024px) {
+    body.has-transparent-header .site-header:not(.scrolled) .cat-nav-link {
+        background: rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+}
+
+/* 4. Scrolled State: Frosted Luxury Glass (Swarovski Style) */
+body.has-transparent-header .site-header.scrolled {
+    top: 0 !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.25) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .brand-logo-img {
+    filter: none !important;
+}
+
+body.has-transparent-header .site-header.scrolled .mobile-nav-toggle {
+    color: var(--theme-color) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .currency-btn {
+    color: var(--theme-color) !important;
+    border-color: var(--border-color) !important;
+    background: var(--bg-ivory) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .header-action-btn {
+    color: var(--theme-color) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .header-auth-pill {
+    color: var(--theme-color) !important;
+    border-color: var(--border-color) !important;
+    background: var(--bg-ivory) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .cart-open-btn {
+    background: rgba(197, 160, 89, 0.12) !important;
+    border: 1px solid rgba(197, 160, 89, 0.4) !important;
+    color: var(--theme-color) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .cart-open-btn span {
+    color: var(--text-dark) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .cart-open-btn i {
+    color: var(--gold-accent) !important;
+}
+
+body.has-transparent-header .site-header.scrolled .header-category-bar {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-bottom: none !important;
+}
+
+body.has-transparent-header .site-header.scrolled .cat-nav-link {
+    color: #1f1a19 !important;
+    opacity: 0.9;
+    text-shadow: none !important;
+}
+
+body.has-transparent-header .site-header.scrolled .cat-nav-link:hover,
+body.has-transparent-header .site-header.scrolled .cat-nav-link.active {
+    color: var(--gold-accent) !important;
+    opacity: 1;
+}
+
+@media (max-width: 1024px) {
+    body.has-transparent-header .site-header.scrolled .cat-nav-link {
+        background: rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        color: #1f1a19 !important;
+    }
+}
+
 /* HERO BANNER */
 .hero-section {
     position: relative;
