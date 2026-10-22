@@ -352,14 +352,16 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
 
         # Extract wholesale INR price from data-price
         dp = re.search(r'data-price=[\"\']([0-9.]+)[\"\']', part)
-        if not dp:
-            continue
         try:
-            wholesale_inr = float(dp.group(1))
+            wholesale_inr = float(dp.group(1)) if dp else 0.0
         except ValueError:
-            continue
+            wholesale_inr = 0.0
+
+        # Check if the card explicitly says Out of Stock, Sold Out, Unavailable or has 0 stock/price
+        part_lower = part.lower()
+        is_card_oos = bool(re.search(r'\b(out\s*of\s*stock|sold\s*out|unavailable|not\s*in\s*stock|not\s*available|stock\s*:\s*0|qty\s*:\s*0)\b', part_lower))
         if wholesale_inr <= 0:
-            continue
+            is_card_oos = True
 
         # Extract PID and Slug from product link
         pid_m = re.search(r'product/(\d+)/([^\"\'>\s]+)', part)
@@ -411,6 +413,7 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
             'hoverImg': hover_img,
             'videoUrl': video_url,
             'badge': '',
+            'isOutOfStock': is_card_oos,
         })
 
     return products
@@ -524,13 +527,13 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
 
 
 # ─── Main Co-Worker Agent Execution ──────────────────────────────────
-def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False, wipe_products=False):
+def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False, wipe_products=False, mark_unmatched_oos=True):
     """
     Main entry point for the CZMakers Co-Worker Agent.
     - Matches existing stock by ID and SKU, updating prices and marking In Stock while preserving inventory.
     - If mode is 'complete_refresh' or wipe_products is True, deletes all products & inventory and performs a fresh reload.
     - Categorizes, sub-categorizes, and applies pricing markup across all 32 categories.
-    - Unmatched pieces are safely marked as Out of Stock (never deleted in normal modes).
+    - Marks items whose data is not matching as per CZMakers website as Out of Stock (inventory preserved, never deleted).
     """
     email, _ = get_stored_credentials()
     tracker = AgentStatusTracker(mode=mode, user_email=email)
@@ -655,6 +658,7 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     total_scanned_count = 0
     updated_price_count = 0
     new_added_count = 0
+    out_of_stock_count = 0
     new_added_ids = []
     fully_exhausted_categories = set()
 
@@ -752,50 +756,88 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
             matched_id = str(sd_by_sku[model_sku].get('id'))
 
         if matched_id:
-            # MATCHED: Existing product in inventory. Update pricing, category/subCategory, and mark In Stock!
             matched_existing_ids.add(matched_id)
 
-            c.execute("""
-                UPDATE products 
-                SET disabled = 0, active = 1, usdWholesale = ?, priceINR = ?, originalPriceINR = ?,
-                    category = CASE WHEN ? != '' THEN ? ELSE category END,
-                    subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
-                    lastRefreshed = ?
-                WHERE id = ?
-            """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id))
+            if p.get('isOutOfStock'):
+                # CZMakers card explicitly marked Out of Stock / Sold Out or invalid price
+                c.execute("""
+                    UPDATE products 
+                    SET disabled = 1, active = 0, usdWholesale = ?, priceINR = ?, originalPriceINR = ?,
+                        category = CASE WHEN ? != '' THEN ? ELSE category END,
+                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        lastRefreshed = ?
+                    WHERE id = ?
+                """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id))
 
-            c.execute("""
-                UPDATE inventory 
-                SET status = 'In Stock', 
-                    stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END, 
-                    usdWholesale = ?,
-                    category = CASE WHEN ? != '' THEN ? ELSE category END,
-                    subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
-                    lastRefreshed = ?
-                WHERE id = ? OR sku = ? OR sku = ?
-            """, (p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                c.execute("""
+                    UPDATE inventory 
+                    SET status = 'Out of Stock', 
+                        stockQty = 0, 
+                        usdWholesale = ?,
+                        category = CASE WHEN ? != '' THEN ? ELSE category END,
+                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        lastRefreshed = ?
+                    WHERE id = ? OR sku = ? OR sku = ?
+                """, (p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
 
-            sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
-            if sd_item:
-                sd_item['priceINR'] = p['priceINR']
-                sd_item['originalPriceINR'] = p['originalPriceINR']
-                sd_item['usdWholesale'] = p['wholesaleINR']
-                if p.get('category'):
-                    sd_item['category'] = p['category']
-                if p.get('subCategory'):
-                    sd_item['subCategory'] = p['subCategory']
-                sd_item['disabled'] = 0
-                sd_item['active'] = 1
-                sd_item['stockStatus'] = 'In Stock'
-                sd_item['lastRefreshed'] = sync_time_iso
-                if not sd_item.get('dateAdded'):
-                    sd_item['dateAdded'] = sync_time_iso
-                if int(sd_item.get('stockQty') or 0) <= 0:
-                    sd_item['stockQty'] = 15
+                sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
+                if sd_item:
+                    sd_item['priceINR'] = p['priceINR']
+                    sd_item['originalPriceINR'] = p['originalPriceINR']
+                    sd_item['usdWholesale'] = p['wholesaleINR']
+                    if p.get('category'): sd_item['category'] = p['category']
+                    if p.get('subCategory'): sd_item['subCategory'] = p['subCategory']
+                    sd_item['disabled'] = 1
+                    sd_item['active'] = 0
+                    sd_item['stockStatus'] = 'Out of Stock'
+                    sd_item['stockQty'] = 0
+                    if sd_item.get('badge') == 'New Launch':
+                        sd_item['badge'] = ''
+                    sd_item['lastRefreshed'] = sync_time_iso
+                out_of_stock_count += 1
+            else:
+                # MATCHED & LIVE: Existing product in inventory. Update pricing, category/subCategory, and mark In Stock!
+                c.execute("""
+                    UPDATE products 
+                    SET disabled = 0, active = 1, usdWholesale = ?, priceINR = ?, originalPriceINR = ?,
+                        category = CASE WHEN ? != '' THEN ? ELSE category END,
+                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        lastRefreshed = ?
+                    WHERE id = ?
+                """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id))
 
-            updated_price_count += 1
-        else:
-            # UNMATCHED: Newly discovered stock on CZMakers. Just add new stock!
+                c.execute("""
+                    UPDATE inventory 
+                    SET status = 'In Stock', 
+                        stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END, 
+                        usdWholesale = ?,
+                        category = CASE WHEN ? != '' THEN ? ELSE category END,
+                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        lastRefreshed = ?
+                    WHERE id = ? OR sku = ? OR sku = ?
+                """, (p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+
+                sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
+                if sd_item:
+                    sd_item['priceINR'] = p['priceINR']
+                    sd_item['originalPriceINR'] = p['originalPriceINR']
+                    sd_item['usdWholesale'] = p['wholesaleINR']
+                    if p.get('category'):
+                        sd_item['category'] = p['category']
+                    if p.get('subCategory'):
+                        sd_item['subCategory'] = p['subCategory']
+                    sd_item['disabled'] = 0
+                    sd_item['active'] = 1
+                    sd_item['stockStatus'] = 'In Stock'
+                    sd_item['lastRefreshed'] = sync_time_iso
+                    if not sd_item.get('dateAdded'):
+                        sd_item['dateAdded'] = sync_time_iso
+                    if int(sd_item.get('stockQty') or 0) <= 0:
+                        sd_item['stockQty'] = 15
+
+                updated_price_count += 1
+        elif not p.get('isOutOfStock'):
+            # UNMATCHED & LIVE: Newly discovered stock on CZMakers. Just add new stock!
             desc = (
                 f"Sculpted with haute joaillerie precision, the {p['name']} features diamond-grade Austrian cubic zirconia "
                 f"crystals hand-finished in enduring 24K gold plating with anti-tarnish protective sealing. Authenticity Ref: {p['sku']}."
@@ -858,16 +900,18 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     tracker.log(f"✓ Stock matched & synced: {updated_price_count} existing pieces refreshed, {new_added_count} new stock arrivals added.")
 
     # ─── STEP 3: Handle Unmatched Stock (Mark as Out of Stock) ──────────
-    tracker.log("🔍 Identifying stock not matching during current run...")
+    tracker.log("🔍 Identifying stock not matching CZMakers live website data...")
+    all_existing_ids = set(existing_db_products.keys()) | set(inventory_by_id.keys()) | set(sd_by_id.keys())
     unmatched_db_ids = [
-        db_id for db_id in existing_db_products.keys()
+        db_id for db_id in all_existing_ids
         if db_id not in matched_existing_ids
     ]
 
     missing_to_mark = []
     if unmatched_db_ids:
-        tracker.log(f"  Evaluating {len(unmatched_db_ids)} pieces not matched in current crawl...")
+        tracker.log(f"  Evaluating {len(unmatched_db_ids)} pieces whose data was not matched as per CZMakers website in current run...")
         if verify_unseen:
+            tracker.log(f"  Verifying availability directly on https://czmakers.com for {len(unmatched_db_ids)} unmatched pieces...")
             def check_single_avail(db_id):
                 pid = db_id.replace('czm_', '')
                 url = f"{BASE_URL}/product/{pid}/slug"
@@ -877,7 +921,9 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         if "/product/" not in final_url or final_url.rstrip("/") == BASE_URL:
                             return db_id, False
                         h = resp.read().decode('utf-8', errors='ignore').lower()
-                        if "product not found" in h or "no product found" in h or "out of stock" in h:
+                        if "product not found" in h or "no product found" in h or "out of stock" in h or "sold out" in h:
+                            return db_id, False
+                        if "add to cart" not in h and "add-to-cart" not in h:
                             return db_id, False
                         return db_id, True
                 except Exception:
@@ -893,24 +939,24 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     except Exception:
                         pass
         else:
-            if max_pages == 0 or mode in ["full_discovery", "complete_refresh"]:
-                # Full scan of every stock: any piece not matched is Out of Stock
+            if mark_unmatched_oos or mode in ["full_discovery", "complete_refresh", "refresh_stock"]:
+                # Default stock refresh behavior: mark any piece not matching CZMakers website data as Out of Stock
                 missing_to_mark = unmatched_db_ids
             else:
                 # Partial scan: only mark out of stock for categories that were fully exhausted
                 missing_to_mark = [
                     db_id for db_id in unmatched_db_ids
-                    if existing_db_products[db_id].get('category') in fully_exhausted_categories
+                    if existing_db_products.get(db_id, {}).get('category') in fully_exhausted_categories
                 ]
 
-    out_of_stock_count = 0
     if missing_to_mark:
-        tracker.log(f"🔴 Marking {len(missing_to_mark)} unmatched pieces as Out of Stock (inventory preserved, never deleted)...")
+        tracker.log(f"🔴 Marking {len(missing_to_mark)} non-matching pieces as Out of Stock (inventory preserved, never deleted)...")
         batch_size = 500
         for i in range(0, len(missing_to_mark), batch_size):
             batch = missing_to_mark[i:i + batch_size]
             placeholders = ','.join('?' for _ in batch)
             c.execute(f"UPDATE products SET disabled = 1, active = 0, lastRefreshed = ? WHERE id IN ({placeholders})", [sync_time_iso] + batch)
+            c.execute(f"UPDATE products SET badge = '' WHERE badge = 'New Launch' AND id IN ({placeholders})", batch)
             c.execute(f"UPDATE inventory SET status = 'Out of Stock', stockQty = 0, lastRefreshed = ? WHERE id IN ({placeholders})", [sync_time_iso] + batch)
         conn.commit()
 
@@ -922,9 +968,11 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                 item['disabled'] = 1
                 item['active'] = 0
                 item['lastRefreshed'] = sync_time_iso
+                if item.get('badge') == 'New Launch':
+                    item['badge'] = ''
 
-        out_of_stock_count = len(missing_to_mark)
-        tracker.log(f"🔴 Successfully marked {out_of_stock_count} unmatched pieces as Out of Stock.")
+        out_of_stock_count += len(missing_to_mark)
+        tracker.log(f"🔴 Successfully marked {len(missing_to_mark)} non-matching pieces as Out of Stock.")
 
     tracker.stats["outOfStock"] = out_of_stock_count
 
@@ -1001,6 +1049,10 @@ if __name__ == '__main__':
                         help="Directly verify HTTP 200/404 for pieces not seen during category crawl")
     parser.add_argument('--wipe-products', action='store_true',
                         help="Delete all products before loading fresh catalog")
+    parser.add_argument('--mark-unmatched-oos', dest='mark_unmatched_oos', action='store_true', default=True,
+                        help="Mark all unmatched/non-matching CZMakers products as Out of Stock")
+    parser.add_argument('--no-mark-unmatched-oos', dest='mark_unmatched_oos', action='store_false',
+                        help="Do not mark unmatched products as Out of Stock")
     args = parser.parse_args()
 
     run_czm_coworker_agent(
@@ -1008,5 +1060,6 @@ if __name__ == '__main__':
         max_pages=args.max_pages,
         remove_missing=args.remove_missing,
         verify_unseen=args.verify_unseen,
-        wipe_products=args.wipe_products
+        wipe_products=args.wipe_products,
+        mark_unmatched_oos=args.mark_unmatched_oos
     )

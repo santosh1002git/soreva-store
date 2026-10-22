@@ -533,7 +533,7 @@
                                 <span style="font-size: 0.72rem; background: rgba(239,68,68,0.3); color: #fca5a5; border: 1px solid rgba(239,68,68,0.5); border-radius: 20px; padding: 3px 10px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
                             </div>
                             <div style="font-size: 0.84rem; color: #e4e4e7; line-height: 1.5;">
-                                Wipes existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories with accurate sub-categories and 2.2x retail pricing. Customer records & orders remain 100% untouched.
+                                Wipes existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories with accurate sub-categories and 2.2x retail pricing. Non-matching or unavailable items are marked Out of Stock. Customer records & orders remain 100% untouched.
                             </div>
                         </div>
                         <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="white-space: nowrap; padding: 12px 24px; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; border-radius: 8px; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(220,38,38,0.45);">
@@ -3453,10 +3453,16 @@
                                 <option value="1">1 Page per Category (Quick ~80/cat)</option>
                             </select>
                         </div>
+                        <label style="display: flex; align-items: center; gap: 8px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 5px 12px; border-radius: 6px; cursor: pointer;" title="Automatically mark any piece not matching CZMakers live website data as Out of Stock">
+                            <input type="checkbox" id="coworkerMarkOos" checked style="accent-color: #ef4444; width: 14px; height: 14px; cursor: pointer;">
+                            <span style="font-size: 0.78rem; color: #fca5a5;">
+                                <strong>Auto-Mark Out of Stock:</strong> Items not matching CZMakers website marked Out of Stock.
+                            </span>
+                        </label>
                         <div style="display: flex; align-items: center; gap: 8px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); padding: 5px 12px; border-radius: 6px;">
                             <i class="fa-solid fa-shield-check" style="color: #34d399; font-size: 0.85rem;"></i>
                             <span style="font-size: 0.78rem; color: #a7f3d0;">
-                                <strong>Preserve Inventory:</strong> Matched stock updated, new stock added, unmatched marked Out of Stock.
+                                <strong>Preserve Inventory:</strong> Matched stock updated, new stock added, non-matching marked Out of Stock.
                             </span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; background: rgba(197,160,89,0.1); border: 1px solid rgba(197,160,89,0.25); padding: 5px 12px; border-radius: 6px;">

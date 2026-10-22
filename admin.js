@@ -6309,6 +6309,7 @@ async function startCzmCoworkerAgent(skipConfirm = false) {
     }
 
     try {
+        const markUnmatchedOos = document.getElementById('coworkerMarkOos') ? document.getElementById('coworkerMarkOos').checked : true;
         const res = await fetch('/api/admin/czm-agent/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6317,7 +6318,8 @@ async function startCzmCoworkerAgent(skipConfirm = false) {
                 maxPages,
                 removeMissing,
                 verifyUnseen: (mode === 'full_discovery'),
-                wipeProducts: (mode === 'complete_refresh')
+                wipeProducts: (mode === 'complete_refresh'),
+                markUnmatchedOos: markUnmatchedOos
             })
         });
         const data = await res.json();
