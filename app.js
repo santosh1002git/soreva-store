@@ -2166,13 +2166,17 @@ function initNavigation() {
     initCategoryDropdowns();
     const header = document.querySelector('.site-header');
     if (header) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 40) {
+        const updateHeaderScroll = () => {
+            if (window.scrollY > 30) {
                 header.classList.add('scrolled');
+                document.body.classList.add('is-scrolled');
             } else {
                 header.classList.remove('scrolled');
+                document.body.classList.remove('is-scrolled');
             }
-        });
+        };
+        window.addEventListener('scroll', updateHeaderScroll, { passive: true });
+        updateHeaderScroll();
     }
 
     // Attach click listeners to all reviews links in header & elsewhere
