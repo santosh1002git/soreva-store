@@ -2432,7 +2432,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         # API: Get Customers Records
-        if parsed.path == '/api/customers':
+        if parsed.path in ['/api/customers', '/api/admin/customers']:
             conn = get_db()
             if not conn:
                 self._send_json({"error": "Database unavailable"}, 500)
@@ -2440,9 +2440,16 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             try:
                 c = conn.cursor()
                 rows = c.execute("""
-                    SELECT id, name, email, phone, address, city, totalOrders, totalSpent 
-                    FROM customers 
-                    ORDER BY totalSpent DESC
+                    SELECT c.id, c.name, c.email, c.phone, c.address, c.city,
+                           COALESCE(o.order_cnt, c.totalOrders, 0) as totalOrders,
+                           COALESCE(o.spent_sum, c.totalSpent, 0) as totalSpent 
+                    FROM customers c
+                    LEFT JOIN (
+                        SELECT LOWER(customerEmail) as o_email, COUNT(id) as order_cnt, SUM(totalAmount) as spent_sum
+                        FROM orders
+                        GROUP BY LOWER(customerEmail)
+                    ) o ON LOWER(c.email) = o.o_email
+                    ORDER BY totalSpent DESC, totalOrders DESC, c.rowid DESC
                 """).fetchall()
                 customers = [dict(r) for r in rows]
                 self._send_json(customers)
@@ -2578,6 +2585,66 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
         # Default: Serve static files
         super().do_GET()
+
+    def do_DELETE(self):
+        parsed = urlparse(self.path)
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+        try:
+            payload = json.loads(body.decode('utf-8')) if body else {}
+        except Exception:
+            payload = {}
+
+        # Support ?id=... query parameter
+        query_params = parse_qs(parsed.query)
+        if 'id' in query_params:
+            payload['id'] = query_params['id'][0]
+        if 'email' in query_params:
+            payload['email'] = query_params['email'][0]
+
+        if parsed.path in ['/api/customers', '/api/admin/customers']:
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                cust_id = (payload.get('id') or '').strip()
+                email = (payload.get('email') or '').strip().lower()
+
+                if not cust_id and not email:
+                    self._send_json({"error": "Customer ID or email is required for deletion"}, 400)
+                    conn.close()
+                    return
+
+                c = conn.cursor()
+                if cust_id:
+                    row = c.execute("SELECT id, name, email FROM customers WHERE id = ?", (cust_id,)).fetchone()
+                else:
+                    row = c.execute("SELECT id, name, email FROM customers WHERE LOWER(email) = ?", (email,)).fetchone()
+
+                if not row:
+                    self._send_json({"error": "Customer not found"}, 404)
+                    conn.close()
+                    return
+
+                target_id = row['id']
+                target_name = row['name']
+                c.execute("DELETE FROM customers WHERE id = ?", (target_id,))
+                conn.commit()
+
+                self._send_json({
+                    "success": True,
+                    "id": target_id,
+                    "name": target_name,
+                    "message": f"Customer '{target_name}' deleted successfully"
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        self._send_json({"error": "DELETE endpoint not found"}, 404)
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -3940,15 +4007,18 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         # ----------------------------------------------------
         # API: Create / Update Customer
         # ----------------------------------------------------
-        if parsed.path == '/api/customers':
+        # ----------------------------------------------------
+        # API: Create / Update Customer
+        # ----------------------------------------------------
+        if parsed.path in ['/api/customers', '/api/admin/customers']:
             conn = get_db()
             if not conn:
                 self._send_json({"error": "Database unavailable"}, 500)
                 return
             try:
-                cust_id = payload.get('id') or gen_pb_id()
+                cust_id = (payload.get('id') or '').strip()
                 name = payload.get('name', '').strip()
-                email = payload.get('email', '').strip()
+                email = payload.get('email', '').strip().lower()
                 phone = payload.get('phone', '').strip()
                 address = payload.get('address', '').strip()
                 city = payload.get('city', '').strip()
@@ -3959,26 +4029,80 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     return
 
                 c = conn.cursor()
-                existing = c.execute("SELECT id FROM customers WHERE email = ?", (email,)).fetchone()
+                existing = None
+                if cust_id:
+                    existing = c.execute("SELECT id FROM customers WHERE id = ?", (cust_id,)).fetchone()
+                if not existing:
+                    existing = c.execute("SELECT id FROM customers WHERE LOWER(email) = ?", (email,)).fetchone()
+
                 if existing:
+                    target_id = existing['id']
                     c.execute("""
                         UPDATE customers 
-                        SET name = ?, phone = ?, address = ?, city = ?
-                        WHERE email = ?
-                    """, (name, phone, address, city, email))
-                    final_id = existing['id']
+                        SET name = ?, email = ?, phone = ?, address = ?, city = ?
+                        WHERE id = ?
+                    """, (name, email, phone, address, city, target_id))
+                    final_id = target_id
                 else:
+                    final_id = cust_id or gen_pb_id()
                     c.execute("""
                         INSERT INTO customers (id, name, email, phone, address, city, totalOrders, totalSpent)
                         VALUES (?, ?, ?, ?, ?, ?, 0, 0)
-                    """, (cust_id, name, email, phone, address, city))
-                    final_id = cust_id
+                    """, (final_id, name, email, phone, address, city))
 
                 conn.commit()
                 self._send_json({
                     "success": True,
                     "id": final_id,
                     "message": "Customer saved successfully"
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # ----------------------------------------------------
+        # API: Delete Customer Record
+        # ----------------------------------------------------
+        if parsed.path in ['/api/customers/delete', '/api/admin/customers/delete']:
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                cust_id = (payload.get('id') or '').strip()
+                email = (payload.get('email') or '').strip().lower()
+
+                if not cust_id and not email:
+                    self._send_json({"error": "Customer ID or email is required for deletion"}, 400)
+                    conn.close()
+                    return
+
+                c = conn.cursor()
+                if cust_id:
+                    row = c.execute("SELECT id, name, email FROM customers WHERE id = ?", (cust_id,)).fetchone()
+                else:
+                    row = c.execute("SELECT id, name, email FROM customers WHERE LOWER(email) = ?", (email,)).fetchone()
+
+                if not row:
+                    self._send_json({"error": "Customer not found"}, 404)
+                    conn.close()
+                    return
+
+                target_id = row['id']
+                target_name = row['name']
+                target_email = row['email']
+
+                c.execute("DELETE FROM customers WHERE id = ?", (target_id,))
+                conn.commit()
+
+                print(f"[Customer Deleted] ID: {target_id} | Name: {target_name} | Email: {target_email}")
+                self._send_json({
+                    "success": True,
+                    "id": target_id,
+                    "name": target_name,
+                    "message": f"Customer '{target_name}' deleted successfully"
                 })
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)

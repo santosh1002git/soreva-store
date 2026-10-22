@@ -633,14 +633,26 @@
 
                 <!-- TAB: CUSTOMERS CRM -->
                 <section class="tab-panel" id="panel-customers">
-                    <div class="panel-header-row">
+                    <div class="panel-header-row" style="flex-wrap: wrap; gap: 14px;">
                         <div>
-                            <h3>Customer Directory & CRM (<span id="customersCountHeader">4</span>)</h3>
+                            <h3>Customer Directory & CRM (<span id="customersCountHeader">0</span>)</h3>
                             <p>Track loyal patrons, shipping addresses, customer lifetime value (LTV), and purchase history.</p>
                         </div>
-                        <button class="btn-admin-primary" onclick="openCustomerModal()">
-                            <i class="fa-solid fa-user-plus"></i> Add Customer
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <div class="search-input-wrap" style="position: relative; min-width: 250px;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--admin-text-muted); font-size: 0.85rem; pointer-events: none;"></i>
+                                <input type="text" id="customerSearchInput" placeholder="Search patron, email, phone, city..." oninput="filterCustomers()" style="width: 100%; padding: 8px 12px 8px 34px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;">
+                            </div>
+                            <button class="btn-admin-outline" onclick="fetchCustomers(true)" title="Refresh Customer Directory">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                            <button class="btn-admin-outline" onclick="exportCustomersCSV()" title="Export Customers to CSV">
+                                <i class="fa-solid fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="btn-admin-primary" onclick="openCustomerModal()">
+                                <i class="fa-solid fa-user-plus"></i> Add Customer
+                            </button>
+                        </div>
                     </div>
 
                     <div class="products-admin-table-wrap">
@@ -2797,6 +2809,29 @@
         </div>
     </div>
 
+    <!-- DELETE PATRON CONFIRMATION MODAL -->
+    <div class="admin-modal-backdrop" id="deleteCustomerModalBackdrop" style="display: none;">
+        <div class="admin-modal" style="max-width: 440px;">
+            <div class="modal-top">
+                <h3 style="color: #f43f5e; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Delete Customer
+                </h3>
+                <button class="modal-close" onclick="closeDeleteCustomerModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 16px 0 20px 0; color: var(--admin-text-muted); font-size: 0.92rem; line-height: 1.5;">
+                Are you sure you want to permanently delete patron <strong id="deleteCustNameText" style="color: #fff;"></strong> (<span id="deleteCustEmailText" style="color: var(--gold-light);"></span>)?
+                <p style="margin: 10px 0 0 0; font-size: 0.8rem; color: #f87171;">This action permanently removes the customer profile from your CRM database. Order transaction history will remain securely archived.</p>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <input type="hidden" id="deleteCustIdInput" value="">
+                <button type="button" class="btn-admin-outline" onclick="closeDeleteCustomerModal()">Cancel</button>
+                <button type="button" class="btn-admin-primary" id="confirmDeleteCustBtn" onclick="confirmDeleteCustomer()" style="background: #e11d48; border-color: #e11d48; color: #fff;">
+                    <i class="fa-solid fa-trash-can"></i> Delete Patron
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ORDER INSPECTION & FULFILLMENT MODAL -->
     <div class="admin-modal-backdrop" id="orderModalBackdrop">
         <div class="admin-modal" style="max-width: 720px; width: 94%;">
@@ -3419,7 +3454,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v35_anti_cache_inline"></script>
+    <script src="admin.js?v=v36_crm_delete"></script>
 
     </body>
 </html>

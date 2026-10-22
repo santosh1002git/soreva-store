@@ -3297,34 +3297,116 @@ async function handleSaveStock(e) {
     }
 }
 
-async function fetchCustomers() {
+// ==========================================
+// 4. CUSTOMER DIRECTORY & CRM CONTROLLERS
+// ==========================================
+let customerSearchQuery = '';
+
+async function fetchCustomers(isManual = false) {
     try {
         const resp = await fetch('/api/customers');
         if (resp.ok) {
             customersData = await resp.json();
             renderCustomers();
             updateBadgeCounts();
+            if (isManual) {
+                showToast(`Customer directory refreshed (${customersData.length} patrons)`);
+            }
+        } else {
+            console.warn("Server returned error for customers:", resp.status);
+            if (isManual) showToast("Could not refresh customer directory.");
         }
     } catch (err) {
         console.warn("Could not fetch customers:", err);
+        if (isManual) showToast("Network error fetching customers.");
     }
 }
+window.fetchCustomers = fetchCustomers;
+
+function filterCustomers() {
+    const input = document.getElementById('customerSearchInput');
+    customerSearchQuery = input ? input.value.trim().toLowerCase() : '';
+    renderCustomers();
+}
+window.filterCustomers = filterCustomers;
 
 function renderCustomers() {
     const tbody = document.getElementById('customersTableBody');
-    if (!tbody || !customersData) return;
+    const headerCount = document.getElementById('customersCountHeader');
+    if (!tbody) return;
 
-    tbody.innerHTML = customersData.map(c => {
-        const initials = (c.name || 'C').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    if (!Array.isArray(customersData)) {
+        customersData = [];
+    }
+
+    if (headerCount) {
+        headerCount.textContent = customersData.length;
+    }
+
+    // Filter by search query if any
+    let displayList = customersData;
+    if (customerSearchQuery) {
+        displayList = customersData.filter(c => {
+            const name = (c.name || '').toLowerCase();
+            const email = (c.email || '').toLowerCase();
+            const phone = (c.phone || '').toLowerCase();
+            const city = (c.city || '').toLowerCase();
+            const address = (c.address || '').toLowerCase();
+            return name.includes(customerSearchQuery) ||
+                   email.includes(customerSearchQuery) ||
+                   phone.includes(customerSearchQuery) ||
+                   city.includes(customerSearchQuery) ||
+                   address.includes(customerSearchQuery);
+        });
+    }
+
+    if (displayList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--admin-text-muted);">
+                    <div style="font-size: 2.2rem; opacity: 0.4; margin-bottom: 10px;">
+                        <i class="fa-solid fa-users-slash"></i>
+                    </div>
+                    <strong style="color: var(--admin-text); font-size: 1rem; display: block; margin-bottom: 4px;">
+                        ${customerSearchQuery ? 'No patrons matching search criteria' : 'No patrons in directory yet'}
+                    </strong>
+                    <span style="font-size: 0.85rem;">
+                        ${customerSearchQuery ? 'Try searching by a different name, email, or city.' : 'Click "+ Add Customer" above to create your first client profile.'}
+                    </span>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = displayList.map(c => {
+        const safeName = (c.name || '').trim();
+        let initials = 'C';
+        if (safeName) {
+            const parts = safeName.split(/\s+/).filter(Boolean);
+            initials = parts.slice(0, 2).map(p => p[0]).join('').toUpperCase() || 'C';
+        }
+
         const spent = Number(c.totalSpent) || 0;
         const orders = Number(c.totalOrders) || 0;
 
         let tierBadge = `<span class="vip-pill"><i class="fa-solid fa-crown"></i> VIP PATRON</span>`;
         if (spent < 5000 && orders <= 1) {
             tierBadge = `<span class="status-badge badge-green">PATRON</span>`;
-        } else if (spent < 10000) {
+        } else if (spent < 15000 && orders < 3) {
             tierBadge = `<span class="status-badge badge-gold">LOYAL CLIENT</span>`;
         }
+
+        const safeId = c.id || '';
+        const safeEmail = c.email || '';
+        const safePhone = c.phone || '';
+        const safeCity = c.city || 'India';
+        const safeAddress = c.address || '—';
+
+        // Escaped for inline attributes
+        const escNameAttr = safeName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const escEmailAttr = safeEmail.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const escIdAttr = safeId.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         return `
             <tr>
@@ -3332,22 +3414,26 @@ function renderCustomers() {
                     <div class="customer-name-box">
                         <div class="customer-avatar">${initials}</div>
                         <div>
-                            <strong style="color: var(--admin-text);">${c.name}</strong>
+                            <strong style="color: var(--admin-text);">${safeName || 'Unnamed Patron'}</strong>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <div style="font-size: 0.88rem;">${c.email}</div>
-                    <div style="font-size: 0.78rem; color: var(--admin-text-muted);">${c.phone || '—'}</div>
-                </td>
-                <td>
-                    <strong style="color: var(--gold-light);">${c.city || 'India'}</strong>
-                    <div style="font-size: 0.78rem; color: var(--admin-text-muted); max-width: 220px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                        ${c.address || '—'}
+                    <div style="font-size: 0.88rem;">
+                        <a href="mailto:${encodeURI(safeEmail)}" style="color: var(--admin-text); text-decoration: none;">${safeEmail || '—'}</a>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--admin-text-muted);">
+                        ${safePhone ? `<a href="tel:${safePhone.replace(/\s+/g, '')}" style="color: var(--admin-text-muted); text-decoration: none;">${safePhone}</a>` : '—'}
                     </div>
                 </td>
                 <td>
-                    <strong style="font-size: 0.95rem;">${orders}</strong>
+                    <strong style="color: var(--gold-light);">${safeCity}</strong>
+                    <div style="font-size: 0.78rem; color: var(--admin-text-muted); max-width: 220px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${safeAddress}">
+                        ${safeAddress}
+                    </div>
+                </td>
+                <td>
+                    <strong style="font-size: 0.95rem; color: var(--admin-text);">${orders}</strong>
                 </td>
                 <td>
                     <strong style="color: var(--gold-light); font-size: 0.95rem;">₹${spent.toLocaleString('en-IN')}</strong>
@@ -3356,14 +3442,20 @@ function renderCustomers() {
                     ${tierBadge}
                 </td>
                 <td style="text-align: right;">
-                    <button class="btn-admin-outline btn-sm" onclick="openCustomerModal('${c.id}')" title="Edit client profile">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
+                    <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                        <button class="btn-admin-outline btn-sm" onclick="openCustomerModal('${escIdAttr}')" title="Edit patron profile">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn-admin-outline btn-sm" onclick="promptDeleteCustomer('${escIdAttr}', '${escNameAttr}', '${escEmailAttr}')" title="Delete patron profile" style="color: #f43f5e; border-color: rgba(244,63,94,0.35);">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
     }).join('');
 }
+window.renderCustomers = renderCustomers;
 
 function openCustomerModal(id = null) {
     const title = document.getElementById('customerModalTitle');
@@ -3378,38 +3470,53 @@ function openCustomerModal(id = null) {
         const c = customersData.find(item => item.id === id);
         if (c) {
             title.textContent = "Edit Patron Profile";
-            idInput.value = c.id;
-            nameInput.value = c.name || '';
-            emailInput.value = c.email || '';
-            phoneInput.value = c.phone || '';
-            addressInput.value = c.address || '';
-            cityInput.value = c.city || '';
+            if (idInput) idInput.value = c.id;
+            if (nameInput) nameInput.value = c.name || '';
+            if (emailInput) emailInput.value = c.email || '';
+            if (phoneInput) phoneInput.value = c.phone || '';
+            if (addressInput) addressInput.value = c.address || '';
+            if (cityInput) cityInput.value = c.city || '';
         }
     } else {
         title.textContent = "Add New Patron Profile";
-        idInput.value = '';
-        nameInput.value = '';
-        emailInput.value = '';
-        phoneInput.value = '';
-        addressInput.value = '';
-        cityInput.value = '';
+        if (idInput) idInput.value = '';
+        if (nameInput) nameInput.value = '';
+        if (emailInput) emailInput.value = '';
+        if (phoneInput) phoneInput.value = '';
+        if (addressInput) addressInput.value = '';
+        if (cityInput) cityInput.value = '';
     }
 
-    document.getElementById('customerModalBackdrop').style.display = 'flex';
+    const backdrop = document.getElementById('customerModalBackdrop');
+    if (backdrop) {
+        backdrop.style.display = 'flex';
+        backdrop.classList.add('active');
+    }
 }
+window.openCustomerModal = openCustomerModal;
 
 function closeCustomerModal() {
-    document.getElementById('customerModalBackdrop').style.display = 'none';
+    const backdrop = document.getElementById('customerModalBackdrop');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        backdrop.style.display = 'none';
+    }
 }
+window.closeCustomerModal = closeCustomerModal;
 
 async function handleSaveCustomer(e) {
-    e.preventDefault();
-    const id = document.getElementById('editCustId').value;
-    const name = document.getElementById('custName').value.trim();
-    const email = document.getElementById('custEmail').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
-    const address = document.getElementById('custAddress').value.trim();
-    const city = document.getElementById('custCity').value.trim();
+    if (e && e.preventDefault) e.preventDefault();
+    const id = document.getElementById('editCustId')?.value || '';
+    const name = document.getElementById('custName')?.value.trim() || '';
+    const email = document.getElementById('custEmail')?.value.trim() || '';
+    const phone = document.getElementById('custPhone')?.value.trim() || '';
+    const address = document.getElementById('custAddress')?.value.trim() || '';
+    const city = document.getElementById('custCity')?.value.trim() || '';
+
+    if (!name || !email) {
+        showToast("Full Name and Email Address are required.");
+        return;
+    }
 
     try {
         const resp = await fetch('/api/customers', {
@@ -3418,17 +3525,120 @@ async function handleSaveCustomer(e) {
             body: JSON.stringify({ id, name, email, phone, address, city })
         });
         const res = await resp.json();
-        if (res.success) {
+        if (resp.ok && res.success) {
             closeCustomerModal();
             showToast("Customer profile saved successfully!");
-            fetchCustomers();
+            await fetchCustomers();
         } else {
-            alert("Error: " + (res.error || "Failed to save customer"));
+            showToast("Error: " + (res.error || "Failed to save customer profile"));
         }
     } catch (err) {
-        alert("Server error: " + err.message);
+        showToast("Server error saving customer: " + err.message);
     }
 }
+window.handleSaveCustomer = handleSaveCustomer;
+
+// --- DELETE PATRON DIALOG & CONTROLLER ---
+function promptDeleteCustomer(id, name, email) {
+    const modal = document.getElementById('deleteCustomerModalBackdrop');
+    const idInput = document.getElementById('deleteCustIdInput');
+    const nameText = document.getElementById('deleteCustNameText');
+    const emailText = document.getElementById('deleteCustEmailText');
+
+    if (idInput) idInput.value = id || '';
+    if (nameText) nameText.textContent = name || 'this patron';
+    if (emailText) emailText.textContent = email || '';
+
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
+}
+window.promptDeleteCustomer = promptDeleteCustomer;
+
+function closeDeleteCustomerModal() {
+    const modal = document.getElementById('deleteCustomerModalBackdrop');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
+}
+window.closeDeleteCustomerModal = closeDeleteCustomerModal;
+
+async function confirmDeleteCustomer() {
+    const idInput = document.getElementById('deleteCustIdInput');
+    const id = idInput ? idInput.value.trim() : '';
+    const btn = document.getElementById('confirmDeleteCustBtn');
+
+    if (!id) {
+        showToast("Error: No customer selected for deletion.");
+        closeDeleteCustomerModal();
+        return;
+    }
+
+    const origBtnHtml = btn ? btn.innerHTML : 'Delete';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+    }
+
+    try {
+        const resp = await fetch('/api/customers/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const res = await resp.json();
+
+        if (resp.ok && res.success) {
+            closeDeleteCustomerModal();
+            showToast(`Patron '${res.name || 'Customer'}' permanently removed from CRM.`);
+            await fetchCustomers();
+        } else {
+            showToast("Deletion failed: " + (res.error || "Unknown server error"));
+        }
+    } catch (err) {
+        showToast("Server error deleting customer: " + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origBtnHtml;
+        }
+    }
+}
+window.confirmDeleteCustomer = confirmDeleteCustomer;
+
+function exportCustomersCSV() {
+    if (!customersData || customersData.length === 0) {
+        showToast("No customer records to export.");
+        return;
+    }
+
+    const headers = ["ID", "Name", "Email", "Phone", "City", "Shipping Address", "Total Orders", "Lifetime Spend (INR)"];
+    const rows = customersData.map(c => [
+        `"${(c.id || '').replace(/"/g, '""')}"`,
+        `"${(c.name || '').replace(/"/g, '""')}"`,
+        `"${(c.email || '').replace(/"/g, '""')}"`,
+        `"${(c.phone || '').replace(/"/g, '""')}"`,
+        `"${(c.city || '').replace(/"/g, '""')}"`,
+        `"${(c.address || '').replace(/"/g, '""')}"`,
+        Number(c.totalOrders) || 0,
+        Number(c.totalSpent) || 0
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `soreva_patron_crm_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${customersData.length} patrons to CSV`);
+}
+window.exportCustomersCSV = exportCustomersCSV;
 
 // --- ORDER MANAGEMENT CONTROLLERS ---
 async function fetchOrders() {
