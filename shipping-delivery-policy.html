@@ -488,6 +488,500 @@
             color: #075e54;
         }
 
+        /* ==========================================
+           INTERNATIONAL SHIPPING SECTION STYLES
+           ========================================== */
+        .intl-shipping-section {
+            margin-top: 48px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .intl-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gold-light);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            padding: 5px 16px;
+            border-radius: var(--radius-full);
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--gold-hover);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .intl-section-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 600;
+            color: var(--theme-color);
+            line-height: 1.25;
+            margin-bottom: 14px;
+        }
+
+        .intl-section-title em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--gold-accent);
+        }
+
+        .intl-lead-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+            max-width: 860px;
+            margin-bottom: 12px;
+        }
+
+        .intl-sub-text {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #6d625e;
+            max-width: 860px;
+            margin-bottom: 36px;
+        }
+
+        /* DESTINATIONS BOX & CHIPS */
+        .intl-destinations-box {
+            background: #fbf9f6;
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            border-radius: var(--radius-md);
+            padding: 32px;
+            margin-bottom: 36px;
+        }
+
+        .intl-block-heading {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--theme-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .intl-block-intro {
+            font-size: 0.92rem;
+            color: #6d625e;
+            margin-bottom: 20px;
+        }
+
+        .intl-destinations-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 10px;
+            margin-bottom: 20px;
+        }
+
+        .intl-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: var(--radius-full);
+            padding: 6px 14px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--theme-color);
+            transition: all var(--transition-fast);
+        }
+
+        .intl-chip:hover {
+            border-color: var(--gold-accent);
+            background: var(--gold-light);
+            transform: translateY(-1px);
+        }
+
+        .intl-chip.more-chip {
+            background: var(--gold-light);
+            border-color: var(--gold-accent);
+            color: var(--gold-hover);
+        }
+
+        .intl-destination-note {
+            background: rgba(197, 160, 89, 0.08);
+            border-left: 3px solid var(--gold-accent);
+            padding: 12px 18px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #4a3e3b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intl-destination-note a {
+            color: var(--gold-hover);
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* 2-COL DELIVERY & COURIER GRID */
+        .intl-delivery-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 28px;
+            margin-bottom: 36px;
+        }
+
+        .intl-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .intl-courier-badges {
+            display: flex;
+            gap: 12px;
+            margin: 12px 0 16px;
+            flex-wrap: wrap;
+        }
+
+        .intl-courier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .intl-courier-badge.dhl {
+            background: #fff0f0;
+            color: #d40511;
+            border: 1px solid rgba(212, 5, 17, 0.25);
+        }
+
+        .intl-courier-badge.fedex {
+            background: #f3f0fa;
+            color: #4d148c;
+            border: 1px solid rgba(77, 20, 140, 0.25);
+        }
+
+        /* TABLE */
+        .intl-table-responsive {
+            overflow-x: auto;
+            margin: 16px 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        .intl-delivery-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            text-align: left;
+        }
+
+        .intl-delivery-table thead {
+            background: #fbf9f6;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .intl-delivery-table th {
+            padding: 12px 14px;
+            font-weight: 700;
+            color: var(--theme-color);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+        }
+
+        .intl-delivery-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        .intl-delivery-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .intl-delivery-table tr:hover td {
+            background: #faf7f2;
+        }
+
+        .delivery-time-badge {
+            display: inline-block;
+            background: var(--gold-light);
+            border: 1px solid rgba(197, 160, 89, 0.35);
+            color: var(--gold-hover);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .delivery-time-badge.badge-domestic {
+            background: rgba(37, 211, 102, 0.1);
+            border-color: rgba(37, 211, 102, 0.3);
+            color: #128c7e;
+        }
+
+        .intl-note-small {
+            font-size: 0.82rem;
+            color: #7a6e69;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .intl-target-box {
+            margin-top: 14px;
+            background: rgba(197, 160, 89, 0.08);
+            border: 1px dashed rgba(197, 160, 89, 0.5);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 0.88rem;
+            color: var(--theme-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* DOORSTEP CLEARANCE CALLOUT */
+        .intl-clearance-callout {
+            background: #fbf9f6;
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .intl-clearance-callout h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--theme-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .intl-clearance-callout p {
+            font-size: 0.88rem;
+            color: #5a4f4b;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        /* CHARGES CARDS */
+        .intl-charges-wrapper {
+            background: #fbf9f6;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 34px 30px;
+            margin-bottom: 36px;
+        }
+
+        .intl-charges-desc {
+            font-size: 0.92rem;
+            color: #5a4f4b;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .intl-charges-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 26px;
+        }
+
+        .intl-rate-card {
+            background: #ffffff;
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .intl-rate-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold-hover);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .intl-rate-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--theme-color);
+            margin-bottom: 10px;
+        }
+
+        .intl-rate-price-tag {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--theme-color);
+            margin-bottom: 10px;
+        }
+
+        .intl-rate-price-tag strong {
+            color: var(--gold-hover);
+            font-size: 1.35rem;
+        }
+
+        .intl-rate-desc {
+            font-size: 0.88rem;
+            color: #6d625e;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .intl-rate-example-box {
+            background: #fbf9f6;
+            border-left: 3px solid var(--gold-accent);
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 0.84rem;
+            color: #4a3e3b;
+            line-height: 1.5;
+        }
+
+        .intl-rate-example-box strong {
+            color: var(--theme-color);
+        }
+
+        /* FACTORS LIST */
+        .intl-factors-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+        }
+
+        .intl-factors-box h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--theme-color);
+            margin-bottom: 8px;
+        }
+
+        .intl-factors-intro {
+            font-size: 0.86rem;
+            color: #6d625e;
+            margin-bottom: 14px;
+        }
+
+        .intl-factors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px 16px;
+            margin-bottom: 16px;
+        }
+
+        .intl-factor-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #38302e;
+        }
+
+        .intl-factor-item i {
+            color: var(--gold-accent);
+            font-size: 0.75rem;
+        }
+
+        .intl-factors-confirm {
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            padding-top: 14px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--theme-color);
+        }
+
+        /* CUSTOMS CARD */
+        .intl-customs-box {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            margin-bottom: 36px;
+        }
+
+        .intl-customs-box p {
+            font-size: 0.92rem;
+            color: #5a4f4b;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        /* TRACKING BANNER */
+        .intl-track-banner {
+            background: linear-gradient(135deg, #2b2422 0%, var(--theme-color) 60%, #1e1816 100%);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: var(--radius-md);
+            padding: 38px 32px;
+            color: #ffffff;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intl-track-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold-accent), transparent);
+        }
+
+        .intl-track-banner h3 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.5rem, 3vw, 2.1rem);
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .intl-track-banner p {
+            max-width: 640px;
+            margin: 0 auto 16px auto;
+            color: rgba(251, 248, 245, 0.9);
+            font-size: 0.96rem;
+            line-height: 1.7;
+        }
+
+        .intl-track-signature {
+            color: var(--gold-accent);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .intl-track-motto {
+            color: rgba(251, 248, 245, 0.7);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
         /* RESPONSIVE BREAKPOINTS */
         @media (max-width: 900px) {
             .shipping-cards-grid {
@@ -504,6 +998,30 @@
 
             .shipping-concierge-card {
                 padding: 36px 22px;
+            }
+
+            .intl-shipping-section {
+                padding: 28px 18px;
+            }
+
+            .intl-destinations-box {
+                padding: 22px 16px;
+            }
+
+            .intl-delivery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intl-charges-wrapper {
+                padding: 24px 18px;
+            }
+
+            .intl-charges-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .intl-track-banner {
+                padding: 30px 18px;
             }
         }
     </style>
@@ -731,6 +1249,7 @@
             <a href="#pillar-02" class="shipping-nav-link"><span class="num">02</span> Processing &amp; Dispatch</a>
             <a href="#pillar-03" class="shipping-nav-link"><span class="num">03</span> Transit Times</a>
             <a href="#pillar-04" class="shipping-nav-link"><span class="num">04</span> Real-Time Tracking</a>
+            <a href="#international-shipping" class="shipping-nav-link"><span class="num">05</span> International Shipping</a>
             <a href="#concierge-support" class="shipping-nav-link"><i class="fa-solid fa-headset" style="font-size: 0.75rem; color: var(--gold-accent);"></i> Support Desk</a>
         </div>
     </nav>
@@ -830,6 +1349,258 @@
                         <span class="shipping-mini-tag"><i class="fa-solid fa-envelope"></i> Email Dispatch Link</span>
                     </div>
                 </article>
+            </section>
+
+            <!-- INTERNATIONAL SHIPPING SECTION -->
+            <section class="intl-shipping-section" id="international-shipping">
+                <div class="intl-badge-pill">
+                    <i class="fa-solid fa-globe"></i> International Shipping
+                </div>
+                <h2 class="intl-section-title">Sorèva, <em>Delivered Worldwide.</em></h2>
+                <p class="intl-lead-text">
+                    Your Sorèva jewellery is made to travel with you. We offer international shipping to most countries across the world, with trusted courier partners <strong>DHL</strong> and <strong>FedEx</strong> for safe, reliable and trackable delivery.
+                </p>
+                <p class="intl-sub-text">
+                    Whether you're in the USA, UK, Europe, the Middle East, Africa, Asia or Australia, we aim to make receiving your Sorèva pieces as seamless as possible.
+                </p>
+
+                <!-- WHERE DO WE SHIP -->
+                <div class="intl-destinations-box">
+                    <h3 class="intl-block-heading">
+                        <i class="fa-solid fa-earth-americas" style="color: var(--gold-accent);"></i> Where Do We Ship?
+                    </h3>
+                    <p class="intl-block-intro">
+                        We currently ship to most international destinations, including:
+                    </p>
+                    <div class="intl-destinations-chips">
+                        <span class="intl-chip"><i class="fa-solid fa-plane-departure" style="font-size: 0.75rem; color: var(--gold-accent);"></i> USA</span>
+                        <span class="intl-chip">UK</span>
+                        <span class="intl-chip">Canada</span>
+                        <span class="intl-chip">Ireland</span>
+                        <span class="intl-chip">Europe</span>
+                        <span class="intl-chip">UAE</span>
+                        <span class="intl-chip">Australia</span>
+                        <span class="intl-chip">New Zealand</span>
+                        <span class="intl-chip">Singapore</span>
+                        <span class="intl-chip">Malaysia</span>
+                        <span class="intl-chip">Thailand</span>
+                        <span class="intl-chip">Vietnam</span>
+                        <span class="intl-chip">Cambodia</span>
+                        <span class="intl-chip">Philippines</span>
+                        <span class="intl-chip">Nepal</span>
+                        <span class="intl-chip">Bangladesh</span>
+                        <span class="intl-chip">Japan</span>
+                        <span class="intl-chip">Africa</span>
+                        <span class="intl-chip">Nigeria</span>
+                        <span class="intl-chip">Ghana</span>
+                        <span class="intl-chip">Kenya</span>
+                        <span class="intl-chip">South Africa</span>
+                        <span class="intl-chip">Qatar</span>
+                        <span class="intl-chip">Brazil</span>
+                        <span class="intl-chip">Russia</span>
+                        <span class="intl-chip more-chip">and many more</span>
+                    </div>
+                    <div class="intl-destination-note">
+                        <i class="fa-solid fa-circle-info" style="color: var(--gold-accent); font-size: 1rem;"></i>
+                        <span>If your country is not listed, please <a href="#concierge-support">contact us</a> and we'll be happy to check shipping availability for you.</span>
+                    </div>
+                </div>
+
+                <!-- 2-COL DELIVERY & DOORSTEP GRID -->
+                <div class="intl-delivery-grid">
+                    <!-- Col 1: Express International Delivery -->
+                    <div class="intl-card">
+                        <div>
+                            <span class="intl-badge-pill" style="margin-bottom: 8px;">GLOBAL COURIER PARTNERS</span>
+                            <h3 class="intl-block-heading" style="margin-top: 4px;">Express International Delivery</h3>
+                            <div class="intl-courier-badges">
+                                <span class="intl-courier-badge dhl"><i class="fa-solid fa-truck-fast"></i> DHL Express</span>
+                                <span class="intl-courier-badge fedex"><i class="fa-solid fa-plane"></i> FedEx Priority</span>
+                            </div>
+                            <p style="font-size: 0.9rem; color: #5a4f4b; line-height: 1.6; margin-bottom: 12px;">
+                                We partner with DHL and FedEx for international shipments, depending on destination and customer preference.
+                            </p>
+
+                            <!-- Estimated Delivery Times Table -->
+                            <div class="intl-table-responsive">
+                                <table class="intl-delivery-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Destination</th>
+                                            <th>Estimated Delivery</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>USA, UK, Ireland, Canada &amp; most European destinations</strong></td>
+                                            <td><span class="delivery-time-badge">4–6 working days</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>UAE, Nepal, Bangladesh &amp; selected Asian destinations</strong></td>
+                                            <td><span class="delivery-time-badge">5–6 working days</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Malaysia, Thailand, Philippines, Cambodia &amp; Singapore</strong></td>
+                                            <td><span class="delivery-time-badge">5–6 working days</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Africa, Nigeria, Ghana, Togo, Benin &amp; Kenya</strong></td>
+                                            <td><span class="delivery-time-badge">7–9 working days</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Australia &amp; selected international destinations</strong></td>
+                                            <td><span class="delivery-time-badge">7–9 working days</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>India (Domestic Reference)</strong></td>
+                                            <td><span class="delivery-time-badge badge-domestic">2–4 working days</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="intl-note-small">
+                                <em>Please note:</em> Delivery timelines are estimates and may vary depending on customs clearance, destination, courier operations, weather and other factors beyond our control.
+                            </p>
+                        </div>
+                        <div class="intl-target-box">
+                            <i class="fa-solid fa-bullseye" style="color: var(--gold-accent); font-size: 1.1rem;"></i>
+                            <span>Our goal is to have your international order delivered within approximately <strong>7 working days</strong> wherever possible.</span>
+                        </div>
+                    </div>
+
+                    <!-- Col 2: Doorstep Delivery & Clearance -->
+                    <div class="intl-card">
+                        <div>
+                            <span class="intl-badge-pill" style="margin-bottom: 8px;">SEAMLESS FULFILLMENT</span>
+                            <h3 class="intl-block-heading" style="margin-top: 4px;">Doorstep Delivery</h3>
+                            <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--gold-hover); margin: 12px 0 10px;">
+                                We believe luxury should be effortless.
+                            </h4>
+                            <p style="font-size: 0.92rem; color: #5a4f4b; line-height: 1.7; margin-bottom: 16px;">
+                                Your Sorèva order is shipped directly to your doorstep through DHL or FedEx, with tracking available so you can follow your parcel throughout its journey.
+                            </p>
+                            <div class="intl-clearance-callout">
+                                <h4><i class="fa-solid fa-passport" style="color: var(--gold-accent);"></i> Customs &amp; Import Coordination</h4>
+                                <p>
+                                    For international shipments requiring customs or import clearance, DHL/FedEx will coordinate the clearance process as the shipping carrier/agent, wherever applicable.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px; padding: 18px; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--gold-light); display: flex; align-items: center; justify-content: center; color: var(--gold-hover); font-size: 1.1rem; flex-shrink: 0;">
+                                    <i class="fa-solid fa-shield-heart"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.88rem; font-weight: 700; color: var(--theme-color);">White-Glove Packaging</div>
+                                    <div style="font-size: 0.8rem; color: #7a6e69; margin-top: 2px;">Every international parcel is enclosed in moisture-sealed outer luxury armor.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INTERNATIONAL SHIPPING CHARGES -->
+                <div class="intl-charges-wrapper">
+                    <h3 class="intl-block-heading">
+                        <i class="fa-solid fa-calculator" style="color: var(--gold-accent);"></i> International Shipping Charges
+                    </h3>
+                    <p class="intl-charges-desc">
+                        International shipping charges vary depending on the destination, parcel size, jewellery selected and volumetric weight.<br>
+                        For international air shipments, courier charges are generally calculated using the <strong>volumetric weight</strong> of the package, which includes the jewellery packaging and outer shipping materials.
+                    </p>
+
+                    <!-- Rate Breakdown Cards -->
+                    <div class="intl-charges-grid">
+                        <!-- Rate Card 1 -->
+                        <div class="intl-rate-card">
+                            <div>
+                                <span class="intl-rate-badge">REGION 1</span>
+                                <h4 class="intl-rate-title">USA, Canada &amp; Europe</h4>
+                                <div class="intl-rate-price-tag">
+                                    Starts from approx. <strong>USD 32</strong>
+                                </div>
+                                <p class="intl-rate-desc">
+                                    For larger orders, shipping may typically be calculated at approximately <strong>6–8%</strong> of the order value, depending on the destination and parcel characteristics.
+                                </p>
+                            </div>
+                            <div class="intl-rate-example-box">
+                                <strong>Illustrative Example:</strong><br>
+                                Order Value: USD 1,000<br>
+                                Estimated Shipping: approx. <strong>USD 60–80</strong>
+                            </div>
+                        </div>
+
+                        <!-- Rate Card 2 -->
+                        <div class="intl-rate-card">
+                            <div>
+                                <span class="intl-rate-badge">REGION 2</span>
+                                <h4 class="intl-rate-title">Africa, Asia &amp; Australia</h4>
+                                <div class="intl-rate-price-tag">
+                                    Starts from approx. <strong>USD 42</strong>
+                                </div>
+                                <p class="intl-rate-desc">
+                                    For larger orders, shipping may typically range around <strong>9–12%</strong> of the order value, depending on the destination, parcel characteristics and courier rates.
+                                </p>
+                            </div>
+                            <div class="intl-rate-example-box">
+                                <strong>Illustrative Example:</strong><br>
+                                Order Value: USD 1,000<br>
+                                Estimated Shipping: approx. <strong>USD 90–120</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Important Note on Shipping Charges -->
+                    <div class="intl-factors-box">
+                        <h4>Important Note on Shipping Charges</h4>
+                        <p class="intl-factors-intro">
+                            The above amounts are indicative estimates only and are provided to give you an idea of international shipping costs. Actual shipping charges may vary based on:
+                        </p>
+                        <div class="intl-factors-grid">
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Destination country and postal code</div>
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Jewellery selected</div>
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Number of pieces in the order</div>
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Package dimensions &amp; volumetric weight</div>
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Courier rates applicable at time of shipment</div>
+                            <div class="intl-factor-item"><i class="fa-solid fa-circle-check"></i> Customs &amp; local delivery requirements</div>
+                        </div>
+                        <div class="intl-factors-confirm">
+                            <i class="fa-solid fa-info-circle" style="color: var(--gold-accent); margin-right: 6px;"></i>
+                            The final shipping charge applicable to your order will be confirmed at checkout or before dispatch.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMS, DUTIES & IMPORT TAXES -->
+                <div class="intl-customs-box">
+                    <h3 class="intl-block-heading">
+                        <i class="fa-solid fa-scale-balanced" style="color: var(--gold-accent);"></i> Customs, Duties &amp; Import Taxes
+                    </h3>
+                    <p>
+                        International orders may be subject to customs duties, import taxes or other local charges depending on the destination country.
+                    </p>
+                    <p>
+                        Any such charges, where applicable, are determined by the destination country's customs authorities and may be payable by the customer.
+                    </p>
+                    <p style="margin-bottom: 0; color: #4a3e3b; font-weight: 500;">
+                        Sorèva and our courier partners will provide the necessary shipping documentation and coordinate the customs clearance process wherever required.
+                    </p>
+                </div>
+
+                <!-- TRACK YOUR SOREVA BANNER -->
+                <div class="intl-track-banner">
+                    <div class="intl-badge-pill" style="background: rgba(197, 160, 89, 0.2); border-color: rgba(197, 160, 89, 0.5); color: var(--gold-light); margin-bottom: 12px;">
+                        REAL-TIME GLOBAL TELEMETRY
+                    </div>
+                    <h3>Track Your Sorèva</h3>
+                    <p>
+                        Once your order has been dispatched, you will receive your courier tracking details so you can follow your Sorèva package from our door to yours.
+                    </p>
+                    <div class="intl-track-signature">✨ From India to your doorstep, wherever you are.</div>
+                    <div class="intl-track-motto">Sorèva — Quiet Luxury, Delivered Worldwide.</div>
+                </div>
             </section>
 
             <!-- JOURNEY SIGNATURE BANNER -->
