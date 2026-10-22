@@ -661,6 +661,10 @@ const STONE_SIZE_OPTIONS = [
     'All Small'
 ];
 let appliedCoupon = null;
+try {
+    const savedCpn = localStorage.getItem('soreva_applied_coupon');
+    if (savedCpn) appliedCoupon = JSON.parse(savedCpn);
+} catch (e) {}
 let FREE_SHIPPING_THRESHOLD_INR = 2499;
 
 // Dynamic Store Data State
@@ -3179,6 +3183,7 @@ function initCartDrawer() {
             }
 
             const couponList = (COUPONS && COUPONS.length) ? COUPONS : [
+                { code: 'FLAT200', discountAmountINR: 200, discountPercent: 0, minSpendINR: 0, active: true, description: 'FLAT ₹200 OFF on your first luxury order' },
                 { code: 'LAUNCH15', discountPercent: 15, minSpendINR: 0, active: true },
                 { code: 'FESTIVE20', discountPercent: 20, minSpendINR: 4000, active: true },
                 { code: 'ROYAL10', discountPercent: 10, minSpendINR: 1500, active: true }
@@ -3198,11 +3203,13 @@ function initCartDrawer() {
                 }
 
                 appliedCoupon = found;
+                try { localStorage.setItem('soreva_applied_coupon', JSON.stringify(appliedCoupon)); } catch (e) {}
                 updateCartUI();
                 if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
-                showToast(`Coupon ${found.code} applied! ${found.discountPercent}% discount granted.`);
+                const discText = found.discountAmountINR ? `₹${found.discountAmountINR}` : `${found.discountPercent}%`;
+                showToast(`Coupon ${found.code} applied! ${discText} discount granted.`);
             } else {
-                showToast(`Invalid or expired coupon "${code}". Try LAUNCH15.`);
+                showToast(`Invalid or expired coupon "${code}". Try FLAT200 or LAUNCH15.`);
             }
         });
     }
@@ -3549,7 +3556,18 @@ function updateCheckoutCouponUI() {
         inputWrap.style.display = 'none';
         badge.style.display = 'flex';
         if (codeText) codeText.textContent = appliedCoupon.code;
-        if (pctText) pctText.textContent = appliedCoupon.discountPercent;
+        if (pctText) {
+            if (appliedCoupon.discountAmountINR) {
+                const parent = pctText.parentElement;
+                if (parent) {
+                    parent.innerHTML = `Coupon <strong id="chkAppliedCouponCodeText" style="letter-spacing: 0.5px;">${appliedCoupon.code}</strong> applied (<span id="chkAppliedCouponPercentText">₹${appliedCoupon.discountAmountINR} off</span>)`;
+                } else {
+                    pctText.textContent = `₹${appliedCoupon.discountAmountINR} off`;
+                }
+            } else {
+                pctText.textContent = appliedCoupon.discountPercent;
+            }
+        }
         if (inputEl) inputEl.value = '';
     } else {
         inputWrap.style.display = 'flex';
@@ -3576,8 +3594,12 @@ function updateCheckoutTotals() {
     }
 
     let discountINR = 0;
-    if (appliedCoupon && appliedCoupon.discountPercent) {
-        discountINR = Math.round(subtotalINR * (appliedCoupon.discountPercent / 100));
+    if (appliedCoupon) {
+        if (appliedCoupon.discountPercent) {
+            discountINR = Math.round(subtotalINR * (appliedCoupon.discountPercent / 100));
+        } else if (appliedCoupon.discountAmountINR) {
+            discountINR = Math.min(subtotalINR, Number(appliedCoupon.discountAmountINR) || 0);
+        }
     }
     const taxableAmount = Math.max(0, subtotalINR - discountINR);
 
@@ -3630,6 +3652,7 @@ function handleCheckoutApplyCoupon() {
     }
 
     const couponList = (COUPONS && COUPONS.length) ? COUPONS : [
+        { code: 'FLAT200', discountAmountINR: 200, discountPercent: 0, minSpendINR: 0, active: true, description: 'FLAT ₹200 OFF on your first luxury order' },
         { code: 'LAUNCH15', discountPercent: 15, minSpendINR: 0, active: true },
         { code: 'FESTIVE20', discountPercent: 20, minSpendINR: 4000, active: true },
         { code: 'ROYAL10', discountPercent: 10, minSpendINR: 1500, active: true }
@@ -3638,11 +3661,11 @@ function handleCheckoutApplyCoupon() {
     const found = couponList.find(c => c.active && c.code.toUpperCase() === code);
     if (!found) {
         if (msgEl) {
-            msgEl.textContent = `Invalid or expired coupon "${code}". Try LAUNCH15.`;
+            msgEl.textContent = `Invalid or expired coupon "${code}". Try FLAT200 or LAUNCH15.`;
             msgEl.style.color = "#ff6b6b";
             msgEl.style.display = "block";
         }
-        if (typeof showToast === 'function') showToast(`Invalid or expired coupon "${code}". Try LAUNCH15.`);
+        if (typeof showToast === 'function') showToast(`Invalid or expired coupon "${code}". Try FLAT200 or LAUNCH15.`);
         return;
     }
 
@@ -3664,6 +3687,7 @@ function handleCheckoutApplyCoupon() {
     }
 
     appliedCoupon = found;
+    try { localStorage.setItem('soreva_applied_coupon', JSON.stringify(appliedCoupon)); } catch (e) {}
     updateCartUI();
     updateCheckoutTotals();
 
@@ -3671,13 +3695,14 @@ function handleCheckoutApplyCoupon() {
     const cartCpnInput = document.getElementById('couponCodeInput');
     if (cartCpnInput) cartCpnInput.value = found.code;
 
+    const discountMsg = found.discountAmountINR ? `₹${found.discountAmountINR} flat discount` : `${found.discountPercent}% discount`;
     if (msgEl) {
-        msgEl.textContent = `Coupon ${found.code} applied! ${found.discountPercent}% discount granted.`;
+        msgEl.textContent = `Coupon ${found.code} applied! ${discountMsg} granted.`;
         msgEl.style.color = "#81c784";
         msgEl.style.display = "block";
     }
     if (typeof showToast === 'function') {
-        showToast(`Coupon ${found.code} applied! ${found.discountPercent}% discount granted.`);
+        showToast(`Coupon ${found.code} applied! ${discountMsg} granted.`);
     }
 }
 window.handleCheckoutApplyCoupon = handleCheckoutApplyCoupon;
@@ -3685,6 +3710,7 @@ window.handleCheckoutApplyCoupon = handleCheckoutApplyCoupon;
 function handleCheckoutRemoveCoupon() {
     const prevCode = appliedCoupon ? appliedCoupon.code : '';
     appliedCoupon = null;
+    try { localStorage.removeItem('soreva_applied_coupon'); } catch (e) {}
 
     const inputEl = document.getElementById('chkCouponCodeInput');
     if (inputEl) inputEl.value = '';
@@ -3988,8 +4014,12 @@ async function handlePlaceOrder(e) {
     });
 
     let discountINR = 0;
-    if (appliedCoupon && appliedCoupon.discountPercent) {
-        discountINR = Math.round(subtotalINR * (appliedCoupon.discountPercent / 100));
+    if (appliedCoupon) {
+        if (appliedCoupon.discountPercent) {
+            discountINR = Math.round(subtotalINR * (appliedCoupon.discountPercent / 100));
+        } else if (appliedCoupon.discountAmountINR) {
+            discountINR = Math.min(subtotalINR, Number(appliedCoupon.discountAmountINR) || 0);
+        }
     }
     const taxableAmount = Math.max(0, subtotalINR - discountINR);
 
@@ -4682,10 +4712,361 @@ function handleHeaderAuthClick(e) {
             dropdown.classList.toggle('active');
         }
     } else {
-        openAuthModal('signin');
+        // If user hasn't claimed welcome offer yet, show the OTP welcome modal
+        if (!localStorage.getItem('soreva_welcome_claimed')) {
+            openWelcomeDiscountModal();
+        } else {
+            openAuthModal('signin');
+        }
     }
 }
 window.handleHeaderAuthClick = handleHeaderAuthClick;
+
+// ==========================================================================
+// WELCOME DISCOUNT & MOBILE OTP AUTH ENGINE (KUSHAL'S / SOREVA LUXURY)
+// ==========================================================================
+let welcomeOtpTimer = null;
+let welcomeOtpCountdown = 30;
+let welcomeActivePhone = '';
+
+function openWelcomeDiscountModal() {
+    const backdrop = document.getElementById('welcomeDiscountBackdrop');
+    if (!backdrop) return;
+    backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Reset alert
+    const alertBox = document.getElementById('welcomeAlertMessage');
+    if (alertBox) {
+        alertBox.className = 'welcome-alert-message';
+        alertBox.style.display = 'none';
+        alertBox.textContent = '';
+    }
+
+    // Default to phone step unless already on success
+    const successStep = document.getElementById('welcomeStepSuccess');
+    if (successStep && successStep.style.display !== 'block') {
+        switchWelcomeModalStep('phone');
+    }
+
+    setTimeout(() => {
+        const input = document.getElementById('welcomePhoneInput');
+        if (input && !input.disabled) input.focus();
+    }, 200);
+}
+window.openWelcomeDiscountModal = openWelcomeDiscountModal;
+
+function closeWelcomeDiscountModal() {
+    const backdrop = document.getElementById('welcomeDiscountBackdrop');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    try {
+        sessionStorage.setItem('soreva_welcome_dismissed', 'true');
+    } catch (e) {}
+    if (welcomeOtpTimer) {
+        clearInterval(welcomeOtpTimer);
+        welcomeOtpTimer = null;
+    }
+}
+window.closeWelcomeDiscountModal = closeWelcomeDiscountModal;
+
+function switchWelcomeModalStep(step) {
+    const phoneStep = document.getElementById('welcomeStepPhone');
+    const otpStep = document.getElementById('welcomeStepOtp');
+    const successStep = document.getElementById('welcomeStepSuccess');
+    const alertBox = document.getElementById('welcomeAlertMessage');
+
+    if (alertBox) {
+        alertBox.className = 'welcome-alert-message';
+        alertBox.style.display = 'none';
+        alertBox.textContent = '';
+    }
+
+    if (phoneStep) phoneStep.style.display = (step === 'phone') ? 'block' : 'none';
+    if (otpStep) otpStep.style.display = (step === 'otp') ? 'block' : 'none';
+    if (successStep) successStep.style.display = (step === 'success') ? 'block' : 'none';
+
+    if (step === 'otp') {
+        const firstCell = document.querySelector('.welcome-otp-cell[data-idx="0"]');
+        if (firstCell) {
+            setTimeout(() => firstCell.focus(), 150);
+        }
+    } else if (step === 'phone') {
+        const phoneInput = document.getElementById('welcomePhoneInput');
+        if (phoneInput) {
+            setTimeout(() => phoneInput.focus(), 150);
+        }
+    }
+}
+window.switchWelcomeModalStep = switchWelcomeModalStep;
+
+function showWelcomeAlert(msg, type = 'error') {
+    const alertBox = document.getElementById('welcomeAlertMessage');
+    if (!alertBox) return;
+    alertBox.className = `welcome-alert-message ${type}`;
+    alertBox.textContent = msg;
+    alertBox.style.display = 'block';
+}
+
+function handleWelcomePhoneInput(input) {
+    input.value = input.value.replace(/\D/g, '').slice(0, 10);
+    const btn = document.getElementById('welcomeSendOtpBtn');
+    if (!btn) return;
+    if (input.value.length === 10 && /^[6-9]/.test(input.value)) {
+        btn.disabled = false;
+        btn.classList.add('ready');
+    } else {
+        btn.disabled = true;
+        btn.classList.remove('ready');
+    }
+}
+window.handleWelcomePhoneInput = handleWelcomePhoneInput;
+
+async function handleWelcomeSendOtp(e) {
+    if (e) e.preventDefault();
+    const phoneInput = document.getElementById('welcomePhoneInput');
+    const btn = document.getElementById('welcomeSendOtpBtn');
+    const consent = document.getElementById('welcomeConsentCheckbox');
+
+    if (!phoneInput) return;
+    const phone = phoneInput.value.trim();
+
+    if (phone.length !== 10 || !/^[6-9]/.test(phone)) {
+        showWelcomeAlert('Please enter a valid 10-digit Indian mobile number.', 'error');
+        return;
+    }
+
+    if (consent && !consent.checked) {
+        showWelcomeAlert('Please agree to terms to proceed.', 'error');
+        return;
+    }
+
+    welcomeActivePhone = phone;
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending OTP...</span>';
+
+    try {
+        const resp = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            const phoneDisp = document.getElementById('welcomeOtpPhoneDisplay');
+            if (phoneDisp) phoneDisp.textContent = `+91 ${phone.slice(0, 2)}******${phone.slice(-2)}`;
+
+            switchWelcomeModalStep('otp');
+            startWelcomeOtpCountdown();
+
+            // Clear any old digits
+            document.querySelectorAll('.welcome-otp-cell').forEach(c => c.value = '');
+
+            if (data.otpDemo) {
+                console.log(`[Sorèva Demo OTP]: ${data.otpDemo}`);
+                window._lastDemoOtp = data.otpDemo;
+            }
+            if (typeof showToast === 'function') {
+                showToast(`OTP sent to +91 ${phone}! Check your phone.`);
+            }
+        } else {
+            showWelcomeAlert(data.error || 'Failed to send verification code. Please check number.', 'error');
+        }
+    } catch (err) {
+        showWelcomeAlert('Network error sending OTP. Please check connection.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    }
+}
+window.handleWelcomeSendOtp = handleWelcomeSendOtp;
+
+function startWelcomeOtpCountdown() {
+    if (welcomeOtpTimer) clearInterval(welcomeOtpTimer);
+    welcomeOtpCountdown = 30;
+
+    const timerSpan = document.getElementById('welcomeResendSecs');
+    const timerText = document.getElementById('welcomeResendTimerText');
+    const resendBtn = document.getElementById('welcomeResendBtn');
+
+    if (resendBtn) resendBtn.disabled = true;
+    if (timerText) timerText.style.display = 'inline';
+    if (timerSpan) timerSpan.textContent = welcomeOtpCountdown;
+
+    welcomeOtpTimer = setInterval(() => {
+        welcomeOtpCountdown--;
+        if (timerSpan) timerSpan.textContent = welcomeOtpCountdown;
+        if (welcomeOtpCountdown <= 0) {
+            clearInterval(welcomeOtpTimer);
+            welcomeOtpTimer = null;
+            if (timerText) timerText.style.display = 'none';
+            if (resendBtn) resendBtn.disabled = false;
+        }
+    }, 1000);
+}
+
+function handleWelcomeResendOtp() {
+    handleWelcomeSendOtp();
+}
+window.handleWelcomeResendOtp = handleWelcomeResendOtp;
+
+async function handleWelcomeVerifyOtp(e) {
+    if (e) e.preventDefault();
+    const cells = document.querySelectorAll('.welcome-otp-cell');
+    const otp = Array.from(cells).map(c => c.value).join('').trim();
+    const btn = document.getElementById('welcomeVerifyOtpBtn');
+
+    if (otp.length < 4) {
+        showWelcomeAlert('Please enter the complete 4-digit verification code.', 'error');
+        return;
+    }
+
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying...</span>';
+
+    try {
+        const resp = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: welcomeActivePhone,
+                otp: otp,
+                cart: cart
+            })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            authToken = data.token;
+            currentUser = data.user;
+            localStorage.setItem('soreva_auth_token', authToken);
+            localStorage.setItem('soreva_user', JSON.stringify(currentUser));
+            if (data.cart) {
+                cart = data.cart;
+                try { localStorage.setItem('sorevaCart', JSON.stringify(cart)); } catch (e) {}
+            }
+
+            // Automatically apply FLAT200 Coupon
+            appliedCoupon = {
+                code: 'FLAT200',
+                discountAmountINR: 200,
+                discountPercent: 0,
+                minSpendINR: 0,
+                active: true,
+                description: 'FLAT ₹200 OFF on your first luxury order'
+            };
+            try {
+                localStorage.setItem('soreva_applied_coupon', JSON.stringify(appliedCoupon));
+            } catch (e) {}
+
+            try {
+                localStorage.setItem('soreva_welcome_claimed', 'true');
+                sessionStorage.setItem('soreva_welcome_dismissed', 'true');
+            } catch (e) {}
+
+            updateUserUI();
+            updateCartUI();
+            if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+            if (typeof updateCheckoutCouponUI === 'function') updateCheckoutCouponUI();
+            broadcastCrossTab('USER_LOGGED_IN', { user: currentUser, token: authToken, cart: cart });
+
+            switchWelcomeModalStep('success');
+
+            if (typeof showToast === 'function') {
+                showToast('Welcome to Sorèva! FLAT ₹200 OFF code FLAT200 applied.');
+            }
+        } else {
+            showWelcomeAlert(data.error || 'Invalid code. Try again or use 1234.', 'error');
+        }
+    } catch (err) {
+        showWelcomeAlert('Network error while verifying OTP. Please retry.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    }
+}
+window.handleWelcomeVerifyOtp = handleWelcomeVerifyOtp;
+
+function handleWelcomeSuccessContinue() {
+    closeWelcomeDiscountModal();
+    const trending = document.getElementById('featuredCollections') || document.getElementById('trendingNow');
+    if (trending) {
+        trending.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+window.handleWelcomeSuccessContinue = handleWelcomeSuccessContinue;
+
+function initWelcomeOtpCellInputs() {
+    const cells = document.querySelectorAll('.welcome-otp-cell');
+    if (!cells || !cells.length) return;
+
+    cells.forEach((cell, idx) => {
+        cell.addEventListener('input', () => {
+            const val = cell.value.replace(/\D/g, '');
+            cell.value = val ? val[0] : '';
+            if (cell.value && idx < cells.length - 1) {
+                cells[idx + 1].focus();
+            }
+            const fullOtp = Array.from(cells).map(c => c.value).join('');
+            if (fullOtp.length === 4) {
+                handleWelcomeVerifyOtp();
+            }
+        });
+
+        cell.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                if (!cell.value && idx > 0) {
+                    cells[idx - 1].focus();
+                }
+            } else if (e.key === 'ArrowLeft' && idx > 0) {
+                cells[idx - 1].focus();
+            } else if (e.key === 'ArrowRight' && idx < cells.length - 1) {
+                cells[idx + 1].focus();
+            }
+        });
+
+        cell.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const clean = text.replace(/\D/g, '').slice(0, cells.length);
+            if (clean.length > 0) {
+                clean.split('').forEach((char, i) => {
+                    if (cells[i]) cells[i].value = char;
+                });
+                const nextIdx = Math.min(clean.length, cells.length - 1);
+                cells[nextIdx].focus();
+                if (clean.length === 4) {
+                    handleWelcomeVerifyOtp();
+                }
+            }
+        });
+    });
+}
+
+function checkAutoOpenWelcomeModal() {
+    try {
+        const token = localStorage.getItem('soreva_auth_token');
+        const dismissed = sessionStorage.getItem('soreva_welcome_dismissed');
+        const claimed = localStorage.getItem('soreva_welcome_claimed');
+
+        if (token || dismissed === 'true' || claimed === 'true') {
+            return;
+        }
+
+        setTimeout(() => {
+            if (!localStorage.getItem('soreva_auth_token') && sessionStorage.getItem('soreva_welcome_dismissed') !== 'true') {
+                openWelcomeDiscountModal();
+            }
+        }, 2800);
+    } catch (e) {
+        console.warn('[Welcome Modal Init Error]', e);
+    }
+}
 
 function initHeaderAuth() {
     let container = document.getElementById('userAccountContainer');
@@ -5230,8 +5611,12 @@ function updateCartUI() {
 
     // Calculations
     let discountINR = 0;
-    if (appliedCoupon && appliedCoupon.discountPercent) {
-        discountINR = Math.round((subtotalINR * appliedCoupon.discountPercent) / 100);
+    if (appliedCoupon) {
+        if (appliedCoupon.discountPercent) {
+            discountINR = Math.round((subtotalINR * appliedCoupon.discountPercent) / 100);
+        } else if (appliedCoupon.discountAmountINR) {
+            discountINR = Math.min(subtotalINR, Number(appliedCoupon.discountAmountINR) || 0);
+        }
     }
     const finalTotalINR = Math.max(0, subtotalINR - discountINR);
 
@@ -7425,6 +7810,10 @@ function initApp() {
             renderSocialFeed(res.items, res.handle);
         }
     }).catch(err => console.warn('Could not fetch /api/instagram/feed:', err));
+
+    // Initialize Welcome Offer & OTP Login Engine
+    if (typeof initWelcomeOtpCellInputs === 'function') initWelcomeOtpCellInputs();
+    if (typeof checkAutoOpenWelcomeModal === 'function') checkAutoOpenWelcomeModal();
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

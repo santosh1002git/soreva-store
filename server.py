@@ -52,6 +52,9 @@ _IN_FLIGHT_FETCHES = {}
 STORE_METADATA_PATH = os.path.join(DATA_DIR, 'store-metadata.json')
 _STORE_METADATA_CACHE = None
 _STORE_METADATA_MTIME = 0
+_PHONE_OTP_STORE = {}
+_PHONE_OTP_LOCK = threading.Lock()
+
 
 def get_stored_metadata():
     """Returns store configuration metadata (settings, categories, instagram, etc.) in 0.1ms without loading 18MB of products."""
@@ -2094,6 +2097,176 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"error": f"Invalid JSON payload: {e}"}).encode())
             return
+
+        # API: Send Mobile OTP for Welcome Login & Checkout
+        if parsed.path == '/api/auth/send-otp':
+            raw_phone = str(payload.get('phone') or '').strip()
+            clean_digits = re.sub(r'\D', '', raw_phone)
+            if len(clean_digits) == 12 and clean_digits.startswith('91'):
+                clean_digits = clean_digits[2:]
+            elif len(clean_digits) == 11 and clean_digits.startswith('0'):
+                clean_digits = clean_digits[1:]
+
+            if len(clean_digits) != 10 or clean_digits[0] not in '6789':
+                self._send_json({"error": "Please enter a valid 10-digit Indian mobile number (starts with 6, 7, 8, or 9)."}, 400)
+                return
+
+            otp_val = f"{random.randint(1000, 9999)}"
+            now_ts = time.time()
+            expires_ts = now_ts + 300  # 5 minutes expiry
+
+            with _PHONE_OTP_LOCK:
+                _PHONE_OTP_STORE[clean_digits] = {
+                    "otp": otp_val,
+                    "expires_at": expires_ts,
+                    "attempts": 0
+                }
+
+            print(f"[AUTH OTP] Mobile: +91 {clean_digits} | Generated OTP: {otp_val} | Expires in: 300s")
+
+            self._send_json({
+                "success": True,
+                "message": f"Verification code sent to +91 {clean_digits[:2]}******{clean_digits[-2:]}",
+                "phone": clean_digits,
+                "expiresIn": 300,
+                "otpDemo": otp_val
+            })
+            return
+
+        # API: Verify Mobile OTP and Login / Claim Welcome Offer
+        if parsed.path == '/api/auth/verify-otp':
+            raw_phone = str(payload.get('phone') or '').strip()
+            otp_input = str(payload.get('otp') or '').strip()
+            guest_cart = payload.get('cart') or []
+
+            clean_digits = re.sub(r'\D', '', raw_phone)
+            if len(clean_digits) == 12 and clean_digits.startswith('91'):
+                clean_digits = clean_digits[2:]
+            elif len(clean_digits) == 11 and clean_digits.startswith('0'):
+                clean_digits = clean_digits[1:]
+
+            if len(clean_digits) != 10:
+                self._send_json({"error": "Invalid phone number provided."}, 400)
+                return
+
+            if not otp_input or len(otp_input) < 4:
+                self._send_json({"error": "Please enter a valid 4-digit verification code."}, 400)
+                return
+
+            now_ts = time.time()
+            valid_otp = False
+
+            # Universal demo / test codes
+            if otp_input in ['1234', '2026', '9999']:
+                valid_otp = True
+            else:
+                with _PHONE_OTP_LOCK:
+                    record = _PHONE_OTP_STORE.get(clean_digits)
+                    if record:
+                        if record['expires_at'] < now_ts:
+                            self._send_json({"error": "This verification code has expired. Please request a new one."}, 400)
+                            return
+                        if record['attempts'] >= 5:
+                            self._send_json({"error": "Too many failed attempts. Please request a new code."}, 429)
+                            return
+                        if record['otp'] == otp_input:
+                            valid_otp = True
+                            del _PHONE_OTP_STORE[clean_digits]
+                        else:
+                            record['attempts'] += 1
+
+            if not valid_otp:
+                self._send_json({"error": "Incorrect verification code. Please check and try again."}, 400)
+                return
+
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+
+            try:
+                c = conn.cursor()
+                now_str = datetime.now().isoformat()
+                expires_str = (datetime.now() + timedelta(days=365)).isoformat()
+                session_token = secrets.token_hex(32)
+
+                # Check customer by phone
+                cust = c.execute("SELECT id, name, email, phone, address, city FROM customers WHERE phone = ? OR phone = ? OR phone LIKE ?", 
+                                 (clean_digits, f"+91{clean_digits}", f"%{clean_digits}")).fetchone()
+
+                user_email = cust['email'] if (cust and cust['email']) else f"client_{clean_digits}@soreva.in"
+                user_name = cust['name'] if (cust and cust['name']) else f"Client {clean_digits[-4:]}"
+
+                # Check if user exists in users table
+                user = c.execute("SELECT id, name, email FROM users WHERE LOWER(email) = LOWER(?)", (user_email,)).fetchone()
+                if not user:
+                    user_id = gen_pb_id()
+                    pw_hash, salt = hash_user_password(secrets.token_hex(16))
+                    c.execute("""
+                        INSERT INTO users (id, name, email, password, tokenKey, created, updated, verified)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                    """, (user_id, user_name, user_email, pw_hash, salt, now_str, now_str))
+                else:
+                    user_id = user['id']
+
+                # Upsert customer record
+                if not cust:
+                    c.execute("""
+                        INSERT INTO customers (id, name, email, phone, address, city, totalOrders, totalSpent)
+                        VALUES (?, ?, ?, ?, '', '', 0, 0)
+                    """, (gen_pb_id(), user_name, user_email, clean_digits))
+                else:
+                    c.execute("UPDATE customers SET phone = ? WHERE id = ?", (clean_digits, cust['id']))
+
+                # Create user session
+                c.execute("""
+                    INSERT INTO user_sessions (token, user_id, email, created_at, expires_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (session_token, user_id, user_email, now_str, expires_str))
+
+                # Fetch database cart & merge with guest cart
+                cart_row = c.execute("SELECT items FROM user_carts WHERE user_id = ?", (user_id,)).fetchone()
+                db_cart = []
+                if cart_row and cart_row['items']:
+                    try:
+                        db_cart = json.loads(cart_row['items'])
+                    except Exception:
+                        db_cart = []
+
+                final_cart = merge_cart_items(db_cart, guest_cart)
+                c.execute("""
+                    INSERT OR REPLACE INTO user_carts (user_id, email, items, updated_at)
+                    VALUES (?, ?, ?, ?)
+                """, (user_id, user_email, json.dumps(final_cart), now_str))
+
+                conn.commit()
+
+                self._send_json({
+                    "success": True,
+                    "token": session_token,
+                    "user": {
+                        "id": user_id,
+                        "name": user_name,
+                        "phone": clean_digits,
+                        "email": user_email
+                    },
+                    "cart": final_cart,
+                    "coupon": {
+                        "code": "FLAT200",
+                        "discountAmountINR": 200,
+                        "minSpendINR": 0,
+                        "active": True,
+                        "description": "FLAT ₹200 OFF on your first luxury order"
+                    },
+                    "message": "Welcome to Sorèva! Your ₹200 welcome discount (FLAT200) has been applied."
+                })
+                return
+            except Exception as e:
+                print(f"[Auth OTP Verify Error] {e}")
+                self._send_json({"error": f"Verification failed: {str(e)}"}, 500)
+                return
+            finally:
+                conn.close()
 
         # API: User Registration
         if parsed.path == '/api/auth/register':

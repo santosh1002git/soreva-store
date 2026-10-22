@@ -1,6 +1,6 @@
 {
   "settings": {
-    "storeName": "Sorèva",
+    "storeName": "Sor\u00e8va",
     "tagline": "Exquisite Cubic Zirconia Jewellery for Every Occasion",
     "logoUrl": "assets/logo-black.png",
     "logoWhiteUrl": "assets/logo-white.png",
@@ -25,18 +25,18 @@
     "newLaunchCapacity": 30
   },
   "announcements": [
-    "✨ Launch Celebration: Use code <strong>LAUNCH15</strong> for 15% OFF your first royal order",
-    "🚚 Complimentary Express Shipping across India on all orders above ₹2,499",
-    "🌍 Worldwide Express Delivery & Signature Soreva Velvet Gift Box Included"
+    "\u2728 Launch Celebration: Use code <strong>LAUNCH15</strong> for 15% OFF your first royal order",
+    "\ud83d\ude9a Complimentary Express Shipping across India on all orders above \u20b92,499",
+    "\ud83c\udf0d Worldwide Express Delivery & Signature Soreva Velvet Gift Box Included"
   ],
   "heroSlides": [
     {
       "id": 1,
-      "tag": "01 / 08 • ROYAL CHOKER EDIT",
+      "tag": "01 / 08 \u2022 ROYAL CHOKER EDIT",
       "headline": "Where Timeless <em>Brilliance</em> Thrives",
       "subtitle": "Handcrafted with Austrian AAA+ Cubic Zirconia crystals and 24K gold micro-finish. Designed for regal celebrations.",
       "image": "assets/hero/hero-slide-1.jpg",
-      "name": "Aurelia Pavé Heritage Collar Necklace",
+      "name": "Aurelia Pav\u00e9 Heritage Collar Necklace",
       "finish": "24K Gold Plated",
       "productId": "czm_41673",
       "ctaText": "Explore Catalog",
@@ -45,7 +45,7 @@
     },
     {
       "id": 2,
-      "tag": "02 / 08 • CELESTE DROPS EDIT",
+      "tag": "02 / 08 \u2022 CELESTE DROPS EDIT",
       "headline": "The Fiery <em>Brilliance</em> of Pure Light",
       "subtitle": "Diamond-cut multi-faceted cascading teardrops in Rhodium Silver finish with fiery diamond dispersion.",
       "image": "assets/hero/hero-slide-2.jpg",
@@ -58,7 +58,7 @@
     },
     {
       "id": 3,
-      "tag": "03 / 08 • BRIDAL EMPRESS EDIT",
+      "tag": "03 / 08 \u2022 BRIDAL EMPRESS EDIT",
       "headline": "Grandeur Reimagined for <em>Every Queen</em>",
       "subtitle": "An opulent heirloom statement choker layered with brilliant cut round and baguette stones.",
       "image": "assets/hero/hero-slide-3.jpg",
@@ -71,11 +71,11 @@
     },
     {
       "id": 4,
-      "tag": "04 / 08 • SIGNATURE RINGS EDIT",
+      "tag": "04 / 08 \u2022 SIGNATURE RINGS EDIT",
       "headline": "Subtle Luxury at <em>Your Fingertips</em>",
       "subtitle": "Crown-cut solitary center stone with micro-pave encrusted shoulders for effortless everyday glamour.",
       "image": "assets/hero/hero-slide-4.jpg",
-      "name": "Floriana Sculpted Blossom Pavé Ring",
+      "name": "Floriana Sculpted Blossom Pav\u00e9 Ring",
       "finish": "Rhodium Silver",
       "productId": "czm_51132",
       "ctaText": "Explore Catalog",
@@ -84,7 +84,7 @@
     },
     {
       "id": 5,
-      "tag": "05 / 08 • WRISTWEAR ICON EDIT",
+      "tag": "05 / 08 \u2022 WRISTWEAR ICON EDIT",
       "headline": "Fluid Elegance Around <em>Your Wrist</em>",
       "subtitle": "Continuous fire of handset round brilliant stones. Flexible, feather-light, and flawlessly secure.",
       "image": "assets/hero/hero-slide-5.jpg",
@@ -97,7 +97,7 @@
     },
     {
       "id": 6,
-      "tag": "06 / 08 • HALO SOLITAIRE EDIT",
+      "tag": "06 / 08 \u2022 HALO SOLITAIRE EDIT",
       "headline": "Everyday Grace with <em>Luminous Depth</em>",
       "subtitle": "Delicate floating solitaire pendant set in micro-halo setting on an adjustable fine chain.",
       "image": "assets/hero/hero-slide-6.jpg",
@@ -110,7 +110,7 @@
     },
     {
       "id": 7,
-      "tag": "07 / 08 • IMPERIAL JHUMKA EDIT",
+      "tag": "07 / 08 \u2022 IMPERIAL JHUMKA EDIT",
       "headline": "Heritage Craftsmanship <em>Modern Silhouette</em>",
       "subtitle": "Filigree bells encrusted with pave crystals and delicate pearl drops for regal festive evenings.",
       "image": "assets/hero/hero-slide-7.jpg",
@@ -123,7 +123,7 @@
     },
     {
       "id": 8,
-      "tag": "08 / 08 • DULHAN SHINE EDIT",
+      "tag": "08 / 08 \u2022 DULHAN SHINE EDIT",
       "headline": "Radiance That Captures <em>Every Gaze</em>",
       "subtitle": "Grand bridal combo wristwear set with hand-faceted cubic zirconia and safety clasp.",
       "image": "assets/hero/hero-slide-8.jpg",
@@ -422563,9 +422563,9 @@
   ],
   "currencies": {
     "INR": {
-      "symbol": "₹",
+      "symbol": "\u20b9",
       "rate": 1.0,
-      "label": "INR (₹)"
+      "label": "INR (\u20b9)"
     },
     "USD": {
       "symbol": "$",
@@ -422573,22 +422573,30 @@
       "label": "USD ($)"
     },
     "AED": {
-      "symbol": "د.إ",
+      "symbol": "\u062f.\u0625",
       "rate": 0.03797365,
-      "label": "AED (د.إ)"
+      "label": "AED (\u062f.\u0625)"
     },
     "GBP": {
-      "symbol": "£",
+      "symbol": "\u00a3",
       "rate": 0.00783,
-      "label": "GBP (£)"
+      "label": "GBP (\u00a3)"
     },
     "EUR": {
-      "symbol": "€",
+      "symbol": "\u20ac",
       "rate": 0.00925,
-      "label": "EUR (€)"
+      "label": "EUR (\u20ac)"
     }
   },
   "coupons": [
+    {
+      "code": "FLAT200",
+      "discountAmountINR": 200,
+      "discountPercent": 0,
+      "minSpendINR": 0,
+      "active": true,
+      "description": "FLAT \u20b9200 OFF on your first luxury order"
+    },
     {
       "code": "LAUNCH15",
       "discountPercent": 15,
@@ -422611,7 +422619,7 @@
   "spotlight": {
     "tag": "Soreva Craftsmanship",
     "title": "The Art of <em>Brilliance</em>",
-    "desc1": "At Sorèva, we believe demi-fine jewelry should carry the breathtaking allure of mined diamonds with uncompromising durability. Every piece is sculpted using Austrian AAA+ grade Cubic Zirconia crystals, hand-set into hypoallergenic, skin-safe alloys.",
+    "desc1": "At Sor\u00e8va, we believe demi-fine jewelry should carry the breathtaking allure of mined diamonds with uncompromising durability. Every piece is sculpted using Austrian AAA+ grade Cubic Zirconia crystals, hand-set into hypoallergenic, skin-safe alloys.",
     "desc2": "Each design is sealed with our proprietary <strong>Triple Anti-Tarnish E-Coating</strong>, preserving its radiant high-mirror luster through celebrations, gala evenings, and everyday luxury wear.",
     "badgeTitle": "57 Facets",
     "badgeSub": "Precision Diamond Cut",
@@ -422665,8 +422673,8 @@
     {
       "id": "18090466829656784",
       "type": "video",
-      "title": "A little drama never hurt — especially when it loo",
-      "caption": "A little drama never hurt — especially when it looks this good. ✨\nA flash of red, a whole lot of brilliance, and the kind of piece that finishes the look before you even try.\n\nDiscover it at SORÈVA.\n\n#Soreva #CZJewellery #StatementNecklace #RedStoneJewellery",
+      "title": "A little drama never hurt \u2014 especially when it loo",
+      "caption": "A little drama never hurt \u2014 especially when it looks this good. \u2728\nA flash of red, a whole lot of brilliance, and the kind of piece that finishes the look before you even try.\n\nDiscover it at SOR\u00c8VA.\n\n#Soreva #CZJewellery #StatementNecklace #RedStoneJewellery",
       "videoUrl": "assets/reels/reel_1.mp4",
       "rawVideoUrl": "https://instagram.fblr1-6.fna.fbcdn.net/o1/v/t2/f2/m86/AQNUmlzzfSFHRdK3YHiohlpTJUiCkRmGFg9ae0-oE4xCDQtpnYb_H-YpjgzCUcTa18Nz99XHB5c5UAROyc6Yc7kIdbJtopb_VHXH1dA.mp4?_nc_cat=103&_nc_oc=AdrfzZRP9ARqscih94ihnontyyaUrRhPIKvj7DFZretPwnaNq5jJd2zaC_gG-6Lme9s&_nc_sid=5e9851&_nc_ht=instagram.fblr1-6.fna.fbcdn.net&_nc_ohc=8bzdsuFzo-YQ7kNvwHysmli&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA5MDE4NjU1Njg1NjQ1OSwiYXNzZXRfYWdlX2RheXMiOjAsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoyMCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=2392b3ff5ebdd669&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8wQjQ3ODgzMTVENzU3QTI5ODcyOTA4QTdGQ0JBMzhBQV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzI0NDAwNzYyQUEyQUNCRjI4M0I0RjEyMjE2OTNDNTgwX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaW4q7nmuHvAxUCKAJDMywXQDS7peNT988YEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIUUWz14tpefFIoJE9SLquz8lK5ES2BET3StwBA1bONFw&oe=6AB718CC",
       "thumbnail": "assets/reels/reel_1_poster.jpg",
@@ -422679,7 +422687,7 @@
       "id": "17878258632544383",
       "type": "video",
       "title": "It starts with the sparkle.",
-      "caption": "It starts with the sparkle.\nBut that touch of red is what you remember. ❤️\n\nExplore the piece at www.soreva.in\n\n#SorevaJewellery #StatementNecklace #CZ Jewellery #RedStoneJewellery #EveningJewellery",
+      "caption": "It starts with the sparkle.\nBut that touch of red is what you remember. \u2764\ufe0f\n\nExplore the piece at www.soreva.in\n\n#SorevaJewellery #StatementNecklace #CZ Jewellery #RedStoneJewellery #EveningJewellery",
       "videoUrl": "assets/reels/reel_2.mp4",
       "rawVideoUrl": "https://instagram.fblr1-5.fna.fbcdn.net/o1/v/t2/f2/m86/AQPAh_I75TMkibe8a-Nk4zZmS5yfEw7_tFYoEcJuzA5HKnGZtRoMm5qOAietIg_mgmUfBgVVVsrPkJYWlBY1OyCJzXwg6ZYRrhgOc4s.mp4?_nc_cat=101&_nc_oc=AdoMOpQEBEsggEKcYqx8jCEnD_vcJZQlrHDZj5xtrvAt1gAF0vcsIwHfyTyMCvr2-rU&_nc_sid=5e9851&_nc_ht=instagram.fblr1-5.fna.fbcdn.net&_nc_ohc=7fC0F6r5YacQ7kNvwHxtZOu&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6Mjk0NDExMTYyMzIxNTg0NTUsImFzc2V0X2FnZV9kYXlzIjoxLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTQsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=42abda293e7e2c98&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9CMDRBRjkxMjZGMEZCMDgxMTM4NTM5RDA1RTQxODI4RF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzVFNEYwNzAwN0M4RDhEOTEyMDU0MkEyMThERjAyNDhDX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbus_iswaLMaBUCKAJDMywXQCzul41P3zsYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQI1yiHAEZgnXjbawpFedasOpW4ETxBClETVYfLlRLeHvQ&oe=6AB74D46",
       "thumbnail": "assets/reels/reel_2_poster.jpg",
@@ -422691,8 +422699,8 @@
     {
       "id": "18035949860653164",
       "type": "video",
-      "title": "A little colour. A lot of presence. ✨",
-      "caption": "A little colour. A lot of presence. ✨\n\nFor the days when the jewellery makes the whole look — a little sparkle, a little colour, and just enough to make it feel special.\n\nDiscover the collection at www.soreva.in\n\nSoreva #CubicZirconia #StatementNecklace #AffordableLuxury",
+      "title": "A little colour. A lot of presence. \u2728",
+      "caption": "A little colour. A lot of presence. \u2728\n\nFor the days when the jewellery makes the whole look \u2014 a little sparkle, a little colour, and just enough to make it feel special.\n\nDiscover the collection at www.soreva.in\n\nSoreva #CubicZirconia #StatementNecklace #AffordableLuxury",
       "videoUrl": "assets/reels/reel_3.mp4",
       "rawVideoUrl": "https://instagram.fblr24-1.fna.fbcdn.net/o1/v/t2/f2/m86/AQMroYiD_JOdFSKHcNoQSvI1cVS-41RqKvIan_Ra8cxKa_NnnDf-Eit_mp7Rkwmg3mDF3MMvO1edYpGTynIwYotF6g_xzyrlxoznpIg.mp4?_nc_cat=102&_nc_oc=AdpMGJBgzeQkyTirqe_pXR5-idsRRtzdF0qKHcsOY0QMlwWhJWS87JUVTsH7NgxFduE&_nc_sid=5e9851&_nc_ht=instagram.fblr24-1.fna.fbcdn.net&_nc_ohc=g6xqHcrJmgMQ7kNvwHNst9_&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA4ODIyMzUyMDQ2NjEwNywiYXNzZXRfYWdlX2RheXMiOjQsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjozNCwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=8ebc0832fc72cc7&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC82MTQxNjM4QTg0MkJGMUZDQjJCMUZENUVDREE1M0M5MF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0E1NEY0Nzk1NTczQjFBMjNDODQ2NTJFQkE3N0NBQzg5X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACb2kv2F-e7uAxUCKAJDMywXQEF6n752yLQYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIBEOpSMsWee9WBDHATwtuG4V3dunTdGHSW8nfnXV4OzQ&oe=6AB72E0B",
       "thumbnail": "assets/reels/reel_3_poster.jpg",
@@ -422704,8 +422712,8 @@
     {
       "id": "18124938898855118",
       "type": "video",
-      "title": "Some pieces don’t need an occasion.",
-      "caption": "Some pieces don’t need an occasion.\nYou see them, love them, and somehow they just feel like you. 🌸\n\nMeet Roselle — a little softness, a little sparkle, and entirely you.\n\nShop now at soreva.in\n\n#Soreva #Roselle #CZJewellery #StatementEarrings #EverydayLuxury",
+      "title": "Some pieces don\u2019t need an occasion.",
+      "caption": "Some pieces don\u2019t need an occasion.\nYou see them, love them, and somehow they just feel like you. \ud83c\udf38\n\nMeet Roselle \u2014 a little softness, a little sparkle, and entirely you.\n\nShop now at soreva.in\n\n#Soreva #Roselle #CZJewellery #StatementEarrings #EverydayLuxury",
       "videoUrl": "assets/reels/reel_4.mp4",
       "rawVideoUrl": "https://instagram.fblr1-3.fna.fbcdn.net/o1/v/t2/f2/m86/AQNDc1S8ZjMrxyPPM4osF7IfqTpgdxk0ML-bttTXAb0MZ3ZT_n8IRudk75apUkqY3XyCBcclhtUgwIPHhoRf341m1aU4KB5jOMEi7UE.mp4?_nc_cat=110&_nc_oc=AdqZZe_THVISjDYLQNzW6Q1uV_199Xsonkv1srIhL_jdVHKtelroO-NfHV1ppauXDS0&_nc_sid=5e9851&_nc_ht=instagram.fblr1-3.fna.fbcdn.net&_nc_ohc=UpfMLfJXcZcQ7kNvwEaHhj9&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MjEyNzMwMTM5MTMyODEzOSwiYXNzZXRfYWdlX2RheXMiOjUsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoyMiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=a2fbb940bdd8091b&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85QTQ4N0JGQzE4QUQzQUYwQ0Q1NEUyMjJEMzAzRjRCRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0ZENDM1RkZBQjUxRjE2MTgxMEYxNTNBNkI2NjE4MEIxX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaWjpW8nrHHBxUCKAJDMywXQDbMzMzMzM0YEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQJw5o_Cn5UlHuchofBF6nYMzm4ecbYttH4P9YSV6a_hZQ&oe=6AB71A57",
       "thumbnail": "assets/reels/reel_4_poster.jpg",
@@ -422717,8 +422725,8 @@
     {
       "id": "18227426737332425",
       "type": "video",
-      "title": "Ruby Radiance — bold, passionate & unforgettable.",
-      "caption": "Ruby Radiance — bold, passionate & unforgettable. \n\nCrafted with AAA+ grade zirconia, premium zirconia stones & a luxe anti-tarnish finish — made to shine beautifully, every time. \n\nSorèva — Quiet Luxury, Made to Shine.\n\nShop here @www.soreva.in",
+      "title": "Ruby Radiance \u2014 bold, passionate & unforgettable.",
+      "caption": "Ruby Radiance \u2014 bold, passionate & unforgettable. \n\nCrafted with AAA+ grade zirconia, premium zirconia stones & a luxe anti-tarnish finish \u2014 made to shine beautifully, every time. \n\nSor\u00e8va \u2014 Quiet Luxury, Made to Shine.\n\nShop here @www.soreva.in",
       "videoUrl": "assets/reels/reel_5.mp4",
       "rawVideoUrl": "https://instagram.fblr1-8.fna.fbcdn.net/o1/v/t2/f2/m86/AQMwbVzlQYkd5L55I0SO8R0ZpqPPe_oPc9g_4hkeG4P5BmuzEwtfCEUpA5VrLjx96Baki4225dTI0AVCVH2kEncpXGfUr1qA_Uiqp14.mp4?_nc_cat=108&_nc_oc=Adp0A9tVCVNRlrOGdR4WPljsYpXcecuPrkojdMDTnGycHrBvrNq9YofY_xN7jCKoMz8&_nc_sid=5e9851&_nc_ht=instagram.fblr1-8.fna.fbcdn.net&_nc_ohc=cwI20otfXjoQ7kNvwHkQd4g&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTc5MzEwNjY4MTcxMDU1NiwiYXNzZXRfYWdlX2RheXMiOjYsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjo5LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=50b8db475e0f72c8&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9BNDQwNkQ5NkVCNzJEQUZFMjUwQTJDMUI1ODc4QzJCQ192aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0JGNENENTJFNDY2OUY0MjE0OTFEQjc3M0ExMTlBOUFEX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa4n_bsxbSvBhUCKAJDMywXQCNmZmZmZmYYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQJRudHv03bjbnmNahl7WR3nuhVM5_ez2p5P7OsMKW8JNA&oe=6AB73519",
       "thumbnail": "assets/reels/reel_5_poster.jpg",
@@ -422731,7 +422739,7 @@
       "id": "17980630103898789",
       "type": "video",
       "title": "For the days when the outfit is simple but the jew",
-      "caption": "For the days when the outfit is simple but the jewellery absolutely isn’t ✨\n\nDM us for price details.\nwww.soreva.in\n\n#Soreva #CZJewellery #StatementJewellery #earrings #TheSorevaEdit",
+      "caption": "For the days when the outfit is simple but the jewellery absolutely isn\u2019t \u2728\n\nDM us for price details.\nwww.soreva.in\n\n#Soreva #CZJewellery #StatementJewellery #earrings #TheSorevaEdit",
       "videoUrl": "assets/reels/reel_6.mp4",
       "rawVideoUrl": "https://www.instagram.com/reel/DdX5hpdzqF4/",
       "thumbnail": "assets/reels/reel_6_poster.jpg",
@@ -422743,8 +422751,8 @@
     {
       "id": "18196614163390593",
       "type": "video",
-      "title": "Your love means everything to us. 🤍",
-      "caption": "Your love means everything to us. 🤍\n\nThank you for choosing Sorèva and sharing your beautiful feedback. Here’s to more sparkle, more smiles & more Sorèva moments. \n\n#Soreva #CustomerLove #CustomerReviews #SorevaJewels #JewelleryLove",
+      "title": "Your love means everything to us. \ud83e\udd0d",
+      "caption": "Your love means everything to us. \ud83e\udd0d\n\nThank you for choosing Sor\u00e8va and sharing your beautiful feedback. Here\u2019s to more sparkle, more smiles & more Sor\u00e8va moments. \n\n#Soreva #CustomerLove #CustomerReviews #SorevaJewels #JewelleryLove",
       "videoUrl": "https://instagram.fblr24-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQNIlUdsx852-CPpEAApVZ6_w4uR8GJs58IVUFK9wCJdCP8U9pNaMJ7LgQpd-1KylwBFmRiTWn7dmdYj1WBd50dFQPQR49vMMBPUf4w.mp4?_nc_cat=102&_nc_oc=Adoi0smhoKfTL0vVrctCJoGP-Uhw7861VlQ-V-KmUmLnHLPeMbj0nD5wIQaCzqJ2NzU&_nc_sid=5e9851&_nc_ht=instagram.fblr24-4.fna.fbcdn.net&_nc_ohc=6xcXAMLrhR0Q7kNvwFcfh-m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MzU0NzE5ODk1NTQ0OTAyOCwiYXNzZXRfYWdlX2RheXMiOjksInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoxNiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=b7e874b62040a73d&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8zRjREOTNGMkMwNDQ4MUZFMzg5MDEwNUFGODkxRUFBRV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzI4NEU2OTk0N0FGNjFCODkxMzI5RjYyQzg5REMzQ0I5X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaIq__ak4rNDBUCKAJDMywXQDAAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQLYx14xgH_DYSDvzptg7zRr2gFGD4fulgIx5CAcSNE4yg&oe=6AB72E0B",
       "rawVideoUrl": "https://instagram.fblr24-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQNIlUdsx852-CPpEAApVZ6_w4uR8GJs58IVUFK9wCJdCP8U9pNaMJ7LgQpd-1KylwBFmRiTWn7dmdYj1WBd50dFQPQR49vMMBPUf4w.mp4?_nc_cat=102&_nc_oc=Adoi0smhoKfTL0vVrctCJoGP-Uhw7861VlQ-V-KmUmLnHLPeMbj0nD5wIQaCzqJ2NzU&_nc_sid=5e9851&_nc_ht=instagram.fblr24-4.fna.fbcdn.net&_nc_ohc=6xcXAMLrhR0Q7kNvwFcfh-m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MzU0NzE5ODk1NTQ0OTAyOCwiYXNzZXRfYWdlX2RheXMiOjksInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjoxNiwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=b7e874b62040a73d&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8zRjREOTNGMkMwNDQ4MUZFMzg5MDEwNUFGODkxRUFBRV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzI4NEU2OTk0N0FGNjFCODkxMzI5RjYyQzg5REMzQ0I5X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaIq__ak4rNDBUCKAJDMywXQDAAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQLYx14xgH_DYSDvzptg7zRr2gFGD4fulgIx5CAcSNE4yg&oe=6AB72E0B",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/812064360_18099777068329899_4207902709807210675_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=pm_V4BlLvfMQ7kNvwHlIe2i&_nc_oc=Adovkxa5ECwGNmAO7Yr2gi5xF3KcCmTDCDOMTFVhJMyCDEU6xElyK1Qhmih1FjrZU2E&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQIpuoYQYKbNx2HyIz8VO4FxqfCu7qjDs1dExYXjOeOpFyWNkv84bjRf7LB_IT4Nk97G_KfiPP86IfM&oh=00_AQJTLP7Tq9mq-oFVV4eMEbv9YcvsjEaY4TCsxxJCk3tJ9Q&oe=6ABB22F6",
@@ -422757,7 +422765,7 @@
       "id": "17956916016253429",
       "type": "video",
       "title": "40 hours of craftsmanship. Zero compromise.",
-      "caption": "40 hours of craftsmanship. Zero compromise. \nDesigned to look real, feel weightless, and last long without losing its shine. Features an adjustable fit so it sits perfectly on any neckline.\nTap the link to explore the collection! 👇\n🔗 https://soreva.in/product/35782/Designer_Handmade_Cz_Jewelry\n#JewelryAddict #BridalJewelry #HandmadeWithLove #LuxuryForLess #jewellery",
+      "caption": "40 hours of craftsmanship. Zero compromise. \nDesigned to look real, feel weightless, and last long without losing its shine. Features an adjustable fit so it sits perfectly on any neckline.\nTap the link to explore the collection! \ud83d\udc47\n\ud83d\udd17 https://soreva.in/product/35782/Designer_Handmade_Cz_Jewelry\n#JewelryAddict #BridalJewelry #HandmadeWithLove #LuxuryForLess #jewellery",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.71878-15/809685273_1804937097188285_3360378800223030814_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=_wbIHiG6veEQ7kNvwF9ybhq&_nc_oc=Adp2M-21nlmZubsHp2rXONc2lX8uwy4236ZsU6pSAaDSim8fw9S4wUXpIHUgxiub0lk&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJp9clfHjvP8ArEEYJ_jbQk3_jt8zArvk5nXeaTU-W0X10DA9dB3xjFnHciBHiv5ZqO5iw8N1t4Yz0&oh=00_AQKEfe0MI_t7_3TKdKs6vWxccM-oWkwvFJzuLTicTu84SA&oe=6ABB34CC",
       "rawVideoUrl": "https://www.instagram.com/reel/DdSwXXHTYh-/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.71878-15/809685273_1804937097188285_3360378800223030814_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=_wbIHiG6veEQ7kNvwF9ybhq&_nc_oc=Adp2M-21nlmZubsHp2rXONc2lX8uwy4236ZsU6pSAaDSim8fw9S4wUXpIHUgxiub0lk&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJp9clfHjvP8ArEEYJ_jbQk3_jt8zArvk5nXeaTU-W0X10DA9dB3xjFnHciBHiv5ZqO5iw8N1t4Yz0&oh=00_AQKEfe0MI_t7_3TKdKs6vWxccM-oWkwvFJzuLTicTu84SA&oe=6ABB34CC",
@@ -422770,7 +422778,7 @@
       "id": "18417171913154614",
       "type": "video",
       "title": "May Bappa bring a little more joy to your days, wa",
-      "caption": "May Bappa bring a little more joy to your days, warmth to your home, and grace to every new beginning. ✨\n\nWishing you and your loved ones a beautiful and blessed Ganesh Chaturthi. 🤍\n\nWith love,\nSORÈVA\n\n#ganpatibappamorya #FestiveBlessings #GaneshChaturthi2026 #Soreva",
+      "caption": "May Bappa bring a little more joy to your days, warmth to your home, and grace to every new beginning. \u2728\n\nWishing you and your loved ones a beautiful and blessed Ganesh Chaturthi. \ud83e\udd0d\n\nWith love,\nSOR\u00c8VA\n\n#ganpatibappamorya #FestiveBlessings #GaneshChaturthi2026 #Soreva",
       "videoUrl": "https://instagram.fblr1-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQPYhkooa5LUekS9QkAZ91Pagqrumu6c16N4p-hMkdOT4XhBRtLkDoW5OqIRGW1rSi0duB4eI4FryO7jkNrWd1XNaDL-8RTGBHA1FgU.mp4?_nc_cat=107&_nc_oc=AdoB0gUBgphlSs4IBDnrb_p2gSLXndFOG8RTj9Bl04c2fEDs45kCUqUWvdOcfxx44io&_nc_sid=5e9851&_nc_ht=instagram.fblr1-4.fna.fbcdn.net&_nc_ohc=HHdI5DOtKVoQ7kNvwHwpFQs&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgwMzUyMTQzNzUwOTAyMiwiYXNzZXRfYWdlX2RheXMiOjEwLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=87165090703fdc85&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8zRTRERTczRjI2RTcxMzcxQ0JBQ0I4Qjg3NzM3NzI4Ml92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzA5NDIxQkY2RERCMEI5NEMwQkVDQjY5NzE1RUExQTg0X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa8loXq4ZK0BhUCKAJDMywXQDKqfvnbItEYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIcuGLpt3XIaTYFMw9mpjzcwHezYs1hUcq1_WGTCtQOTQ&oe=6AB71970",
       "rawVideoUrl": "https://instagram.fblr1-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQPYhkooa5LUekS9QkAZ91Pagqrumu6c16N4p-hMkdOT4XhBRtLkDoW5OqIRGW1rSi0duB4eI4FryO7jkNrWd1XNaDL-8RTGBHA1FgU.mp4?_nc_cat=107&_nc_oc=AdoB0gUBgphlSs4IBDnrb_p2gSLXndFOG8RTj9Bl04c2fEDs45kCUqUWvdOcfxx44io&_nc_sid=5e9851&_nc_ht=instagram.fblr1-4.fna.fbcdn.net&_nc_ohc=HHdI5DOtKVoQ7kNvwHwpFQs&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTgwMzUyMTQzNzUwOTAyMiwiYXNzZXRfYWdlX2RheXMiOjEwLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=87165090703fdc85&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8zRTRERTczRjI2RTcxMzcxQ0JBQ0I4Qjg3NzM3NzI4Ml92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzA5NDIxQkY2RERCMEI5NEMwQkVDQjY5NzE1RUExQTg0X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa8loXq4ZK0BhUCKAJDMywXQDKqfvnbItEYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIcuGLpt3XIaTYFMw9mpjzcwHezYs1hUcq1_WGTCtQOTQ&oe=6AB71970",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/809209258_18099618164329899_3928522451864237670_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=DVqLsnjXZ4QQ7kNvwGiBSXS&_nc_oc=AdrpjwzzhJnQoEfXOciLNs7pTv-SIW6i2f1b3R2azE5Mr1POPzwgd6gJ4SGG7zGtJf0&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKLxoCxQ85xijjVTo1y5YC9OfncYY9sO1obm1HGJzitG1TpYY0vkpNxzTaedTRB91dFDtTFrQUhmbQ&oh=00_AQJGORpHEl8cBtVigb1IKBswpcZ3O-jh7u3N-9j-jbcNoQ&oe=6ABB3909",
@@ -422782,8 +422790,8 @@
     {
       "id": "18141319387507605",
       "type": "video",
-      "title": "Some traditions never change. ❤️",
-      "caption": "Some traditions never change. ❤️\n\nFrom the warmth of olden-day Ganesh Chaturthi celebrations to the little sparkle that completes the festive look — some moments are meant to be treasured.\n\nBappa is coming. Is your festive look ready?\n\nDiscover the beauty of tradition with Sorèva. \n\nProduct Link - https://soreva.in/product/23573/Classic_Jewelry_Set\n\n#festival #ganeshchaturthi #jewellery #india #reel",
+      "title": "Some traditions never change. \u2764\ufe0f",
+      "caption": "Some traditions never change. \u2764\ufe0f\n\nFrom the warmth of olden-day Ganesh Chaturthi celebrations to the little sparkle that completes the festive look \u2014 some moments are meant to be treasured.\n\nBappa is coming. Is your festive look ready?\n\nDiscover the beauty of tradition with Sor\u00e8va. \n\nProduct Link - https://soreva.in/product/23573/Classic_Jewelry_Set\n\n#festival #ganeshchaturthi #jewellery #india #reel",
       "videoUrl": "https://scontent.cdninstagram.com/v/t15.5256-10/808265365_1419738703425669_8554308381033332866_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=v1t6VlmTExAQ7kNvwHr4fSH&_nc_oc=AdqARYz6dnS8tSUX9VSYXaijT8sHxa2UaBhiX8nqCUDAKsst_EW1dO0FtquP5koSUxE&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQLuDGAdtpLp-kM_y3LBhdQDNQ7glXn1NrhHU4qhvSogi4z2MQRKdSCEc7TTr_DQoxCm-3s7lVqzuPc&oh=00_AQKtFY5Q3HdXrg1L17A_jD3JQIqaU5-mW-LyPUNzx_QWeA&oe=6ABB23C1",
       "rawVideoUrl": "https://www.instagram.com/reel/DdNtOaWhl4v/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t15.5256-10/808265365_1419738703425669_8554308381033332866_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=v1t6VlmTExAQ7kNvwHr4fSH&_nc_oc=AdqARYz6dnS8tSUX9VSYXaijT8sHxa2UaBhiX8nqCUDAKsst_EW1dO0FtquP5koSUxE&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQLuDGAdtpLp-kM_y3LBhdQDNQ7glXn1NrhHU4qhvSogi4z2MQRKdSCEc7TTr_DQoxCm-3s7lVqzuPc&oh=00_AQKtFY5Q3HdXrg1L17A_jD3JQIqaU5-mW-LyPUNzx_QWeA&oe=6ABB23C1",
@@ -422796,7 +422804,7 @@
       "id": "18128816206744780",
       "type": "video",
       "title": "Experience the divine grace of Ganesha Chaturthi w",
-      "caption": "Experience the divine grace of Ganesha Chaturthi with Sorèva Collections! \n\nCelebrate every moment in unmatched elegance.\nAdorned in our exclusive, handcrafted zircon necklace set featuring intricate peacock motifs and timeless sparkle, our muse brings tradition and luxury together. \n\n✨ Happy Ganesha Chaturthi to all! ✨\nShop the look now and make your celebrations truly unforgettable.\n\n#Sorèva #GaneshaChaturthi #FestiveVibes #ZirconJewellery #indianfestivals",
+      "caption": "Experience the divine grace of Ganesha Chaturthi with Sor\u00e8va Collections! \n\nCelebrate every moment in unmatched elegance.\nAdorned in our exclusive, handcrafted zircon necklace set featuring intricate peacock motifs and timeless sparkle, our muse brings tradition and luxury together. \n\n\u2728 Happy Ganesha Chaturthi to all! \u2728\nShop the look now and make your celebrations truly unforgettable.\n\n#Sor\u00e8va #GaneshaChaturthi #FestiveVibes #ZirconJewellery #indianfestivals",
       "videoUrl": "https://instagram.fblr24-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQPvdor6Cy8fn5crnOtHrV4QQeLO4Np-_pXCtmNHli15hxJQUoTBrTPkSc1zdE44ataYYBHTW2cDAhyQo25jEcQ3T-M9ly_6M6WV-8g.mp4?_nc_cat=108&_nc_oc=AdpM6WuSNUjIi75xqlefX5BJyMVwE0F00k-GBhMovWbsTK4h_UFe4_Ryq_9zQN718Q0&_nc_sid=5e9851&_nc_ht=instagram.fblr24-4.fna.fbcdn.net&_nc_ohc=MgKEARSLrQAQ7kNvwHl6SJf&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA3MDQxNTExOTA0NTAzNiwiYXNzZXRfYWdlX2RheXMiOjEyLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MzAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=ba886fc1a2381922&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9GQTQxNzJCOEYzNkVBQkM1Q0JCRUMyNjNCRjNGNDM5Ql92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzlENEZFOTlDMzkzM0M3Qzg2NDJDRDJDQUQwN0QwMTk4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbYxvaOruLmAxUCKAJDMywXQD5EGJN0vGoYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIhb06Um2bmkor2QMblCVzvQEexN4oZ9Ouoa8Is9ljVUQ&oe=6AB73DC1",
       "rawVideoUrl": "https://instagram.fblr24-4.fna.fbcdn.net/o1/v/t2/f2/m86/AQPvdor6Cy8fn5crnOtHrV4QQeLO4Np-_pXCtmNHli15hxJQUoTBrTPkSc1zdE44ataYYBHTW2cDAhyQo25jEcQ3T-M9ly_6M6WV-8g.mp4?_nc_cat=108&_nc_oc=AdpM6WuSNUjIi75xqlefX5BJyMVwE0F00k-GBhMovWbsTK4h_UFe4_Ryq_9zQN718Q0&_nc_sid=5e9851&_nc_ht=instagram.fblr24-4.fna.fbcdn.net&_nc_ohc=MgKEARSLrQAQ7kNvwHl6SJf&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA3MDQxNTExOTA0NTAzNiwiYXNzZXRfYWdlX2RheXMiOjEyLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MzAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=ba886fc1a2381922&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC9GQTQxNzJCOEYzNkVBQkM1Q0JCRUMyNjNCRjNGNDM5Ql92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzlENEZFOTlDMzkzM0M3Qzg2NDJDRDJDQUQwN0QwMTk4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbYxvaOruLmAxUCKAJDMywXQD5EGJN0vGoYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQIhb06Um2bmkor2QMblCVzvQEexN4oZ9Ouoa8Is9ljVUQ&oe=6AB73DC1",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/806298909_18099298427329899_1242080337949689887_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=Da7G5Jc0drUQ7kNvwGhVcTU&_nc_oc=AdoSCslKJ_IjYZ6fEJb2h0Sypjnaz9qDXWtd00lf7CH9VGhW2RmLIoS41IDdEecQUAA&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJGE6wroZ4V43O8uuLw5ihnRg7Wmdoswj8MFJytqhKQ8O5vrIXwJ5vspx6AV0IAURSIANC7UQUImcs&oh=00_AQK-c4b_Fhqa1GMTSbY2YQvDaVn0_1ZYRk1bPjnBNExFWA&oe=6ABB31AC",
@@ -422808,8 +422816,8 @@
     {
       "id": "18427295029195443",
       "type": "video",
-      "title": "The celebrations are almost here. ✨",
-      "caption": "The celebrations are almost here. ✨\nA little tradition, a little sparkle, and pieces made for everything the festive days bring.\n\nDiscover SORÈVA’s festive edit at www.soreva.in 🤍\n\n#sorèva #GaneshChaturthi2026 #FestiveEdit #CZJewellery #MadeForCelebrations",
+      "title": "The celebrations are almost here. \u2728",
+      "caption": "The celebrations are almost here. \u2728\nA little tradition, a little sparkle, and pieces made for everything the festive days bring.\n\nDiscover SOR\u00c8VA\u2019s festive edit at www.soreva.in \ud83e\udd0d\n\n#sor\u00e8va #GaneshChaturthi2026 #FestiveEdit #CZJewellery #MadeForCelebrations",
       "videoUrl": "https://instagram.fblr1-9.fna.fbcdn.net/o1/v/t2/f2/m86/AQMnbWb6OSpWD4x6k2BQ2pHfB3RJxkhqWF4u1cuHDTt3eRwh3HzfD2jrt0G966DhnA7VeJJCiEzfAlZBZe_jxVeaWqL32AE1OKJBAfA.mp4?_nc_cat=104&_nc_oc=Adr9E3l6d-o9FlxHV6tcfHLMcmSTIxSZns_3UquMFcUtvakef9DOCxg7yV48xubxNnM&_nc_sid=5e9851&_nc_ht=instagram.fblr1-9.fna.fbcdn.net&_nc_ohc=NKb-8dJx9AsQ7kNvwE_IZqE&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTYzMjM4MTk2ODYwNDIyNywiYXNzZXRfYWdlX2RheXMiOjEzLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=96a084027fd0c244&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC84RDRBRkVDNzY5NTQyMjE1MEQ1MkRGODc2MEJGMjg4QV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0ZCNDAxNTgxMjU4MUUxNzYxMDdDRUU3NkY3OUNGRUI0X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaG8YK2kanmBRUCKAJDMywXQDKiDEm6XjUYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQL367Wu2OBtdW0YcD7XGRxBs7VY6tssXEt2y-IuPCzvzQ&oe=6AB7389D",
       "rawVideoUrl": "https://instagram.fblr1-9.fna.fbcdn.net/o1/v/t2/f2/m86/AQMnbWb6OSpWD4x6k2BQ2pHfB3RJxkhqWF4u1cuHDTt3eRwh3HzfD2jrt0G966DhnA7VeJJCiEzfAlZBZe_jxVeaWqL32AE1OKJBAfA.mp4?_nc_cat=104&_nc_oc=Adr9E3l6d-o9FlxHV6tcfHLMcmSTIxSZns_3UquMFcUtvakef9DOCxg7yV48xubxNnM&_nc_sid=5e9851&_nc_ht=instagram.fblr1-9.fna.fbcdn.net&_nc_ohc=NKb-8dJx9AsQ7kNvwE_IZqE&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTYzMjM4MTk2ODYwNDIyNywiYXNzZXRfYWdlX2RheXMiOjEzLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=96a084027fd0c244&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC84RDRBRkVDNzY5NTQyMjE1MEQ1MkRGODc2MEJGMjg4QV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0ZCNDAxNTgxMjU4MUUxNzYxMDdDRUU3NkY3OUNGRUI0X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaG8YK2kanmBRUCKAJDMywXQDKiDEm6XjUYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQL367Wu2OBtdW0YcD7XGRxBs7VY6tssXEt2y-IuPCzvzQ&oe=6AB7389D",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/804725498_18099144980329899_1644455437413585533_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=XMPpCRCxEXgQ7kNvwE6ZG1y&_nc_oc=AdrdXaHtVIsi-AKE3hBsOu24xAvrjS8K1ctJ7NC-F1jSNTU-LSdUbAjjy-5oANhgbXw&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJYWtwUYUk_n8EaZBF5GY0dzptusDHJS6aq0awssPh9QR4mw2vp9EfTqT5wn9JqF_RbDDFyQD-Wncw&oh=00_AQL-OnWB28ETyDSipQcWGGKbDv_KkWR4tcK81w0sikScqQ&oe=6ABB2356",
@@ -422822,7 +422830,7 @@
       "id": "18127223092685255",
       "type": "video",
       "title": "80s glamour, reimagined for today.",
-      "caption": "80s glamour, reimagined for today. \n\nBold. Dramatic. Unapologetically glamorous.\nA vintage-inspired statement, made for the modern woman.\n\nWear the era. Own the moment. 🤍\n\n#80s #80sglam #modernjewellery #StatementJewellery #jewellerytrend",
+      "caption": "80s glamour, reimagined for today. \n\nBold. Dramatic. Unapologetically glamorous.\nA vintage-inspired statement, made for the modern woman.\n\nWear the era. Own the moment. \ud83e\udd0d\n\n#80s #80sglam #modernjewellery #StatementJewellery #jewellerytrend",
       "videoUrl": "https://scontent.cdninstagram.com/v/t15.5256-10/802307631_1898656234436595_5008706168073928351_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=cGvtfuXb1GcQ7kNvwEF9ata&_nc_oc=AdpVPeHocRTlTDEDcuz7b4e0qnLyvA0GomEoDjL-C5usI9uSJrh12HszrZ4AzTFoNTQ&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKrKXt7o8tO4Le5gwAdWjsndmyig9xTh5Z3F38K2sOjTKi6P_o50tYWXg6oX3ZBm4xgHWGNEVNtinc&oh=00_AQKZ9O5SlCWxBAWblob1ot3gJc35C04BPdHLl9tCin-6yg&oe=6ABB38DA",
       "rawVideoUrl": "https://www.instagram.com/reel/DdG3hHlzu_f/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t15.5256-10/802307631_1898656234436595_5008706168073928351_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=cGvtfuXb1GcQ7kNvwEF9ata&_nc_oc=AdpVPeHocRTlTDEDcuz7b4e0qnLyvA0GomEoDjL-C5usI9uSJrh12HszrZ4AzTFoNTQ&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKrKXt7o8tO4Le5gwAdWjsndmyig9xTh5Z3F38K2sOjTKi6P_o50tYWXg6oX3ZBm4xgHWGNEVNtinc&oh=00_AQKZ9O5SlCWxBAWblob1ot3gJc35C04BPdHLl9tCin-6yg&oe=6ABB38DA",
@@ -422834,8 +422842,8 @@
     {
       "id": "18626140237057512",
       "type": "video",
-      "title": "A little love from our beautiful customers. 🤍",
-      "caption": "A little love from our beautiful customers. 🤍\n\nYour trust, your smiles, and your words mean so much to us.\n\nThank you for choosing Sorèva. ✨\n\n#Soreva #CustomerLove #SorevaJewels #HappyCustomers #JewelleryLove",
+      "title": "A little love from our beautiful customers. \ud83e\udd0d",
+      "caption": "A little love from our beautiful customers. \ud83e\udd0d\n\nYour trust, your smiles, and your words mean so much to us.\n\nThank you for choosing Sor\u00e8va. \u2728\n\n#Soreva #CustomerLove #SorevaJewels #HappyCustomers #JewelleryLove",
       "videoUrl": "https://scontent.cdninstagram.com/v/t15.5256-10/802308041_28214274671570583_2655491624563975696_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=kWzVdd8gxG4Q7kNvwH1n1fg&_nc_oc=Adqti9VP4n8EpmHwh8BmpQQFxznNdz7yX4badm4L12N7z_o815UA9WmJWOQOqDlZBg8&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJhO_taIZHSRur06L8HlS2RmIzn0S3B3zJ6SUZV1JpY0FMOVjvXdnmVWDvH0Ub-5gUWytQgkdGHhuc&oh=00_AQLfa3VW0WyCgclnUe6II4Adx_QP7V4BnczW0Tomhs0vFg&oe=6ABB420A",
       "rawVideoUrl": "https://www.instagram.com/reel/DdGVf99TbpO/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t15.5256-10/802308041_28214274671570583_2655491624563975696_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=kWzVdd8gxG4Q7kNvwH1n1fg&_nc_oc=Adqti9VP4n8EpmHwh8BmpQQFxznNdz7yX4badm4L12N7z_o815UA9WmJWOQOqDlZBg8&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJhO_taIZHSRur06L8HlS2RmIzn0S3B3zJ6SUZV1JpY0FMOVjvXdnmVWDvH0Ub-5gUWytQgkdGHhuc&oh=00_AQLfa3VW0WyCgclnUe6II4Adx_QP7V4BnczW0Tomhs0vFg&oe=6ABB420A",
@@ -422847,8 +422855,8 @@
     {
       "id": "18131559733636686",
       "type": "video",
-      "title": "Some things don’t ask to be noticed.",
-      "caption": "Some things don’t ask to be noticed.\nThey simply stay with you. ✨\n\nA little light. A little mystery.\nA piece that feels like it was always meant to find you.\n\nSORÈVA — jewellery that lingers.\n\nDiscover the collection at soreva.in\nYour next favourite piece might already be waiting. 🤍\n\n#Soreva #SorevaJewellery #JewelleryThatLingers #CubicZirconiaJewellery #StatementJewellery",
+      "title": "Some things don\u2019t ask to be noticed.",
+      "caption": "Some things don\u2019t ask to be noticed.\nThey simply stay with you. \u2728\n\nA little light. A little mystery.\nA piece that feels like it was always meant to find you.\n\nSOR\u00c8VA \u2014 jewellery that lingers.\n\nDiscover the collection at soreva.in\nYour next favourite piece might already be waiting. \ud83e\udd0d\n\n#Soreva #SorevaJewellery #JewelleryThatLingers #CubicZirconiaJewellery #StatementJewellery",
       "videoUrl": "https://instagram.fblr1-6.fna.fbcdn.net/o1/v/t2/f2/m86/AQNSUtuyKCnWQzW_C8bwYeYVdmye4bEzGYRXQ1kNv8tkSGDmduqr_0e-APChb0wujPvS-mGmhGZjqkPgJhXO9CYBIXktRuZGOz5IUBo.mp4?_nc_cat=100&_nc_oc=AdrYxBgD6mwgNnyqC7WDdJqhLBI-8d7F_DYIXe9SIqhtdnSvh9C9W-nIoGN-0KXQ-QQ&_nc_sid=5e9851&_nc_ht=instagram.fblr1-6.fna.fbcdn.net&_nc_ohc=LLGZJEzLo7EQ7kNvwETJWnj&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MjA2NDIwNDM1NzU1NzUwMSwiYXNzZXRfYWdlX2RheXMiOjE2LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=bfe1d00616131fb&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC81ODRDM0MxQkM4Mzg2NDVBMTg4Q0YwRTRBNTBCOUZBRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzhENDlGRTIxNEI1QTlGNEM2NzZDQ0E3Qjk0OTdDRkJEX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACb68873wNiqBxUCKAJDMywXQCq7ZFocrAgYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQI-Ocl_kbFBYvmv7uO1oZEXrIK4imYcyyFA8ExurrDc6Q&oe=6AB71F59",
       "rawVideoUrl": "https://instagram.fblr1-6.fna.fbcdn.net/o1/v/t2/f2/m86/AQNSUtuyKCnWQzW_C8bwYeYVdmye4bEzGYRXQ1kNv8tkSGDmduqr_0e-APChb0wujPvS-mGmhGZjqkPgJhXO9CYBIXktRuZGOz5IUBo.mp4?_nc_cat=100&_nc_oc=AdrYxBgD6mwgNnyqC7WDdJqhLBI-8d7F_DYIXe9SIqhtdnSvh9C9W-nIoGN-0KXQ-QQ&_nc_sid=5e9851&_nc_ht=instagram.fblr1-6.fna.fbcdn.net&_nc_ohc=LLGZJEzLo7EQ7kNvwETJWnj&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MjA2NDIwNDM1NzU1NzUwMSwiYXNzZXRfYWdlX2RheXMiOjE2LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTMsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=bfe1d00616131fb&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC81ODRDM0MxQkM4Mzg2NDVBMTg4Q0YwRTRBNTBCOUZBRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzhENDlGRTIxNEI1QTlGNEM2NzZDQ0E3Qjk0OTdDRkJEX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACb68873wNiqBxUCKAJDMywXQCq7ZFocrAgYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQI-Ocl_kbFBYvmv7uO1oZEXrIK4imYcyyFA8ExurrDc6Q&oe=6AB71F59",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/800065683_18098760167329899_2677931524191999014_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=0ZjjfLt62RgQ7kNvwE5XfnF&_nc_oc=AdrUgHQg-fqjtw4zM1GKtLv36p6UdP9mpaWt2yUDLLaP-h0vgZQXQJZRa8CpYPn0GC0&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKBFt3i3fYF0G3zyaDJjhpRDNCREmyvaHoZvPwOX1QglUBLF7TpFXrluDPGOEBFK14USnkq7oegnuM&oh=00_AQJ49Egs8GgY6ahrqMtMuq08-rkdunnFGwSfkbybFDN9hg&oe=6ABB38E4",
@@ -422860,8 +422868,8 @@
     {
       "id": "17899978089603630",
       "type": "video",
-      "title": "Timeless isn’t a trend. It’s a signature. ✨",
-      "caption": "Timeless isn’t a trend. It’s a signature. ✨\n\nJewellery made for the pieces you reach for today, tomorrow, and years from now.\n\nDiscover SORÈVA — designed to be noticed, made to stay.\n15% OFF — DM us for the launch code.\nWorld-wide shipping 🌎\n\nwww.soreva.in\n\n#Soreva #TimelessJewellery #LuxuryJewellery #JewelleryEdit #CZJewellery",
+      "title": "Timeless isn\u2019t a trend. It\u2019s a signature. \u2728",
+      "caption": "Timeless isn\u2019t a trend. It\u2019s a signature. \u2728\n\nJewellery made for the pieces you reach for today, tomorrow, and years from now.\n\nDiscover SOR\u00c8VA \u2014 designed to be noticed, made to stay.\n15% OFF \u2014 DM us for the launch code.\nWorld-wide shipping \ud83c\udf0e\n\nwww.soreva.in\n\n#Soreva #TimelessJewellery #LuxuryJewellery #JewelleryEdit #CZJewellery",
       "videoUrl": "https://instagram.fblr24-1.fna.fbcdn.net/o1/v/t2/f2/m86/AQO5mtFFQO2g_bUDPSrA9ydOBjwIyl0HD7zxi6twSof7Sy7nrzxAY24mBa0_sCWq2lcU93zbxB1M2CMo2Mu6mo_i3bJan5AzO6bgFSk.mp4?_nc_cat=110&_nc_oc=AdoWCyChspsMQ8zh0M0Emy2WWSU20yeuqeXa7cX3chH2zp5sFf_roCErKwoe8wSbgDM&_nc_sid=5e9851&_nc_ht=instagram.fblr24-1.fna.fbcdn.net&_nc_ohc=omFCjf4ASJsQ7kNvwF1x49Q&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNDgwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA0ODU3MTY2ODA3NDc3MSwiYXNzZXRfYWdlX2RheXMiOjE3LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6OSwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=d8c0cf80a40541db&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85MjQwRUFENTJDQjU0OUVERDE2OEI5OTFEMDU2NzRCOF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzJDNDcwQjM0MDlGRTQ0REQ5MTE3MjUwRkI0N0Q5NzlCX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACamxODc8-rcAxUCKAJDMywXQCJEGJN0vGoYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQJB7oqRf-JxwypKi60bHtECiSacFi9bJRS4lV4B09RfuA&oe=6AB717FF",
       "rawVideoUrl": "https://instagram.fblr24-1.fna.fbcdn.net/o1/v/t2/f2/m86/AQO5mtFFQO2g_bUDPSrA9ydOBjwIyl0HD7zxi6twSof7Sy7nrzxAY24mBa0_sCWq2lcU93zbxB1M2CMo2Mu6mo_i3bJan5AzO6bgFSk.mp4?_nc_cat=110&_nc_oc=AdoWCyChspsMQ8zh0M0Emy2WWSU20yeuqeXa7cX3chH2zp5sFf_roCErKwoe8wSbgDM&_nc_sid=5e9851&_nc_ht=instagram.fblr24-1.fna.fbcdn.net&_nc_ohc=omFCjf4ASJsQ7kNvwF1x49Q&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNDgwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTA0ODU3MTY2ODA3NDc3MSwiYXNzZXRfYWdlX2RheXMiOjE3LCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6OSwidXJsZ2VuX3NvdXJjZSI6Ind3dyJ9&ccb=17-1&vs=d8c0cf80a40541db&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85MjQwRUFENTJDQjU0OUVERDE2OEI5OTFEMDU2NzRCOF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzJDNDcwQjM0MDlGRTQ0REQ5MTE3MjUwRkI0N0Q5NzlCX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACamxODc8-rcAxUCKAJDMywXQCJEGJN0vGoYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQJB7oqRf-JxwypKi60bHtECiSacFi9bJRS4lV4B09RfuA&oe=6AB717FF",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/798984151_18098638652329899_630300205169621510_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=gIciiine_E0Q7kNvwHYs9GD&_nc_oc=AdrXWTEZnB-ZbUzMZAJ5eKVkK6XlhI8GZqQvg2mhCeXLUAKWHLmIx8SYHs2-_gPjklI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQJisao1RMnN0PL4kLqj3nWgbL90UhRW5BS3xy2c7sLHElKUWwkjvXVR1K8s6TOSWKqKlEQ5lq1pk9s&oh=00_AQIGHjMxaYJgnV8MyuD1VEzvbz5ZTZJhU7Cw4VDwDZ_89w&oe=6ABB2814",
@@ -422873,8 +422881,8 @@
     {
       "id": "17965165461179639",
       "type": "video",
-      "title": "Made to command attention. ✨",
-      "caption": "Made to command attention. ✨\n\nThe Imperial Radiance Cocktail Ring — sculpted in layers of brilliant zirconia, finished with a warm statement stone at its heart. Bold, architectural, and impossible to overlook.\n\nA little more radiance, now 15% OFF.\n\nShop now at soreva.in \nWorldwide shipping available. 🤍\n\n#Soreva #CocktailRing #StatementRing #ZirconiaJewellery LuxuryJewellery",
+      "title": "Made to command attention. \u2728",
+      "caption": "Made to command attention. \u2728\n\nThe Imperial Radiance Cocktail Ring \u2014 sculpted in layers of brilliant zirconia, finished with a warm statement stone at its heart. Bold, architectural, and impossible to overlook.\n\nA little more radiance, now 15% OFF.\n\nShop now at soreva.in \nWorldwide shipping available. \ud83e\udd0d\n\n#Soreva #CocktailRing #StatementRing #ZirconiaJewellery LuxuryJewellery",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/795913498_18098402639329899_7054746323456949710_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=sAwV74QuE94Q7kNvwHd_tvZ&_nc_oc=AdoehqvmUOq7xn455kS-gXujLapLzYZFJUC2OWWcPfkQ5IaBo8B20zCcPE7ooMnO6QI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQI4Mxc-KdrJVx7jG7T7tBCUOBi0kkO5zGJpv7MdFYwk3Q&oe=6ABB1F30",
       "rawVideoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/795913498_18098402639329899_7054746323456949710_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=sAwV74QuE94Q7kNvwHd_tvZ&_nc_oc=AdoehqvmUOq7xn455kS-gXujLapLzYZFJUC2OWWcPfkQ5IaBo8B20zCcPE7ooMnO6QI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQI4Mxc-KdrJVx7jG7T7tBCUOBi0kkO5zGJpv7MdFYwk3Q&oe=6ABB1F30",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/795913498_18098402639329899_7054746323456949710_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=sAwV74QuE94Q7kNvwHd_tvZ&_nc_oc=AdoehqvmUOq7xn455kS-gXujLapLzYZFJUC2OWWcPfkQ5IaBo8B20zCcPE7ooMnO6QI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQI4Mxc-KdrJVx7jG7T7tBCUOBi0kkO5zGJpv7MdFYwk3Q&oe=6ABB1F30",
@@ -422886,8 +422894,8 @@
     {
       "id": "18185799409410165",
       "type": "video",
-      "title": "Made to make an entrance. ✨",
-      "caption": "Made to make an entrance. ✨\n\nThe Solstice Art Deco Fan Earrings bring together sculptural lines, brilliant zirconia and just the right amount of drama.\n\nBecause some pieces aren’t meant to blend in.\n\n15% OFF — for a limited time.\nShop now at www.soreva.in\n\n#Soreva #SorevaJewellery #ArtDecoJewellery #StatementEarrings #ZirconiaJewellery",
+      "title": "Made to make an entrance. \u2728",
+      "caption": "Made to make an entrance. \u2728\n\nThe Solstice Art Deco Fan Earrings bring together sculptural lines, brilliant zirconia and just the right amount of drama.\n\nBecause some pieces aren\u2019t meant to blend in.\n\n15% OFF \u2014 for a limited time.\nShop now at www.soreva.in\n\n#Soreva #SorevaJewellery #ArtDecoJewellery #StatementEarrings #ZirconiaJewellery",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/793867548_18098302913329899_4202153134452790189_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=107&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=5TOpieao3wwQ7kNvwFgdGBH&_nc_oc=Adpdf-iAp2P-mUGLo7zpmzZl-rB7IyZndGlAAdbyXXZf0gEYyyfGJhhX8ePVJQU-nW4&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQJVS-Do7b0AlmRhQ_ZBKpje8KRPReMnCt0dD6VFUQzq7Q&oe=6ABB23C0",
       "rawVideoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/793867548_18098302913329899_4202153134452790189_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=107&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=5TOpieao3wwQ7kNvwFgdGBH&_nc_oc=Adpdf-iAp2P-mUGLo7zpmzZl-rB7IyZndGlAAdbyXXZf0gEYyyfGJhhX8ePVJQU-nW4&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQJVS-Do7b0AlmRhQ_ZBKpje8KRPReMnCt0dD6VFUQzq7Q&oe=6ABB23C0",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/793867548_18098302913329899_4202153134452790189_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=107&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&_nc_ohc=5TOpieao3wwQ7kNvwFgdGBH&_nc_oc=Adpdf-iAp2P-mUGLo7zpmzZl-rB7IyZndGlAAdbyXXZf0gEYyyfGJhhX8ePVJQU-nW4&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&oh=00_AQJVS-Do7b0AlmRhQ_ZBKpje8KRPReMnCt0dD6VFUQzq7Q&oe=6ABB23C0",
@@ -422900,7 +422908,7 @@
       "id": "18336616966282383",
       "type": "video",
       "title": "Turn heads without saying a word.",
-      "caption": "Turn heads without saying a word. \n\nThe Aurelia Waterfall Set brings together cascading brilliance and anti-tarnish durability for an unforgettable statement piece.\n\n15% OFF storewide\n\n✈️ Worldwide Shipping\n\n🔗 Tap the link in bio to shop: www.soreva.in\n\n#HighJewelry #ZirconiaCollection #JewelryAddict #ModernElegance #NecklaceSet",
+      "caption": "Turn heads without saying a word. \n\nThe Aurelia Waterfall Set brings together cascading brilliance and anti-tarnish durability for an unforgettable statement piece.\n\n15% OFF storewide\n\n\u2708\ufe0f Worldwide Shipping\n\n\ud83d\udd17 Tap the link in bio to shop: www.soreva.in\n\n#HighJewelry #ZirconiaCollection #JewelryAddict #ModernElegance #NecklaceSet",
       "videoUrl": "https://instagram.fblr1-5.fna.fbcdn.net/o1/v/t2/f2/m86/AQMT9HoSipTRPXZG11sSvxPKRWUzf-kpTA23iBt1nC9KKJuZ94igSwK18af_KJG-94BZBkuQ1_WiZ5SckpoTdErd_mtF_K1g5PFC-c8.mp4?_nc_cat=102&_nc_oc=Adpgo3HTFk0m7EWLF5CblrDafYaHpsTPNspgNxsh_PwpxUinBxuGl4kVy4mnY-kvPFM&_nc_sid=5e9851&_nc_ht=instagram.fblr1-5.fna.fbcdn.net&_nc_ohc=1zrQw9L7Vo4Q7kNvwFu8aI1&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTYwMjA1NDQyMTU4Mjc3NywiYXNzZXRfYWdlX2RheXMiOjIwLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MzAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=feffd9ee1285d779&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC82MDQ3QzE2Rjg1N0JBNDRCNTQ5NUQ0MjIyRTcwMzBBMl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzc4NDQwNDY2MkVGNjg0NTVDNDE3QjVFOUE2MkI0Nzk2X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbyzqzL68PYBRUCKAJDMywXQD4AAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQK2-O6Flb6VOmFRTar4wMY-9He4tPJefsGEwCSdTgT8iQ&oe=6AB71EFB",
       "rawVideoUrl": "https://instagram.fblr1-5.fna.fbcdn.net/o1/v/t2/f2/m86/AQMT9HoSipTRPXZG11sSvxPKRWUzf-kpTA23iBt1nC9KKJuZ94igSwK18af_KJG-94BZBkuQ1_WiZ5SckpoTdErd_mtF_K1g5PFC-c8.mp4?_nc_cat=102&_nc_oc=Adpgo3HTFk0m7EWLF5CblrDafYaHpsTPNspgNxsh_PwpxUinBxuGl4kVy4mnY-kvPFM&_nc_sid=5e9851&_nc_ht=instagram.fblr1-5.fna.fbcdn.net&_nc_ohc=1zrQw9L7Vo4Q7kNvwFu8aI1&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTYwMjA1NDQyMTU4Mjc3NywiYXNzZXRfYWdlX2RheXMiOjIwLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MzAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=feffd9ee1285d779&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC82MDQ3QzE2Rjg1N0JBNDRCNTQ5NUQ0MjIyRTcwMzBBMl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzc4NDQwNDY2MkVGNjg0NTVDNDE3QjVFOUE2MkI0Nzk2X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACbyzqzL68PYBRUCKAJDMywXQD4AAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQK2-O6Flb6VOmFRTar4wMY-9He4tPJefsGEwCSdTgT8iQ&oe=6AB71EFB",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/793000406_18098143667329899_9216826926166822550_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=u6IwHbgV8WwQ7kNvwHAhPa4&_nc_oc=Ado5HsH_QEqIiOK78shbAkgMUWU7wI1qa4wzd4uUlI9EcgQgLGm8AqYVHW5v4iOksWE&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKzVVOcUYJBtQd1PdIxc6KVoW_kgpxX0o0MKLK6zHb7dobFX0nOwtMcTZAEn_gjbMQ9snFZtjio-IE&oh=00_AQKg5ckkoSznOdh32ChqAQ1A0fEaxwhUUT5Oz7XNo-7LpQ&oe=6ABB3C8D",
@@ -422912,8 +422920,8 @@
     {
       "id": "18100399157202198",
       "type": "video",
-      "title": "Janmashtami Special by Sorèva",
-      "caption": "Janmashtami Special by Sorèva\n\nDressed in grace. Adorned in elegance.\nA Radha-inspired celebration, where every sparkle tells a story. \n\nCelebrate Janmashtami with Sorèva — jewellery that makes every festive moment shine.\n\nShop Now | All Sorèva Products @www.soreva.in\n\n#Soreva #JanmashtamiSpecial #JanmashtamiLook #RadhaLook #FestiveJewellery",
+      "title": "Janmashtami Special by Sor\u00e8va",
+      "caption": "Janmashtami Special by Sor\u00e8va\n\nDressed in grace. Adorned in elegance.\nA Radha-inspired celebration, where every sparkle tells a story. \n\nCelebrate Janmashtami with Sor\u00e8va \u2014 jewellery that makes every festive moment shine.\n\nShop Now | All Sor\u00e8va Products @www.soreva.in\n\n#Soreva #JanmashtamiSpecial #JanmashtamiLook #RadhaLook #FestiveJewellery",
       "videoUrl": "https://instagram.fblr24-3.fna.fbcdn.net/o1/v/t16/f2/m84/AQOmHwakVkQczBc7ohS8hdZyGSh3MhZRKo7rllriBoIaUJowpDEYMgx87SY9bAb7zfk_HRc9kCB9aDMTowm2TtpA4GVIbJFpuMLky-I.mp4?_nc_cat=108&_nc_oc=AdqO4P3qVroBh2xTD7cR7imqblqEd-kn3pT2UGkG007231YrMhSb5uzkYrc7dYokrE4&_nc_sid=5e9851&_nc_ht=instagram.fblr24-3.fna.fbcdn.net&_nc_ohc=D0F7NvZFlOwQ7kNvwGL5C2V&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTU5Nzk5NzQ4NTA0ODcxMywiYXNzZXRfYWdlX2RheXMiOjIxLCJ2aV91c2VjYXNlX2lkIjoxMDgyNywiZHVyYXRpb25fcyI6MjgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=430412ecbec8e3d4&_nc_vs=HBksFQIYTGlnX2JhY2tmaWxsX3RpbWVsaW5lX3ZvZC8yQzQ2MDNBRUM4RTMxM0NEQzE0NjFBODkzRjMxMzI4RF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzRCNDI0OEIwRjk0Njc5QUNCNERCOTcwOEFCMjFFREEyX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaSjpaH2dfWBRUCKAJDMywXQDxdsi0OVgQYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZZapAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQKtdca5qEBQiWXk5zjXZMKIbw3C-tXJGqw563dIOsK-RA&oe=6AB74A84",
       "rawVideoUrl": "https://instagram.fblr24-3.fna.fbcdn.net/o1/v/t16/f2/m84/AQOmHwakVkQczBc7ohS8hdZyGSh3MhZRKo7rllriBoIaUJowpDEYMgx87SY9bAb7zfk_HRc9kCB9aDMTowm2TtpA4GVIbJFpuMLky-I.mp4?_nc_cat=108&_nc_oc=AdqO4P3qVroBh2xTD7cR7imqblqEd-kn3pT2UGkG007231YrMhSb5uzkYrc7dYokrE4&_nc_sid=5e9851&_nc_ht=instagram.fblr24-3.fna.fbcdn.net&_nc_ohc=D0F7NvZFlOwQ7kNvwGL5C2V&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTU5Nzk5NzQ4NTA0ODcxMywiYXNzZXRfYWdlX2RheXMiOjIxLCJ2aV91c2VjYXNlX2lkIjoxMDgyNywiZHVyYXRpb25fcyI6MjgsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=430412ecbec8e3d4&_nc_vs=HBksFQIYTGlnX2JhY2tmaWxsX3RpbWVsaW5lX3ZvZC8yQzQ2MDNBRUM4RTMxM0NEQzE0NjFBODkzRjMxMzI4RF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzRCNDI0OEIwRjk0Njc5QUNCNERCOTcwOEFCMjFFREEyX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaSjpaH2dfWBRUCKAJDMywXQDxdsi0OVgQYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZZapAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQKtdca5qEBQiWXk5zjXZMKIbw3C-tXJGqw563dIOsK-RA&oe=6AB74A84",
       "thumbnail": "https://scontent.cdninstagram.com/v/t15.5256-10/792764197_1821389189022528_8573024034493238164_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=fIYMee9aTJgQ7kNvwFmXJac&_nc_oc=AdobrX6fPq82-Xn2HMvoA6VrE9DYhijAeCacPJIK7uxIyA_mHFl0MUUwNSKZknvelY8&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKOxvgnw_E0xPkgLuQ3QLT2KgZBoWQx93IniR69fvUE7_mdeL3q7ILLUqJ7AXb__F5BHaWaF7vL-EI&oh=00_AQItGSwT8icwduimtOin7xTitzT6Adua5qrkTgKlm47_AA&oe=6ABB19EE",
@@ -422926,7 +422934,7 @@
       "id": "17883922785621940",
       "type": "video",
       "title": "From an idea, to a box, to our very first customer",
-      "caption": "From an idea, to a box, to our very first customer. 🤍\n\nThere’s something special about packing the first one.\nOur very first SORÈVA order, packed and on its way. ✨\n\nHere’s to the first of many😇\n\n#sorèva #FirstOrder #MadeWithLove #jewellery",
+      "caption": "From an idea, to a box, to our very first customer. \ud83e\udd0d\n\nThere\u2019s something special about packing the first one.\nOur very first SOR\u00c8VA order, packed and on its way. \u2728\n\nHere\u2019s to the first of many\ud83d\ude07\n\n#sor\u00e8va #FirstOrder #MadeWithLove #jewellery",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/793121923_18097927115329899_5157178131496887997_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=I0YkosTGXwQQ7kNvwFaz3Wq&_nc_oc=Ado5M0XLCyzG9OBM57rvRIX3UWmSBiTjf68LggebC5Fi3s0bOU33veZ99NSMfo2rcP4&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKM5urFzpv5ad_jQRWZv45md3U0zspEnlPIDhVvcXc56cYmVCq8Qn8nIgC0ViQRyxDt5PLVjFpu3Os&oh=00_AQK_5sZufSXxLeg0wRmppppcxoHr-StrhaNE0-IRXUM3pg&oe=6ABB224B",
       "rawVideoUrl": "https://www.instagram.com/reel/DcydWzJTDXl/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/793121923_18097927115329899_5157178131496887997_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=I0YkosTGXwQQ7kNvwFaz3Wq&_nc_oc=Ado5M0XLCyzG9OBM57rvRIX3UWmSBiTjf68LggebC5Fi3s0bOU33veZ99NSMfo2rcP4&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQKM5urFzpv5ad_jQRWZv45md3U0zspEnlPIDhVvcXc56cYmVCq8Qn8nIgC0ViQRyxDt5PLVjFpu3Os&oh=00_AQK_5sZufSXxLeg0wRmppppcxoHr-StrhaNE0-IRXUM3pg&oe=6ABB224B",
@@ -422938,8 +422946,8 @@
     {
       "id": "18431209087181438",
       "type": "video",
-      "title": "The wait is over. ✨",
-      "caption": "The wait is over. ✨\n\nSORÈVA is officially LIVE.\n\nJewellery made for the moments you want to be remembered — and the ones you simply want to feel beautiful in.\n\nOur collection is now yours to discover. 🤍\n\nShop now on our website.\n\nAnd because every beginning deserves something special —\nDM us “LAUNCH” for your exclusive launch discount code.\n\n#sorèva #WeAreLive #quietluxury #jewellery",
+      "title": "The wait is over. \u2728",
+      "caption": "The wait is over. \u2728\n\nSOR\u00c8VA is officially LIVE.\n\nJewellery made for the moments you want to be remembered \u2014 and the ones you simply want to feel beautiful in.\n\nOur collection is now yours to discover. \ud83e\udd0d\n\nShop now on our website.\n\nAnd because every beginning deserves something special \u2014\nDM us \u201cLAUNCH\u201d for your exclusive launch discount code.\n\n#sor\u00e8va #WeAreLive #quietluxury #jewellery",
       "videoUrl": "https://instagram.fblr1-6.fna.fbcdn.net/o1/v/t2/f2/m86/AQMdfQPD_a1Ktfg0i6JxO9S7pmDnL7dQLoxIvxFC4W1q-0kkQJNGwxbhRC2isQ-W7jDmEOIjXm6--tXlXLiW_-g27DLB1f_EQyseyPE.mp4?_nc_cat=111&_nc_oc=AdrAOfCPox8Z1OwE0xNyRspjDjLdhiNEuR9bTfCg-fxoJVdyT1IWJPHrqnBw_JyhTeU&_nc_sid=5e9851&_nc_ht=instagram.fblr1-6.fna.fbcdn.net&_nc_ohc=aVaMofs78roQ7kNvwHG0qDw&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTQxNjg4NDM3Njk4NjcwNSwiYXNzZXRfYWdlX2RheXMiOjIzLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=94acee0304a2de95&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC83NzQ0MTU2QkZDQjNBMThCNDg4MUFCNzBFNDY5RUY5Nl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0Y4NDdCOEJENjMyQjdGQ0EwREI3NThEMEUzOTRFQUE4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaikdOfw6mEBRUCKAJDMywXQCQAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQLfhM_K7S296fZ-WfrAiOzJsLRFOG3RY17Xw9sJT8zIXg&oe=6AB74D10",
       "rawVideoUrl": "https://instagram.fblr1-6.fna.fbcdn.net/o1/v/t2/f2/m86/AQMdfQPD_a1Ktfg0i6JxO9S7pmDnL7dQLoxIvxFC4W1q-0kkQJNGwxbhRC2isQ-W7jDmEOIjXm6--tXlXLiW_-g27DLB1f_EQyseyPE.mp4?_nc_cat=111&_nc_oc=AdrAOfCPox8Z1OwE0xNyRspjDjLdhiNEuR9bTfCg-fxoJVdyT1IWJPHrqnBw_JyhTeU&_nc_sid=5e9851&_nc_ht=instagram.fblr1-6.fna.fbcdn.net&_nc_ohc=aVaMofs78roQ7kNvwHG0qDw&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTQxNjg4NDM3Njk4NjcwNSwiYXNzZXRfYWdlX2RheXMiOjIzLCJ2aV91c2VjYXNlX2lkIjoxMDA5OSwiZHVyYXRpb25fcyI6MTAsInVybGdlbl9zb3VyY2UiOiJ3d3cifQ%3D%3D&ccb=17-1&vs=94acee0304a2de95&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC83NzQ0MTU2QkZDQjNBMThCNDg4MUFCNzBFNDY5RUY5Nl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0Y4NDdCOEJENjMyQjdGQ0EwREI3NThEMEUzOTRFQUE4X2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaikdOfw6mEBRUCKAJDMywXQCQAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQLfhM_K7S296fZ-WfrAiOzJsLRFOG3RY17Xw9sJT8zIXg&oe=6AB74D10",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/790194786_18097649117329899_6895877244317015795_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=OTAIw_TDQkMQ7kNvwFkElcU&_nc_oc=AdqTIszYTEenppXAV97qmxiI_VlyvdZaHwOL9hvrWyopY3tYxjwBxk0PrelKBYxECfg&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQLoUZoGpYcpJxt0ZYJkb3UD4ucqy3axQyUMRhTY8BKd6d1Q1A50VEajhOCTqUX7E8tVC-0wCGZhKnw&oh=00_AQITBDh4aPzyTJnxg1ECgL4VEF06dgOlDrbmL9LKKwUD3A&oe=6ABB30B3",
@@ -422951,8 +422959,8 @@
     {
       "id": "18126201079823375",
       "type": "video",
-      "title": "Sorèva- Tomorrow, the wait is finally over.",
-      "caption": "Sorèva- Tomorrow, the wait is finally over.\n\nSomething beautiful is about to arrive.\nSomething made to make every moment sparkle a little brighter. \n\nSORÈVA\n\nLaunching Tomorrow.\n\nYour everyday luxury is almost here. \n\n#Soreva #SorevaJewellery #LaunchingTomorrow #JewelleryLaunch #comingsoon",
+      "title": "Sor\u00e8va- Tomorrow, the wait is finally over.",
+      "caption": "Sor\u00e8va- Tomorrow, the wait is finally over.\n\nSomething beautiful is about to arrive.\nSomething made to make every moment sparkle a little brighter. \n\nSOR\u00c8VA\n\nLaunching Tomorrow.\n\nYour everyday luxury is almost here. \n\n#Soreva #SorevaJewellery #LaunchingTomorrow #JewelleryLaunch #comingsoon",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/790585975_18097603064329899_632019527388415766_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=QqAiVtK3eEAQ7kNvwHDEhXL&_nc_oc=Adq6KI2AiYFQZdKMAf9-LaMC4HjsEI8Hvq_wSa6TuN2CkgYi6ajuSYSN3Do-kX53vy0&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQIdbGG8vxRfjxiLfb9xxzay9BXuehW09bmM-f8P-8NV8pj2dN726HGTckIzyoYZn00ft7Bopdw7urA&oh=00_AQI0WNk3jyqjXT_u4afbJUTCO32DX6lwBQFm6WcvWMRQWg&oe=6ABB380A",
       "rawVideoUrl": "https://www.instagram.com/reel/DctTo0Lz_Qx/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/790585975_18097603064329899_632019527388415766_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=QqAiVtK3eEAQ7kNvwHDEhXL&_nc_oc=Adq6KI2AiYFQZdKMAf9-LaMC4HjsEI8Hvq_wSa6TuN2CkgYi6ajuSYSN3Do-kX53vy0&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQIdbGG8vxRfjxiLfb9xxzay9BXuehW09bmM-f8P-8NV8pj2dN726HGTckIzyoYZn00ft7Bopdw7urA&oh=00_AQI0WNk3jyqjXT_u4afbJUTCO32DX6lwBQFm6WcvWMRQWg&oe=6ABB380A",
@@ -422964,8 +422972,8 @@
     {
       "id": "17984956500061021",
       "type": "video",
-      "title": "One more night between you and SORÈVA.",
-      "caption": "One more night between you and SORÈVA.\n\nTomorrow, the wait ends.\nTomorrow, you see it all.\n\nSORÈVA — almost yours. ✨\n\n#sorèva #czjewellerycollection #jewellery #launching soon",
+      "title": "One more night between you and SOR\u00c8VA.",
+      "caption": "One more night between you and SOR\u00c8VA.\n\nTomorrow, the wait ends.\nTomorrow, you see it all.\n\nSOR\u00c8VA \u2014 almost yours. \u2728\n\n#sor\u00e8va #czjewellerycollection #jewellery #launching soon",
       "videoUrl": "https://instagram.fblr1-8.fna.fbcdn.net/o1/v/t2/f2/m86/AQMCEnvUOKpj-0liKROyw7CGczhJX4aa6LA5cFPn4QksYkr28XvwX-SN1pcBD2lOBtq6NJ0oEesigA1G1cwsrRjztMKokUqYpUjUqZ0.mp4?_nc_cat=108&_nc_oc=Adq-0477JVHhbFMbmVuLrAly5kySaj8mIhlgeOyWEr2_A4PWx-HI7Ck8p0UIfoR--Zo&_nc_sid=5e9851&_nc_ht=instagram.fblr1-8.fna.fbcdn.net&_nc_ohc=Evs2sXTEU0MQ7kNvwEWzE0m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6ODcyNjcwNjI1Nzg0MDY1LCJhc3NldF9hZ2VfZGF5cyI6MjQsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjo5LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=a6461ba139b31b65&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85MTQ3QTI0N0NGNTNFQzc3MDJFMzMxMjU5QzMzMDNCRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzEyNEI4MzRCRTk3M0NGQ0ZDMDlGOUIzQTRFOTYwNEIzX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaChL_qjuyMAxUCKAJDMywXQCMAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQL_InEP23X3kdr5kYkvkXWdfL4TpgQZo24ZKCeRhu6YAw&oe=6AB7412D",
       "rawVideoUrl": "https://instagram.fblr1-8.fna.fbcdn.net/o1/v/t2/f2/m86/AQMCEnvUOKpj-0liKROyw7CGczhJX4aa6LA5cFPn4QksYkr28XvwX-SN1pcBD2lOBtq6NJ0oEesigA1G1cwsrRjztMKokUqYpUjUqZ0.mp4?_nc_cat=108&_nc_oc=Adq-0477JVHhbFMbmVuLrAly5kySaj8mIhlgeOyWEr2_A4PWx-HI7Ck8p0UIfoR--Zo&_nc_sid=5e9851&_nc_ht=instagram.fblr1-8.fna.fbcdn.net&_nc_ohc=Evs2sXTEU0MQ7kNvwEWzE0m&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6ODcyNjcwNjI1Nzg0MDY1LCJhc3NldF9hZ2VfZGF5cyI6MjQsInZpX3VzZWNhc2VfaWQiOjEwMDk5LCJkdXJhdGlvbl9zIjo5LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=a6461ba139b31b65&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC85MTQ3QTI0N0NGNTNFQzc3MDJFMzMxMjU5QzMzMDNCRF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyLzEyNEI4MzRCRTk3M0NGQ0ZDMDlGOUIzQTRFOTYwNEIzX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACaChL_qjuyMAxUCKAJDMywXQCMAAAAAAAAYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&edm=AM6HXa8EAAAA&_nc_map=urlgen_bucketless&_nc_zt=28&oh=00_AQL_InEP23X3kdr5kYkvkXWdfL4TpgQZo24ZKCeRhu6YAw&oe=6AB7412D",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/791755583_18097567937329899_5782461764920751592_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=ui5NEbHCDrMQ7kNvwGp3WM_&_nc_oc=AdpgobFtD66BsuDsgMJG5rFPLbvAwQ4TpSOEJefdJcgHneFSKsIzHEU10OQAeE1E-f0&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQIAWil0EMl4oNH0Oz7--IvzWMuL5V_Uclxao-EWF7wii-rilA6iXepfY_gh2mg4i1sDwa1OYTDxMOw&oh=00_AQIHdUI0hF-nhlfX0lnaz_DG_1bW9JYzTsl2LqT_bz4a5w&oe=6ABB0D03",
@@ -422978,7 +422986,7 @@
       "id": "18132076762730920",
       "type": "video",
       "title": "Crafted by Imagination. Made to Feel Timeless.",
-      "caption": "Crafted by Imagination. Made to Feel Timeless.\n\nWhat if craftsmanship could exist beyond the hands that create it? \n\nA little artistry, a little imagination, and a whole lot of detail — bringing a jewellery dream to life, one frame at a time.\n\nBecause true beauty isn’t just about what you see.\nIt’s about what you feel.\n\n#Soreva #SorevaJewellery #JewelleryArt #JewelleryDesign #Craftsmanship",
+      "caption": "Crafted by Imagination. Made to Feel Timeless.\n\nWhat if craftsmanship could exist beyond the hands that create it? \n\nA little artistry, a little imagination, and a whole lot of detail \u2014 bringing a jewellery dream to life, one frame at a time.\n\nBecause true beauty isn\u2019t just about what you see.\nIt\u2019s about what you feel.\n\n#Soreva #SorevaJewellery #JewelleryArt #JewelleryDesign #Craftsmanship",
       "videoUrl": "https://scontent.cdninstagram.com/v/t51.82787-15/785214195_18097392233329899_6758898748646037768_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=pqkup1pgUfQQ7kNvwGSNoRV&_nc_oc=AdpuLM0UUJ99lnc5EdWuXTWzKxS_EdxjZ3RmTrp4BaJUpTsfBPiti5rRpRcg3wD1BSI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQL0aUGI7VTqfETVX19DKTMz-d1DZrhz8AqKFGByt_-YbhwIyYJY8mqAzG-NtT0z9JBFBEnGEQo32KM&oh=00_AQJBIPaAP4_OM8IbH6YZ_panScA7uUEK5qn1MsDWUk3zZw&oe=6ABB2AA1",
       "rawVideoUrl": "https://www.instagram.com/reel/Dcpuq18Tac4/",
       "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/785214195_18097392233329899_6758898748646037768_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&efg=eyJlZmdfdGFnIjoiQ0xJUFMuYmVzdF9pbWFnZV91cmxnZW4uQzMifQ%3D%3D&_nc_ohc=pqkup1pgUfQQ7kNvwGSNoRV&_nc_oc=AdpuLM0UUJ99lnc5EdWuXTWzKxS_EdxjZ3RmTrp4BaJUpTsfBPiti5rRpRcg3wD1BSI&_nc_zt=23&_nc_ht=scontent.cdninstagram.com&edm=AM6HXa8EAAAA&_nc_gid=N0NJoLM7Bvaz5phJHcD7fA&_nc_tpa=Q5bMBQL0aUGI7VTqfETVX19DKTMz-d1DZrhz8AqKFGByt_-YbhwIyYJY8mqAzG-NtT0z9JBFBEnGEQo32KM&oh=00_AQJBIPaAP4_OM8IbH6YZ_panScA7uUEK5qn1MsDWUk3zZw&oe=6ABB2AA1",

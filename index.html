@@ -169,6 +169,10 @@
                     <span><strong>LAUNCH15</strong> — Celebrate our launch with 15% OFF across all products</span>
                 </div>
                 <div class="announcement-slide">
+                    <span class="announcement-badge" style="background: linear-gradient(135deg, #f03e67, #d91c49); color: #fff;">New Client Offer</span>
+                    <span><strong>FLAT ₹200 OFF</strong> on your 1st order • Use code <strong>FLAT200</strong> <a href="javascript:void(0)" onclick="openWelcomeDiscountModal()" style="color: #fff; text-decoration: underline; margin-left: 6px; font-weight: 700;">Claim Offer &rarr;</a></span>
+                </div>
+                <div class="announcement-slide">
                     <i class="fa-solid fa-truck-fast" style="color: var(--gold-badge);"></i>
                     <span>Express Shipping Across India — Delivered Within 2–5 Days</span>
                 </div>
@@ -2634,6 +2638,124 @@
                 <div style="display: flex; gap: 14px; justify-content: center;">
                     <button class="btn-primary" onclick="closeCheckoutModal()" style="padding: 12px 28px; background: #c5a059; color: #120e0d; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
                         <i class="fa-solid fa-gem"></i> Continue Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- WELCOME OFFER & OTP LOGIN MODAL (KUSHAL'S STYLE) -->
+    <div class="welcome-modal-backdrop" id="welcomeDiscountBackdrop" role="dialog" aria-modal="true" aria-labelledby="welcomeStepTitle" onclick="if(event.target === this) closeWelcomeDiscountModal();">
+        <div class="welcome-discount-card" id="welcomeDiscountCard">
+            <!-- Top Banner -->
+            <div class="welcome-banner">
+                <img class="welcome-banner-img" src="assets/welcome-offer-banner.webp" alt="Sorèva Luxury Celebrations" loading="lazy">
+                <div class="welcome-banner-overlay"></div>
+                <button type="button" class="welcome-close-btn" id="welcomeCloseBtn" aria-label="Close Offer" onclick="closeWelcomeDiscountModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="welcome-banner-content">
+                    <div class="welcome-sparkles">
+                        <i class="fa-solid fa-sparkles"></i>
+                        <span>✦ ✦</span>
+                    </div>
+                    <h4 class="welcome-banner-title-flat">FLAT</h4>
+                    <div class="welcome-banner-title-off">₹200 OFF</div>
+                    <div class="welcome-banner-sub">ON YOUR 1ST ORDER</div>
+                    <div class="welcome-voucher-badge">
+                        <span class="code-label">CODE</span>
+                        <span style="opacity: 0.6;">:</span>
+                        <span class="code-val">FLAT200</span>
+                    </div>
+                </div>
+                <span class="welcome-banner-terms">*T&amp;C applied</span>
+            </div>
+
+            <!-- Body Container -->
+            <div class="welcome-body">
+                <div class="welcome-alert-message" id="welcomeAlertMessage"></div>
+
+                <!-- STEP 1: Phone Input -->
+                <div class="welcome-step-phone" id="welcomeStepPhone">
+                    <h3 class="welcome-step-title" id="welcomeStepTitle">Login for faster checkout</h3>
+                    <p class="welcome-step-desc">We'll send a one-time code. No password needed.</p>
+
+                    <form id="welcomePhoneForm" onsubmit="handleWelcomeSendOtp(event)">
+                        <div class="welcome-phone-box">
+                            <div class="welcome-phone-prefix">
+                                <span>+91</span>
+                            </div>
+                            <input type="tel" id="welcomePhoneInput" class="welcome-phone-input" placeholder="Enter mobile number" maxlength="10" autocomplete="tel" inputmode="numeric" oninput="handleWelcomePhoneInput(this)">
+                        </div>
+                        <div class="welcome-phone-note">OTP will be sent to this number.</div>
+
+                        <button type="submit" class="welcome-submit-btn" id="welcomeSendOtpBtn" disabled>
+                            <span>Send OTP</span>
+                        </button>
+                    </form>
+
+                    <div class="welcome-trust-badge">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Secure login with OTP</span>
+                    </div>
+
+                    <div class="welcome-consent-wrap">
+                        <input type="checkbox" id="welcomeConsentCheckbox" checked>
+                        <label for="welcomeConsentCheckbox">
+                            I agree to receive updates and communication from Sorèva. <a href="terms-conditions.html" target="_blank">Terms &amp; Conditions apply.</a>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- STEP 2: OTP Verification -->
+                <div class="welcome-step-otp" id="welcomeStepOtp">
+                    <button type="button" class="welcome-otp-back-link" onclick="switchWelcomeModalStep('phone')">
+                        <i class="fa-solid fa-arrow-left"></i> Change Number
+                    </button>
+                    <h3 class="welcome-step-title">Verify Mobile Number</h3>
+                    <p class="welcome-step-desc">Enter the 4-digit code sent to <strong id="welcomeOtpPhoneDisplay">+91 </strong></p>
+
+                    <form id="welcomeOtpForm" onsubmit="handleWelcomeVerifyOtp(event)">
+                        <div class="welcome-otp-grid">
+                            <input type="text" maxlength="1" class="welcome-otp-cell" data-idx="0" inputmode="numeric" autocomplete="one-time-code">
+                            <input type="text" maxlength="1" class="welcome-otp-cell" data-idx="1" inputmode="numeric">
+                            <input type="text" maxlength="1" class="welcome-otp-cell" data-idx="2" inputmode="numeric">
+                            <input type="text" maxlength="1" class="welcome-otp-cell" data-idx="3" inputmode="numeric">
+                        </div>
+
+                        <div class="welcome-resend-bar">
+                            <span id="welcomeResendTimerText">Resend code in <strong id="welcomeResendSecs">30</strong>s</span>
+                            <button type="button" class="welcome-resend-link" id="welcomeResendBtn" disabled onclick="handleWelcomeResendOtp()">Resend OTP</button>
+                        </div>
+
+                        <button type="submit" class="welcome-submit-btn ready" id="welcomeVerifyOtpBtn">
+                            <span>Verify &amp; Claim ₹200 OFF</span>
+                        </button>
+                    </form>
+
+                    <div class="welcome-trust-badge" style="margin-top: 18px;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Instant verification • Coupon auto-applies to bag</span>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Success Celebration -->
+                <div class="welcome-step-success" id="welcomeStepSuccess">
+                    <div class="welcome-success-icon-wrap">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="welcome-step-title" style="margin-bottom: 4px;">Welcome to Sorèva!</h3>
+                    <p class="welcome-step-desc" style="margin-bottom: 12px;">You're now logged in with exclusive client privileges.</p>
+
+                    <div class="welcome-success-badge-card">
+                        <div style="font-size: 0.8rem; color: #9f1239; margin-bottom: 2px;">VOUCHER APPLIED</div>
+                        <strong>FLAT ₹200 OFF</strong>
+                        <div style="font-size: 0.78rem; color: #4c0519; margin-top: 4px;">Automatically discounted on your first order checkout!</div>
+                    </div>
+
+                    <button type="button" class="welcome-submit-btn ready" onclick="handleWelcomeSuccessContinue()">
+                        <i class="fa-solid fa-gem"></i>
+                        <span>Start Shopping with ₹200 OFF</span>
                     </button>
                 </div>
             </div>

@@ -7668,5 +7668,527 @@ button:disabled.btn-out-of-stock {
     visibility: visible !important;
 }
 
+/* ==========================================================================
+   WELCOME DISCOUNT & OTP LOGIN MODAL (KUSHAL'S / SOREVA LUXURY STYLE)
+   ========================================================================== */
+.welcome-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 14, 13, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
 
+.welcome-modal-backdrop.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
 
+.welcome-discount-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 440px;
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    transform: scale(0.92) translateY(12px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    color: #1f2937;
+}
+
+.welcome-modal-backdrop.active .welcome-discount-card {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header Banner */
+.welcome-banner {
+    position: relative;
+    height: 195px;
+    background: #fdebee;
+    overflow: hidden;
+}
+
+.welcome-banner-img {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    display: block;
+}
+
+.welcome-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, 
+        rgba(255, 238, 240, 0.98) 0%, 
+        rgba(255, 238, 240, 0.92) 42%, 
+        rgba(255, 238, 240, 0.55) 62%, 
+        rgba(255, 238, 240, 0) 80%);
+    pointer-events: none;
+}
+
+.welcome-banner-content {
+    position: relative;
+    z-index: 2;
+    padding: 20px 22px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 65%;
+}
+
+.welcome-sparkles {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #d82b52;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
+.welcome-banner-title-flat {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+    color: #c41e45;
+    margin: 0;
+}
+
+.welcome-banner-title-off {
+    font-size: 1.85rem;
+    font-weight: 900;
+    line-height: 1.05;
+    color: #b31338;
+    margin: 2px 0 3px 0;
+    letter-spacing: -0.5px;
+}
+
+.welcome-banner-sub {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #4a1924;
+    margin-bottom: 8px;
+}
+
+/* Voucher coupon badge with dashed borders */
+.welcome-voucher-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #f03e67, #d91c49);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(217, 28, 73, 0.35);
+    border: 1px dashed rgba(255, 255, 255, 0.45);
+    width: fit-content;
+}
+
+.welcome-voucher-badge .code-label {
+    opacity: 0.85;
+    font-weight: 600;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+}
+
+.welcome-voucher-badge .code-val {
+    font-family: 'JetBrains Mono', monospace, sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 1.2px;
+}
+
+.welcome-banner-terms {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    z-index: 2;
+}
+
+.welcome-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    z-index: 5;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.welcome-close-btn:hover {
+    background: #ffffff;
+    transform: scale(1.08);
+}
+
+/* Modal Body */
+.welcome-body {
+    padding: 24px 26px 26px;
+}
+
+.welcome-step-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.2px;
+}
+
+.welcome-step-desc {
+    font-size: 0.86rem;
+    color: #6b7280;
+    margin: 0 0 18px 0;
+    line-height: 1.45;
+}
+
+/* Phone input field */
+.welcome-phone-box {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #d1d5db;
+    border-radius: 12px;
+    padding: 0 14px;
+    height: 52px;
+    background: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.welcome-phone-box:focus-within {
+    border-color: #b31338;
+    box-shadow: 0 0 0 3px rgba(179, 19, 56, 0.12);
+}
+
+.welcome-phone-prefix {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #4b5563;
+    padding-right: 10px;
+    margin-right: 10px;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.welcome-phone-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+    letter-spacing: 0.8px;
+    background: transparent;
+    font-family: inherit;
+}
+
+.welcome-phone-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.welcome-phone-note {
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin: 8px 0 16px 2px;
+}
+
+/* Submit Action Button */
+.welcome-submit-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 10px;
+    border: none;
+    background: #9ca3af;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: not-allowed;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.welcome-submit-btn.ready {
+    background: linear-gradient(135deg, #c41e45, #9b1334);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(179, 19, 56, 0.35);
+}
+
+.welcome-submit-btn.ready:hover {
+    background: linear-gradient(135deg, #d82b52, #a61539);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(179, 19, 56, 0.42);
+}
+
+/* Trust Shield Badge */
+.welcome-trust-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #374151;
+    margin-top: 14px;
+}
+
+.welcome-trust-badge i {
+    color: #10b981;
+    font-size: 0.95rem;
+}
+
+/* Consent Checkbox */
+.welcome-consent-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.welcome-consent-wrap input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 4px;
+    margin-top: 2px;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.welcome-consent-wrap input[type="checkbox"]:checked {
+    background: #b31338;
+    border-color: #b31338;
+}
+
+.welcome-consent-wrap input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4.5px;
+    top: 1.5px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.welcome-consent-wrap label {
+    font-size: 0.74rem;
+    line-height: 1.42;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+.welcome-consent-wrap a {
+    color: #2563eb;
+    text-decoration: underline;
+    transition: color 0.15s;
+}
+
+.welcome-consent-wrap a:hover {
+    color: #1d4ed8;
+}
+
+/* Step 2: OTP Verification */
+.welcome-step-otp {
+    display: none;
+}
+
+.welcome-otp-back-link {
+    background: none;
+    border: none;
+    color: #b31338;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+}
+
+.welcome-otp-back-link:hover {
+    opacity: 0.8;
+}
+
+.welcome-otp-grid {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 18px 0 16px 0;
+}
+
+.welcome-otp-cell {
+    width: 52px;
+    height: 54px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #111827;
+    background: #f9fafb;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.welcome-otp-cell:focus {
+    border-color: #b31338;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(179, 19, 56, 0.12);
+}
+
+.welcome-resend-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 18px;
+}
+
+.welcome-resend-link {
+    background: none;
+    border: none;
+    color: #b31338;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.welcome-resend-link:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.welcome-alert-message {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 14px;
+    display: none;
+}
+
+.welcome-alert-message.error {
+    display: block;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.welcome-alert-message.success {
+    display: block;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+}
+
+/* Step 3: Success Celebration */
+.welcome-step-success {
+    display: none;
+    text-align: center;
+    padding: 8px 0 4px;
+}
+
+.welcome-success-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto 14px auto;
+    box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2);
+}
+
+.welcome-success-badge-card {
+    background: #fff1f2;
+    border: 1px dashed #f43f5e;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 14px 0 18px 0;
+}
+
+.welcome-success-badge-card strong {
+    color: #be123c;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 480px) {
+    .welcome-discount-card {
+        max-width: 94%;
+        border-radius: 20px;
+    }
+    .welcome-banner {
+        height: 175px;
+    }
+    .welcome-banner-title-off {
+        font-size: 1.6rem;
+    }
+    .welcome-banner-content {
+        padding: 16px 16px;
+        max-width: 68%;
+    }
+    .welcome-body {
+        padding: 18px 18px 22px;
+    }
+    .welcome-otp-cell {
+        width: 46px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+}
