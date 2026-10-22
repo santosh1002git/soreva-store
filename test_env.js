@@ -985,8 +985,8 @@ let currentInstagramReels = [];
 const SOREVA_LOCAL_REELS = [
     {
         id: 'reel_1',
-        videoUrl: 'assets/reels/reel_1.mp4',
-        thumbnail: 'assets/reels/reel_1_poster.jpg',
+        videoUrl: '/assets/reels/reel_1.mp4',
+        thumbnail: '/assets/reels/reel_1_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DdqS_DcTt5z/',
         title: 'Ruby Radiance Choker',
         caption: 'A little drama never hurt — especially when it looks this good. A flash of red & unmatched brilliance.',
@@ -996,8 +996,8 @@ const SOREVA_LOCAL_REELS = [
     },
     {
         id: 'reel_2',
-        videoUrl: 'assets/reels/reel_2.mp4',
-        thumbnail: 'assets/reels/reel_2_poster.jpg',
+        videoUrl: '/assets/reels/reel_2.mp4',
+        thumbnail: '/assets/reels/reel_2_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DdnZyRnzf-M/',
         title: 'The Brilliance That Lingers',
         caption: 'It starts with the sparkle. But that touch of red is what you remember. Pure cubic zirconia perfection.',
@@ -1007,8 +1007,8 @@ const SOREVA_LOCAL_REELS = [
     },
     {
         id: 'reel_3',
-        videoUrl: 'assets/reels/reel_3.mp4',
-        thumbnail: 'assets/reels/reel_3_poster.jpg',
+        videoUrl: '/assets/reels/reel_3.mp4',
+        thumbnail: '/assets/reels/reel_3_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DdgR2vnzK8i/',
         title: 'Cascading Diamond Collar',
         caption: 'A little colour. A lot of presence. Handcrafted for evenings where only the finest jewellery speaks.',
@@ -1018,8 +1018,8 @@ const SOREVA_LOCAL_REELS = [
     },
     {
         id: 'reel_4',
-        videoUrl: 'assets/reels/reel_4.mp4',
-        thumbnail: 'assets/reels/reel_4_poster.jpg',
+        videoUrl: '/assets/reels/reel_4.mp4',
+        thumbnail: '/assets/reels/reel_4_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DddeqOWpiSR/',
         title: 'Bespoke Atelier Creation',
         caption: 'Some pieces don’t need an occasion. You see them, love them, and wear them forever.',
@@ -1029,8 +1029,8 @@ const SOREVA_LOCAL_REELS = [
     },
     {
         id: 'reel_5',
-        videoUrl: 'assets/reels/reel_5.mp4',
-        thumbnail: 'assets/reels/reel_5_poster.jpg',
+        videoUrl: '/assets/reels/reel_5.mp4',
+        thumbnail: '/assets/reels/reel_5_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DdalJxwT2lh/',
         title: 'Ruby Radiance Bold Drops',
         caption: 'Ruby Radiance — bold, passionate & unforgettable. Crafted with AAA+ grade cubic zirconia.',
@@ -1040,8 +1040,8 @@ const SOREVA_LOCAL_REELS = [
     },
     {
         id: 'reel_6',
-        videoUrl: 'assets/reels/reel_6.mp4',
-        thumbnail: 'assets/reels/reel_6_poster.jpg',
+        videoUrl: '/assets/reels/reel_6.mp4',
+        thumbnail: '/assets/reels/reel_6_poster.jpg',
         permalink: 'https://www.instagram.com/reel/DdTjaQ0z5SR/',
         title: 'Timeless Atelier Glamour',
         caption: 'Designed to turn heads without uttering a single word. Unmatched fire in every facet.',
@@ -1050,6 +1050,9 @@ const SOREVA_LOCAL_REELS = [
         date: 'Recent'
     }
 ];
+
+let activeMobileReelVid = null;
+let reelIntersectionObserver = null;
 
 function renderSocialFeed(instagram, handle = 'soreva_jewels') {
     const container = document.getElementById('socialGrid');
@@ -1069,7 +1072,7 @@ function renderSocialFeed(instagram, handle = 'soreva_jewels') {
              data-reel-id="${item.id || idx}" 
              onmouseenter="handleReelCardEnter(this)" 
              onmouseleave="handleReelCardLeave(this)" 
-             onclick="openReelModal('${item.id || idx}')">
+             onclick="handleReelCardClick(event, this, '${item.id || idx}')">
             
             <video class="reel-video" 
                    id="reel_vid_${idx}"
@@ -1078,14 +1081,20 @@ function renderSocialFeed(instagram, handle = 'soreva_jewels') {
                    loop 
                    muted 
                    playsinline 
-                   preload="metadata">
+                   webkit-playsinline
+                   preload="auto">
             </video>
             
             <div class="reel-top-bar">
                 <span class="reel-badge"><i class="fa-brands fa-instagram"></i> Reel</span>
-                <button type="button" class="reel-audio-btn" onclick="toggleReelAudio(event, this, 'reel_vid_${idx}')" title="Toggle Sound">
-                    <i class="fa-solid fa-volume-xmark"></i>
-                </button>
+                <div class="reel-top-actions">
+                    <button type="button" class="reel-audio-btn" onclick="toggleReelAudio(event, this, 'reel_vid_${idx}')" title="Toggle Sound" aria-label="Toggle Sound">
+                        <i class="fa-solid fa-volume-xmark"></i>
+                    </button>
+                    <button type="button" class="reel-expand-btn" onclick="openReelModalFromCard(event, '${item.id || idx}')" title="View Full Reel" aria-label="View Full Reel">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="reel-center-play">
@@ -1099,8 +1108,8 @@ function renderSocialFeed(instagram, handle = 'soreva_jewels') {
                 <p class="reel-caption-text">${(caption || '').replace(/</g, '&lt;')}</p>
                 <div class="reel-meta-row">
                     <span><i class="fa-solid fa-heart" style="color: #e4405f; font-size: 0.65rem;"></i> ${likes}</span>
-                    <a href="${permalink}" target="_blank" rel="noopener" class="reel-insta-link" onclick="event.stopPropagation();">
-                        Watch on IG <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.62rem;"></i>
+                    <a href="${permalink}" target="_blank" rel="noopener noreferrer" class="btn-reel-ig" onclick="handleInstagramLinkClick(event, '${permalink}')">
+                        <i class="fa-brands fa-instagram"></i> Watch on IG
                     </a>
                 </div>
             </div>
@@ -1108,11 +1117,20 @@ function renderSocialFeed(instagram, handle = 'soreva_jewels') {
         `;
     }).join('');
 
+    // Ensure all video DOM objects strictly reflect WebKit mobile autoplay policy
+    container.querySelectorAll('video.reel-video').forEach(vid => {
+        vid.muted = true;
+        vid.defaultMuted = true;
+        vid.playsInline = true;
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('webkit-playsinline', '');
+    });
+
     initReelIntersectionAutoplay();
 }
 
 function handleReelCardEnter(cardEl) {
-    if (!cardEl) return;
+    if (!cardEl || window.innerWidth <= 768) return;
     const vid = cardEl.querySelector('video');
     if (vid) {
         vid.play().catch(() => {});
@@ -1122,7 +1140,7 @@ function handleReelCardEnter(cardEl) {
 }
 
 function handleReelCardLeave(cardEl) {
-    if (!cardEl) return;
+    if (!cardEl || window.innerWidth <= 768) return;
     const vid = cardEl.querySelector('video');
     if (vid) {
         vid.pause();
@@ -1131,28 +1149,60 @@ function handleReelCardLeave(cardEl) {
     cardEl.classList.remove('is-playing');
 }
 
-function handleReelHoverPlay(videoEl) {
-    if (!videoEl) return;
-    videoEl.play().catch(() => {});
-    const card = videoEl.closest('.reel-card');
-    if (card) {
-        card.classList.remove('is-paused');
-        card.classList.add('is-playing');
+function handleReelCardClick(e, cardEl, reelId) {
+    // If the click originated from an explicit button or link, ignore card click
+    if (e.target.closest('button') || e.target.closest('a')) return;
+
+    const vid = cardEl ? cardEl.querySelector('video') : null;
+    if (!vid) return;
+
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+        // Mobile tap: toggle play/pause inline with single-active playback
+        if (vid.paused) {
+            if (activeMobileReelVid && activeMobileReelVid !== vid) {
+                activeMobileReelVid.pause();
+                const prevCard = activeMobileReelVid.closest('.reel-card');
+                if (prevCard) {
+                    prevCard.classList.remove('is-playing');
+                    prevCard.classList.add('is-paused');
+                }
+            }
+            activeMobileReelVid = vid;
+            vid.play().then(() => {
+                cardEl.classList.remove('is-paused');
+                cardEl.classList.add('is-playing');
+            }).catch(() => {
+                // If inline autoplay was blocked, open modal as graceful fallback
+                openReelModal(reelId);
+            });
+        } else {
+            vid.pause();
+            cardEl.classList.remove('is-playing');
+            cardEl.classList.add('is-paused');
+            if (activeMobileReelVid === vid) activeMobileReelVid = null;
+        }
+    } else {
+        // Desktop click: open lightbox modal
+        openReelModal(reelId);
     }
 }
 
-function handleReelHoverPause(videoEl) {
-    if (!videoEl) return;
-    videoEl.pause();
-    const card = videoEl.closest('.reel-card');
-    if (card) {
-        card.classList.add('is-paused');
-        card.classList.remove('is-playing');
+function openReelModalFromCard(e, reelId) {
+    if (e) e.stopPropagation();
+    openReelModal(reelId);
+}
+
+function handleInstagramLinkClick(e, url) {
+    if (e) e.stopPropagation();
+    if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
     }
 }
 
 function toggleReelAudio(e, btnEl, videoId) {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     const vid = document.getElementById(videoId);
     if (!vid) return;
 
@@ -1170,27 +1220,62 @@ function toggleReelAudio(e, btnEl, videoId) {
 
 function initReelIntersectionAutoplay() {
     if (!('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver((entries) => {
+    if (reelIntersectionObserver) {
+        reelIntersectionObserver.disconnect();
+    }
+
+    const isMobile = window.innerWidth <= 768;
+
+    reelIntersectionObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const vid = entry.target.querySelector('video');
             if (!vid) return;
+
             if (entry.isIntersecting) {
-                vid.play().catch(() => {});
-                entry.target.classList.remove('is-paused');
-                entry.target.classList.add('is-playing');
+                if (isMobile) {
+                    // Mobile: single active playing video
+                    if (activeMobileReelVid && activeMobileReelVid !== vid) {
+                        activeMobileReelVid.pause();
+                        const prevCard = activeMobileReelVid.closest('.reel-card');
+                        if (prevCard) {
+                            prevCard.classList.remove('is-playing');
+                            prevCard.classList.add('is-paused');
+                        }
+                    }
+                    activeMobileReelVid = vid;
+                }
+                vid.play().then(() => {
+                    entry.target.classList.remove('is-paused');
+                    entry.target.classList.add('is-playing');
+                }).catch(() => {});
             } else {
                 vid.pause();
-                entry.target.classList.add('is-paused');
                 entry.target.classList.remove('is-playing');
+                entry.target.classList.add('is-paused');
+                if (activeMobileReelVid === vid) {
+                    activeMobileReelVid = null;
+                }
             }
         });
-    }, { threshold: 0.35 });
+    }, { 
+        threshold: isMobile ? 0.6 : 0.35 
+    });
 
-    document.querySelectorAll('.reel-card').forEach(card => observer.observe(card));
+    document.querySelectorAll('.reel-card').forEach(card => reelIntersectionObserver.observe(card));
 }
 
 // Fullscreen Reel Modal Player
 function openReelModal(reelId) {
+    // Pause any card reel playing in background
+    if (activeMobileReelVid) {
+        activeMobileReelVid.pause();
+    }
+    document.querySelectorAll('.reel-card video').forEach(v => v.pause());
+    document.querySelectorAll('.reel-card').forEach(c => {
+        c.classList.remove('is-playing');
+        c.classList.add('is-paused');
+    });
+
     const item = (currentInstagramReels || []).find(r => String(r.id) === String(reelId)) || (currentInstagramReels || [])[0];
     if (!item) return;
 
@@ -1210,15 +1295,28 @@ function openReelModal(reelId) {
 
     modal.innerHTML = `
         <div class="reel-modal-card">
-            <button class="reel-modal-close" onclick="closeReelModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="reel-modal-close" onclick="closeReelModal()" aria-label="Close Modal"><i class="fa-solid fa-xmark"></i></button>
             <div class="reel-modal-video-wrap">
-                <video class="reel-modal-video" id="modalReelVideo" src="${videoSrc}" poster="${item.thumbnail || ''}" autoplay loop playsinline controls></video>
+                <video class="reel-modal-video" 
+                       id="modalReelVideo" 
+                       src="${videoSrc}" 
+                       poster="${item.thumbnail || ''}" 
+                       autoplay 
+                       loop 
+                       muted 
+                       playsinline 
+                       webkit-playsinline
+                       controls>
+                </video>
+                <button type="button" class="reel-modal-sound-btn" id="modalSoundBtn" onclick="toggleModalSound(event)">
+                    <i class="fa-solid fa-volume-xmark"></i> Tap for Sound
+                </button>
             </div>
             <div class="reel-modal-side">
                 <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743); padding: 2px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743); padding: 2px; flex-shrink: 0;">
                                 <div style="width: 100%; height: 100%; border-radius: 50%; background: #14100f; display: flex; align-items: center; justify-content: center;">
                                     <i class="fa-brands fa-instagram" style="color: #ffffff; font-size: 1.1rem;"></i>
                                 </div>
@@ -1241,7 +1339,7 @@ function openReelModal(reelId) {
                         <span><i class="fa-solid fa-heart" style="color: #e4405f; margin-right: 5px;"></i> ${likes} likes</span>
                         <span><i class="fa-solid fa-clock" style="margin-right: 5px;"></i> ${item.date || 'Recent'}</span>
                     </div>
-                    <a href="${permalink}" target="_blank" rel="noopener" class="btn-insta-follow" style="width: 100%; justify-content: center; text-align: center;">
+                    <a href="${permalink}" target="_blank" rel="noopener noreferrer" class="btn-insta-follow" style="width: 100%; justify-content: center; text-align: center;">
                         <i class="fa-brands fa-instagram"></i> View Full Reel on Instagram
                     </a>
                 </div>
@@ -1250,8 +1348,37 @@ function openReelModal(reelId) {
     `;
 
     modal.classList.add('active');
+
+    // Temporarily hide chatbot so it never overlaps the Instagram action button
+    const chatbot = document.getElementById('chatbot-container');
+    if (chatbot) chatbot.style.display = 'none';
+
     const modalVid = document.getElementById('modalReelVideo');
-    if (modalVid) modalVid.play().catch(() => {});
+    if (modalVid) {
+        modalVid.muted = true;
+        modalVid.defaultMuted = true;
+        modalVid.playsInline = true;
+        modalVid.setAttribute('playsinline', '');
+        modalVid.setAttribute('webkit-playsinline', '');
+        modalVid.play().catch(() => {});
+    }
+}
+
+function toggleModalSound(e) {
+    if (e) e.stopPropagation();
+    const modalVid = document.getElementById('modalReelVideo');
+    const soundBtn = document.getElementById('modalSoundBtn');
+    if (!modalVid) return;
+
+    modalVid.muted = !modalVid.muted;
+    if (soundBtn) {
+        if (modalVid.muted) {
+            soundBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> Tap for Sound';
+        } else {
+            soundBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Sound On';
+            modalVid.play().catch(() => {});
+        }
+    }
 }
 
 function closeReelModal() {
@@ -1261,6 +1388,9 @@ function closeReelModal() {
         if (modalVid) modalVid.pause();
         modal.classList.remove('active');
     }
+    // Restore chatbot container visibility
+    const chatbot = document.getElementById('chatbot-container');
+    if (chatbot) chatbot.style.display = '';
 }
 
 
