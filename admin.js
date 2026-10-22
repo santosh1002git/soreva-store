@@ -322,41 +322,189 @@ async function loadStoreData() {
     }
 }
 
-async function saveAllStoreData(silent = false) {
+function flushAllFormsToStoreData() {
     if (!storeData) return;
+    if (!storeData.settings) storeData.settings = {};
+
+    // 1. Overview Quick Inputs
+    const quickShipping = document.getElementById('quickShippingInput');
+    if (quickShipping && quickShipping.value !== '') {
+        const num = parseInt(quickShipping.value, 10);
+        if (!isNaN(num) && num >= 0) storeData.settings.freeShippingThresholdINR = num;
+    }
+
+    const quickDiscount = document.getElementById('quickLaunchDiscountInput');
+    if (quickDiscount && quickDiscount.value !== '') {
+        const num = parseInt(quickDiscount.value, 10);
+        if (!isNaN(num) && num > 0 && num <= 100) {
+            const coupon = (storeData.coupons || []).find(c => c.code === 'LAUNCH15');
+            if (coupon) coupon.discountPercent = num;
+        }
+    }
+
+    const quickSpeed = document.getElementById('quickTickerSpeedInput');
+    if (quickSpeed && quickSpeed.value !== '') {
+        const sec = parseFloat(quickSpeed.value);
+        if (!isNaN(sec) && sec >= 1) storeData.settings.tickerSpeedMs = Math.round(sec * 1000);
+    }
+
+    // 2. Boutique Settings Panel (panel-settings)
+    const storeName = document.getElementById('settingStoreName');
+    if (storeName && storeName.value !== undefined) storeData.settings.storeName = storeName.value.trim();
+    const tagline = document.getElementById('settingTagline');
+    if (tagline && tagline.value !== undefined) storeData.settings.tagline = tagline.value.trim();
+    const logoUrl = document.getElementById('settingLogoUrl');
+    if (logoUrl && logoUrl.value !== undefined) storeData.settings.logoUrl = logoUrl.value.trim();
+    const logoWhiteUrl = document.getElementById('settingLogoWhiteUrl');
+    if (logoWhiteUrl && logoWhiteUrl.value !== undefined) storeData.settings.logoWhiteUrl = logoWhiteUrl.value.trim();
+    const email = document.getElementById('settingEmail');
+    if (email && email.value !== undefined) storeData.settings.contactEmail = email.value.trim();
+    const phone = document.getElementById('settingPhone');
+    if (phone && phone.value !== undefined) storeData.settings.contactPhone = phone.value.trim();
+    const insta = document.getElementById('settingInstagram');
+    if (insta && insta.value !== undefined) storeData.settings.instagramHandle = insta.value.trim();
+    const gstRate = document.getElementById('settingGstRate');
+    if (gstRate && gstRate.value !== '') storeData.settings.gstRate = parseFloat(gstRate.value) || 3;
+    const gstEnabled = document.getElementById('settingGstEnabled');
+    if (gstEnabled) storeData.settings.gstEnabled = gstEnabled.checked;
+    const profitMarkup = document.getElementById('settingProfitMarkup');
+    if (profitMarkup && profitMarkup.value !== '') storeData.settings.profitMarkup = parseFloat(profitMarkup.value) || 2.2;
+    const profitFlat = document.getElementById('settingProfitFlat');
+    if (profitFlat && profitFlat.value !== '') storeData.settings.profitFlat = parseFloat(profitFlat.value) || 0;
+
+    // 3. Spotlight / Brand Story Form (panel-spotlight)
+    if (!storeData.spotlight) storeData.spotlight = {};
+    const spotTag = document.getElementById('spotlightTagInput');
+    if (spotTag && spotTag.value !== undefined) storeData.spotlight.tag = spotTag.value.trim();
+    const spotTitle = document.getElementById('spotlightTitleInput');
+    if (spotTitle && spotTitle.value !== undefined) storeData.spotlight.title = spotTitle.value.trim();
+    const spotDesc1 = document.getElementById('spotlightDesc1Input');
+    if (spotDesc1 && spotDesc1.value !== undefined) storeData.spotlight.desc1 = spotDesc1.value.trim();
+    const spotDesc2 = document.getElementById('spotlightDesc2Input');
+    if (spotDesc2 && spotDesc2.value !== undefined) storeData.spotlight.desc2 = spotDesc2.value.trim();
+    const spotImgMain = document.getElementById('spotlightImgMainInput');
+    if (spotImgMain && spotImgMain.value !== undefined) storeData.spotlight.imgMain = spotImgMain.value.trim();
+    const spotImgSub = document.getElementById('spotlightImgSubInput');
+    if (spotImgSub && spotImgSub.value !== undefined) storeData.spotlight.imgSub = spotImgSub.value.trim();
+    const spotBadgeTitle = document.getElementById('spotlightBadgeTitleInput');
+    if (spotBadgeTitle && spotBadgeTitle.value !== undefined) storeData.spotlight.badgeTitle = spotBadgeTitle.value.trim();
+    const spotBadgeSub = document.getElementById('spotlightBadgeSubInput');
+    if (spotBadgeSub && spotBadgeSub.value !== undefined) storeData.spotlight.badgeSub = spotBadgeSub.value.trim();
+}
+window.flushAllFormsToStoreData = flushAllFormsToStoreData;
+
+async function saveAllStoreData(silent = false) {
+    if (!storeData) {
+        try {
+            const resp = await fetch('/data/store-data.json');
+            storeData = await resp.json();
+        } catch (e) {
+            showToast("Failed to initialize store configuration.");
+            return;
+        }
+    }
+
+    // 1. Visual feedback on Save All button immediately
+    const btn = document.querySelector('.btn-save-all');
+    const origHtml = btn ? btn.innerHTML : '<i class="fa-solid fa-floppy-disk"></i> <span>Save All</span>';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Saving...</span>';
+    }
 
     setSaveStatus(false, "Saving changes...");
 
-    // 1. Save to LocalStorage immediately for zero-delay client reflection
-    localStorage.setItem('soreva_store_data', JSON.stringify(storeData));
+    // 2. Flush all active DOM form inputs across all panels into storeData
+    try {
+        flushAllFormsToStoreData();
+    } catch (flushErr) {
+        console.warn("[SaveAll] Form flush warning:", flushErr);
+    }
 
-    // 2. Persist to server disk
+    // 3. Save to LocalStorage safely (guard against quota exceeded)
+    try {
+        localStorage.setItem('soreva_store_data', JSON.stringify(storeData));
+    } catch (lsErr) {
+        console.warn("[SaveAll] LocalStorage quota reached or disabled:", lsErr);
+    }
+
+    let saveErrors = [];
+
+    // 4. Persist storeData to server disk (/api/store-data)
     try {
         const resp = await fetch('/api/store-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(storeData)
         });
-        if (resp.ok) {
-            setSaveStatus(true, "All Changes Saved");
-            if (!silent) showToast("Saved successfully to disk & live store!");
-        } else {
-            throw new Error("Failed to persist to server disk");
+        if (!resp.ok) {
+            const errJson = await resp.json().catch(() => ({}));
+            throw new Error(errJson.error || `HTTP ${resp.status}`);
         }
     } catch (err) {
-        setSaveStatus(true, "Saved to Local Cache");
-        if (!silent) showToast("Changes saved locally in browser cache.");
+        console.error("[SaveAll] /api/store-data failed:", err);
+        saveErrors.push("Store config: " + err.message);
     }
 
-    // Refresh metrics & counts
-    updateBadgeCounts();
+    // 5. Also persist any active specialized panel settings if user was editing them
+    try {
+        const activeTabEl = document.querySelector('.tab-panel.active');
+        const activeTabId = activeTabEl ? activeTabEl.id : '';
+
+        if (activeTabId === 'panel-welcome-popup' && typeof savePopupOfferSettings === 'function') {
+            await savePopupOfferSettings();
+        } else if (activeTabId === 'panel-newsletter' && typeof saveNewsletterSettings === 'function') {
+            await saveNewsletterSettings();
+        } else if (activeTabId === 'panel-notifications' && typeof saveNotificationSettings === 'function') {
+            await saveNotificationSettings();
+        } else if (activeTabId === 'panel-payments' && typeof saveRazorpaySettings === 'function') {
+            await saveRazorpaySettings(false);
+        } else if (activeTabId === 'panel-instagram' && typeof saveInstagramSettings === 'function') {
+            await saveInstagramSettings();
+        }
+    } catch (specialErr) {
+        console.warn("[SaveAll] Secondary panel save warning:", specialErr);
+    }
+
+    // 6. Visual feedback on completion
+    if (saveErrors.length === 0) {
+        setSaveStatus(true, "All Changes Saved");
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #4ade80;"></i> <span>Saved!</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }, 1800);
+        }
+        if (!silent) {
+            showToast("✨ All boutique changes saved to disk & live store!");
+        }
+    } else {
+        setSaveStatus(true, "Saved with Warnings");
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+        if (!silent) {
+            showToast("Warning saving to server: " + saveErrors.join(', '));
+        }
+    }
+
+    // 7. Refresh metrics & counts
+    if (typeof updateBadgeCounts === 'function') {
+        updateBadgeCounts();
+    }
 }
+window.saveAllStoreData = saveAllStoreData;
 
 function setSaveStatus(saved, text) {
     const pill = document.getElementById('saveStatusPill');
     if (!pill) return;
     if (saved) {
         pill.className = "save-status-pill";
+        pill.style.background = "";
+        pill.style.borderColor = "";
+        pill.style.color = "";
         pill.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${text || 'All Changes Saved'}</span>`;
     } else {
         pill.className = "save-status-pill";
@@ -366,6 +514,7 @@ function setSaveStatus(saved, text) {
         pill.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>${text || 'Saving...'}</span>`;
     }
 }
+window.setSaveStatus = setSaveStatus;
 
 // ==========================================
 // TAB NAVIGATION
