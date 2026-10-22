@@ -33,6 +33,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import threading
+import html
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 
@@ -42,6 +43,7 @@ STORE_DATA_PATH = os.path.join(DATA_DIR, 'store-data.json')
 BACKUP_DATA_PATH = os.path.join(DATA_DIR, 'store-data.backup.json')
 RAZORPAY_CONFIG_PATH = os.path.join(DATA_DIR, 'razorpay-config.json')
 NOTIFICATIONS_CONFIG_PATH = os.path.join(DATA_DIR, 'notifications-config.json')
+EMAIL_OUTBOX_PATH = os.path.join(DATA_DIR, 'email-outbox.log')
 POPUP_CONFIG_PATH = os.path.join(DATA_DIR, 'popup-config.json')
 POPUP_SUBSCRIBERS_PATH = os.path.join(DATA_DIR, 'popup-subscribers.json')
 NEWSLETTER_CONFIG_PATH = os.path.join(DATA_DIR, 'newsletter-config.json')
@@ -739,44 +741,429 @@ def format_notification_template(tmpl, data):
     return res
 
 
-def send_order_email_notification(order_data, force_recipient=None):
-    """Send order confirmation email to Sorèva support."""
+def generate_customer_order_html_email(order_data):
+    """Generate a responsive, luxury-branded HTML email receipt for the customer."""
+    order_num = html.escape(str(order_data.get("orderNumber", "SRV-ORDER")))
+    cust_name = html.escape(str(order_data.get("customerName", "Valued Patron")))
+    cust_email = html.escape(str(order_data.get("customerEmail", "")))
+    cust_phone = html.escape(str(order_data.get("customerPhone", "")))
+    date_time = html.escape(str(order_data.get("dateTime", datetime.now().strftime("%d %b %Y, %I:%M %p"))))
+    pay_method = html.escape(str(order_data.get("paymentMethod", "Online Payment")))
+    pay_id = html.escape(str(order_data.get("paymentId", "N/A")))
+    full_address = html.escape(str(order_data.get("fullAddress") or order_data.get("shippingAddress", "")))
+    order_notes = html.escape(str(order_data.get("orderNotes") or ""))
+    
+    total_val = float(order_data.get("totalAmount", 0) or 0)
+    subtotal_val = float(order_data.get("subtotalAmount", total_val) or total_val)
+    discount_val = float(order_data.get("discountAmount", 0) or 0)
+    coupon_code = str(order_data.get("couponCode", "") or "").strip()
+    
+    # Parse items list
+    raw_items = order_data.get("items")
+    if isinstance(raw_items, str):
+        try:
+            raw_items = json.loads(raw_items)
+        except Exception:
+            raw_items = []
+    if not isinstance(raw_items, list):
+        raw_items = []
+        
+    items_rows_html = ""
+    if raw_items:
+        for it in raw_items:
+            it_name = html.escape(str(it.get("name") or it.get("productName") or "Luxury Jewellery Piece"))
+            it_qty = int(it.get("qty", 1) or 1)
+            it_finish = html.escape(str(it.get("finish") or "24K Gold Polish"))
+            it_price = float(it.get("price", 0) or 0)
+            it_subtotal = it_price * it_qty
+            it_img = it.get("image") or it.get("primaryImg") or ""
+            
+            img_tag = ""
+            if it_img:
+                if not it_img.startswith("http"):
+                    it_img = f"https://soreva.in/{it_img.lstrip('/')}"
+                img_tag = f'<img src="{html.escape(it_img)}" width="52" height="52" style="border-radius: 8px; object-fit: cover; border: 1px solid #38302e; display: block;" alt="{it_name}">'
+            else:
+                img_tag = '<div style="width: 52px; height: 52px; background: #251f1e; border-radius: 8px; border: 1px solid #38302e; display: flex; align-items: center; justify-content: center; color: #c5a059; font-size: 20px;">💎</div>'
+
+            items_rows_html += f"""
+            <tr>
+                <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; width: 60px;">
+                    {img_tag}
+                </td>
+                <td style="padding: 12px 10px; border-bottom: 1px solid #2a2321; vertical-align: middle;">
+                    <div style="font-weight: 600; color: #f5f2eb; font-size: 14px; line-height: 1.3;">{it_name}</div>
+                    <div style="font-size: 12px; color: #c5a059; margin-top: 3px;">Finish: {it_finish}</div>
+                    <div style="font-size: 12px; color: #a3958f; margin-top: 2px;">Qty: {it_qty} × ₹{it_price:,.2f}</div>
+                </td>
+                <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; text-align: right; font-weight: 600; color: #f5f2eb; font-size: 14px;">
+                    ₹{it_subtotal:,.2f}
+                </td>
+            </tr>
+            """
+    else:
+        # Fallback to itemsSummary string
+        summary_str = html.escape(str(order_data.get("itemsSummary", "Jewellery Pieces")))
+        items_rows_html = f"""
+        <tr>
+            <td colspan="3" style="padding: 16px 12px; border-bottom: 1px solid #2a2321; color: #f5f2eb; font-size: 14px;">
+                <div style="font-weight: 600;">{summary_str}</div>
+                <div style="font-size: 12px; color: #c5a059; margin-top: 4px;">Atelier Reserved • Standard Collection</div>
+            </td>
+        </tr>
+        """
+
+    # Discount block
+    discount_html = ""
+    if discount_val > 0:
+        coupon_label = f" ({html.escape(coupon_code)})" if coupon_code and coupon_code != "None" else ""
+        discount_html = f"""
+        <tr>
+            <td style="padding: 5px 0; color: #a3958f; font-size: 13px;">Special Discount{coupon_label}:</td>
+            <td style="padding: 5px 0; text-align: right; color: #4ade80; font-size: 13px; font-weight: 600;">-₹{discount_val:,.2f}</td>
+        </tr>
+        """
+
+    # Notes block
+    notes_html = ""
+    if order_notes and order_notes.lower() != "none":
+        notes_html = f"""
+        <div style="margin-top: 18px; padding: 12px 16px; background: rgba(197, 160, 89, 0.08); border-left: 3px solid #c5a059; border-radius: 4px;">
+            <strong style="color: #c5a059; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">Atelier Order Notes:</strong>
+            <p style="margin: 4px 0 0 0; color: #f5f2eb; font-size: 13px;">{order_notes}</p>
+        </div>
+        """
+
+    html_email = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Sorèva Order Confirmation — {order_num}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0c0a09; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f5f2eb;">
+    <div style="max-width: 620px; margin: 0 auto; background-color: #171312; border: 1px solid #2a2321; border-radius: 12px; overflow: hidden; margin-top: 24px; margin-bottom: 24px;">
+        
+        <!-- HEADER -->
+        <div style="background: linear-gradient(180deg, #221c1a 0%, #171312 100%); padding: 36px 30px 24px 30px; text-align: center; border-bottom: 1px solid #2a2321;">
+            <div style="color: #c5a059; font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Haute Joaillerie Atelier</div>
+            <h1 style="margin: 0; color: #f5f2eb; font-family: Georgia, serif; font-size: 28px; font-weight: 500; letter-spacing: 2px;">SORÈVA</h1>
+            <div style="color: #a3958f; font-size: 11px; letter-spacing: 2px; margin-top: 4px; text-transform: uppercase;">Paris • Mumbai</div>
+        </div>
+
+        <!-- HERO CONFIRMATION BANNER -->
+        <div style="padding: 28px 30px 10px 30px; text-align: center;">
+            <div style="display: inline-block; padding: 8px 18px; background: rgba(197, 160, 89, 0.12); border: 1px solid rgba(197, 160, 89, 0.35); border-radius: 30px; color: #e5c483; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px;">
+                ✨ Order Confirmed & Reserved
+            </div>
+            <h2 style="margin: 0 0 10px 0; color: #ffffff; font-size: 22px; font-weight: 500;">Thank you for your order, {cust_name}</h2>
+            <p style="margin: 0; color: #a3958f; font-size: 14px; line-height: 1.5;">
+                Your jewellery order <strong style="color: #c5a059;">{order_num}</strong> has been received by our atelier. Our craftsmen are now packaging your handcrafted pieces with signature velvet presentation boxes and certificates of authenticity.
+            </p>
+        </div>
+
+        <!-- ORDER QUICK METRICS -->
+        <div style="margin: 24px 30px; background: #1f1a19; border: 1px solid #332a28; border-radius: 10px; padding: 18px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding: 6px 0; width: 50%; vertical-align: top;">
+                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Order Number</div>
+                        <div style="color: #f5f2eb; font-size: 14px; font-weight: 600; margin-top: 2px;">{order_num}</div>
+                    </td>
+                    <td style="padding: 6px 0; width: 50%; vertical-align: top;">
+                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Date & Time</div>
+                        <div style="color: #f5f2eb; font-size: 14px; font-weight: 500; margin-top: 2px;">{date_time}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0 0 0; width: 50%; vertical-align: top;">
+                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Payment Method</div>
+                        <div style="color: #f5f2eb; font-size: 14px; font-weight: 500; margin-top: 2px;">{pay_method}</div>
+                    </td>
+                    <td style="padding: 10px 0 0 0; width: 50%; vertical-align: top;">
+                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Payment Reference</div>
+                        <div style="color: #c5a059; font-size: 13px; font-family: monospace; margin-top: 2px;">{pay_id}</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ITEMS ORDERED TABLE -->
+        <div style="padding: 0 30px 20px 30px;">
+            <div style="color: #c5a059; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #2a2321; padding-bottom: 8px;">
+                Items in Your Atelier Order
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                {items_rows_html}
+            </table>
+
+            <!-- FINANCIAL SUMMARY -->
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #2a2321;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td style="padding: 5px 0; color: #a3958f; font-size: 13px;">Atelier Subtotal:</td>
+                        <td style="padding: 5px 0; text-align: right; color: #f5f2eb; font-size: 13px;">₹{subtotal_val:,.2f}</td>
+                    </tr>
+                    {discount_html}
+                    <tr>
+                        <td style="padding: 5px 0; color: #a3958f; font-size: 13px;">Insured Express Shipping:</td>
+                        <td style="padding: 5px 0; text-align: right; color: #4ade80; font-size: 13px; font-weight: 600;">FREE (Insured)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0 0 0; border-top: 1px solid #332a28; color: #f5f2eb; font-size: 15px; font-weight: 700;">Grand Total:</td>
+                        <td style="padding: 12px 0 0 0; border-top: 1px solid #332a28; text-align: right; color: #c5a059; font-size: 20px; font-weight: 700;">₹{total_val:,.2f}</td>
+                    </tr>
+                </table>
+            </div>
+            {notes_html}
+        </div>
+
+        <!-- SHIPPING DESTINATION & CLIENT INFO -->
+        <div style="margin: 0 30px 28px 30px; padding: 20px; background: #1f1a19; border: 1px solid #332a28; border-radius: 10px;">
+            <div style="color: #c5a059; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;">
+                Shipping & Delivery Address
+            </div>
+            <div style="color: #f5f2eb; font-size: 14px; font-weight: 600;">{cust_name}</div>
+            <div style="color: #d1c7bd; font-size: 13px; line-height: 1.5; margin-top: 4px;">{full_address}</div>
+            <div style="color: #a3958f; font-size: 12px; margin-top: 6px;">
+                Phone: <span style="color: #f5f2eb;">{cust_phone}</span> &bull; Email: <span style="color: #f5f2eb;">{cust_email}</span>
+            </div>
+        </div>
+
+        <!-- ASSURANCE PERKS -->
+        <div style="margin: 0 30px 28px 30px; border-top: 1px solid #2a2321; padding-top: 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="width: 33.33%; text-align: center; padding: 8px 6px;">
+                        <div style="font-size: 20px; margin-bottom: 4px;">🛡️</div>
+                        <div style="color: #f5f2eb; font-size: 11px; font-weight: 600;">1-Year Polish</div>
+                        <div style="color: #8c7e78; font-size: 10px;">Anti-Tarnish Warranty</div>
+                    </td>
+                    <td style="width: 33.33%; text-align: center; padding: 8px 6px;">
+                        <div style="font-size: 20px; margin-bottom: 4px;">📦</div>
+                        <div style="color: #f5f2eb; font-size: 11px; font-weight: 600;">Velvet Box</div>
+                        <div style="color: #8c7e78; font-size: 10px;">Signature Presentation</div>
+                    </td>
+                    <td style="width: 33.33%; text-align: center; padding: 8px 6px;">
+                        <div style="font-size: 20px; margin-bottom: 4px;">💎</div>
+                        <div style="color: #f5f2eb; font-size: 11px; font-weight: 600;">Authenticity</div>
+                        <div style="color: #8c7e78; font-size: 10px;">Certified 5A CZ Grade</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ATELIER FOOTER -->
+        <div style="background-color: #120f0e; padding: 26px 30px; text-align: center; border-top: 1px solid #2a2321;">
+            <p style="margin: 0 0 10px 0; color: #a3958f; font-size: 12px; line-height: 1.5;">
+                Need assistance with your jewellery order? Our client concierge is at your service.<br>
+                Email: <a href="mailto:support@soreva.in" style="color: #c5a059; text-decoration: none;">support@soreva.in</a> &bull; Phone: <a href="tel:+919741118940" style="color: #c5a059; text-decoration: none;">+91 97411 18940</a>
+            </p>
+            <div style="margin-top: 14px;">
+                <a href="https://soreva.in" style="display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #c5a059, #a37c35); color: #171312; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                    Visit Sorèva Boutique
+                </a>
+            </div>
+            <p style="margin: 20px 0 0 0; color: #574c47; font-size: 11px;">
+                &copy; 2026 Sorèva Luxury Jewellery. All rights reserved. Handcrafted with passion.
+            </p>
+        </div>
+
+    </div>
+</body>
+</html>"""
+    return html_email
+
+
+def generate_customer_order_text_email(order_data):
+    """Generate a clean ASCII plain-text receipt for the customer."""
+    order_num = order_data.get("orderNumber", "SRV-ORDER")
+    cust_name = str(order_data.get("customerName", "Valued Patron"))
+    date_time = str(order_data.get("dateTime", datetime.now().strftime("%d %b %Y, %I:%M %p")))
+    pay_method = str(order_data.get("paymentMethod", "Online Payment"))
+    pay_id = str(order_data.get("paymentId", "N/A"))
+    full_address = str(order_data.get("fullAddress") or order_data.get("shippingAddress", ""))
+    
+    total_val = float(order_data.get("totalAmount", 0) or 0)
+    subtotal_val = float(order_data.get("subtotalAmount", total_val) or total_val)
+    discount_val = float(order_data.get("discountAmount", 0) or 0)
+    coupon_code = str(order_data.get("couponCode", "") or "").strip()
+    items_summary = str(order_data.get("itemsSummary", "Jewellery Items"))
+    
+    lines = [
+        "SORÈVA LUXURY JEWELLERY — ORDER CONFIRMATION",
+        "============================================================",
+        f"Dear {cust_name},",
+        "",
+        f"Thank you for choosing Sorèva. Your order {order_num} has been successfully reserved with our atelier.",
+        "",
+        "ORDER DETAILS:",
+        f"• Order Number:    {order_num}",
+        f"• Date & Time:     {date_time}",
+        f"• Payment Method:  {pay_method}",
+        f"• Payment Ref ID:  {pay_id}",
+        "",
+        "ITEMS ORDERED:",
+        f"• {items_summary}",
+        "",
+        "FINANCIAL BREAKDOWN:",
+        f"• Subtotal:        ₹{subtotal_val:,.2f}",
+    ]
+    if discount_val > 0:
+        c_str = f" ({coupon_code})" if coupon_code and coupon_code != "None" else ""
+        lines.append(f"• Discount{c_str}:   -₹{discount_val:,.2f}")
+    lines.extend([
+        f"• Express Shipping: FREE (Insured Delivery)",
+        f"• Grand Total:     ₹{total_val:,.2f}",
+        "",
+        "DELIVERY DESTINATION:",
+        f"{full_address}",
+        "",
+        "ATELIER ASSURANCES:",
+        "• 1-Year Polish & Anti-Tarnish Guarantee",
+        "• Signature Velvet Box & Certificate of Authenticity Included",
+        "",
+        "CLIENT CONCIERGE:",
+        "Email: support@soreva.in | Phone: +91 97411 18940",
+        "Website: https://soreva.in",
+        "============================================================"
+    ])
+    return "\n".join(lines)
+
+
+def dispatch_smtp_email(to_email, subject, html_content, text_content=None, from_name="Sorèva Luxury Jewellery"):
+    """
+    Dispatch an email via SMTP.
+    Also appends the complete email payload to data/email-outbox.log for transparency and auditability.
+    """
+    to_email = (to_email or "").strip()
+    if not to_email:
+        return False, "Recipient email address is required"
+
     cfg = get_notifications_config().get("email", {})
     if not cfg.get("enabled", True):
-        return False, "Email notification disabled in settings"
+        return False, "Email notifications are disabled in settings"
 
-    recipient = force_recipient or cfg.get("supportEmail", "").strip() or "support@soreva.in"
     smtp_host = cfg.get("smtpHost", "").strip()
     smtp_port = int(cfg.get("smtpPort") or 587)
     smtp_user = cfg.get("smtpUser", "").strip()
     smtp_pass = cfg.get("smtpPassword", "").strip()
     from_email = cfg.get("fromEmail", "").strip() or smtp_user or "orders@soreva.in"
 
-    subject = format_notification_template(cfg.get("subjectTemplate", "New Order: {order_number}"), order_data)
-    body = format_notification_template(cfg.get("bodyTemplate", ""), order_data)
+    # Always log to outbox log file
+    timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = (
+        f"[{timestamp_str}] TO: {to_email} | SUBJECT: {subject}\n"
+        f"FROM: {from_name} <{from_email}>\n"
+        f"{'-'*40}\n"
+        f"{text_content or 'HTML receipt attached'}\n"
+        f"{'='*60}\n\n"
+    )
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(EMAIL_OUTBOX_PATH, "a", encoding="utf-8") as outf:
+            outf.write(log_entry)
+    except Exception as log_err:
+        print(f"[Outbox Log Warning] {log_err}")
 
     if not smtp_host or not smtp_user or not smtp_pass:
-        msg = f"Order email queued for {recipient}. (SMTP credentials can be entered in Admin > Notifications)"
-        print(f"[Email Notification Note] {msg}")
+        msg = f"Email queued for {to_email} and logged to outbox. (Configure Gmail 16-character App Password in Admin > Email to send live SMTP)"
+        print(f"[Email Notification Logged] {msg}")
         return True, msg
 
     try:
-        msg = MIMEMultipart()
-        msg['From'] = f"Sorèva Order Concierge <{from_email}>"
-        msg['To'] = recipient
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"{from_name} <{from_email}>"
+        msg['To'] = to_email
         msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+        if text_content:
+            msg.attach(MIMEText(text_content, 'plain', 'utf-8'))
+        if html_content:
+            msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
         server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
         server.starttls()
         server.login(smtp_user, smtp_pass)
         server.send_message(msg)
         server.quit()
-        print(f"[Email Notification Sent] Successfully dispatched to {recipient}")
-        return True, f"Email successfully sent to {recipient}"
+        print(f"[Email Dispatched via SMTP] Sent to {to_email}")
+        return True, f"Email delivered successfully to {to_email}"
+    except smtplib.SMTPAuthenticationError as auth_err:
+        err_msg = "SMTP Authentication failed: If using Gmail Workspace, a 16-character Google App Password is required instead of your account password."
+        print(f"[Email SMTP Auth Error] {err_msg} ({auth_err})")
+        return False, err_msg
     except Exception as e:
-        print(f"[Email Notification Error] {e}")
-        return False, f"SMTP Error: {str(e)}"
+        err_msg = f"SMTP error dispatching to {to_email}: {str(e)}"
+        print(f"[Email SMTP Error] {err_msg}")
+        return False, err_msg
+
+
+def send_customer_order_confirmation(order_data, force_recipient=None):
+    """Dispatch the luxury customer order confirmation email with itemized receipt."""
+    recipient = force_recipient or order_data.get("customerEmail")
+    if not recipient:
+        return False, "No customer email specified"
+
+    order_num = order_data.get("orderNumber", "")
+    cust_name = order_data.get("customerName", "Valued Patron")
+    subject = f"✨ Your Sorèva Order Confirmation: {order_num} — {cust_name}"
+
+    html_body = generate_customer_order_html_email(order_data)
+    text_body = generate_customer_order_text_email(order_data)
+
+    return dispatch_smtp_email(
+        to_email=recipient,
+        subject=subject,
+        html_content=html_body,
+        text_content=text_body,
+        from_name="Sorèva Luxury Jewellery"
+    )
+
+
+def send_admin_order_notification(order_data, force_recipient=None):
+    """Dispatch the atelier packing & inventory notification to support staff."""
+    cfg = get_notifications_config().get("email", {})
+    recipient = force_recipient or cfg.get("supportEmail", "").strip() or "support@soreva.in"
+
+    subject = format_notification_template(cfg.get("subjectTemplate", "💎 New Order Received: {order_number}"), order_data)
+    body = format_notification_template(cfg.get("bodyTemplate", ""), order_data)
+
+    return dispatch_smtp_email(
+        to_email=recipient,
+        subject=subject,
+        html_content=f"<pre style='font-family: monospace; white-space: pre-wrap; color: #171312;'>{html.escape(body)}</pre>",
+        text_content=body,
+        from_name="Sorèva Order Concierge"
+    )
+
+
+def send_order_email_notification(order_data, force_recipient=None):
+    """
+    Master email dispatcher: Sends BOTH the Customer Order Confirmation Receipt
+    and the Admin Atelier Notification.
+    """
+    if force_recipient:
+        # If a single recipient is forced (e.g. from Admin Test Email), send the full customer receipt
+        return send_customer_order_confirmation(order_data, force_recipient=force_recipient)
+
+    results = []
+    # 1. Customer Order Confirmation Email
+    cust_email = order_data.get("customerEmail")
+    if cust_email:
+        s_cust, m_cust = send_customer_order_confirmation(order_data)
+        results.append(f"Customer ({cust_email}): {m_cust}")
+    else:
+        results.append("No customer email on record")
+
+    # 2. Admin Atelier Notification Email
+    cfg = get_notifications_config().get("email", {})
+    admin_email = cfg.get("supportEmail", "").strip() or "support@soreva.in"
+    if admin_email and admin_email.lower() != (cust_email or "").lower():
+        s_admin, m_admin = send_admin_order_notification(order_data)
+        results.append(f"Admin ({admin_email}): {m_admin}")
+
+    return True, "; ".join(results)
 
 
 def send_order_whatsapp_notification(order_data, force_phone=None, force_template=None):
@@ -1666,6 +2053,7 @@ def record_order_in_db(
             "fullAddress": full_shipping_destination,
             "orderNotes": order_notes or "None",
             "itemsSummary": items_summary,
+            "items": items,
             "paymentMethod": payment_method,
             "paymentId": payment_id_str or "N/A",
             "dateTime": now_str
