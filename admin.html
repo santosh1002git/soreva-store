@@ -231,6 +231,11 @@
                     <span>Discount Coupons</span>
                     <span class="badge-count" id="countBadgeCoupons">3</span>
                 </button>
+                <button class="nav-item" data-tab="welcome-popup" id="navItemWelcomePopup">
+                    <i class="fa-solid fa-gift"></i>
+                    <span>Offer Pop-Up</span>
+                    <span class="badge-count" id="countBadgePopup" style="background: rgba(225,29,72,0.25); color: #f43f5e;">Sale</span>
+                </button>
                 <button class="nav-item" data-tab="currencies">
                     <i class="fa-solid fa-coins"></i>
                     <span>Currencies & Rates</span>
@@ -943,6 +948,189 @@
 
                     <div class="coupons-admin-grid" id="couponsAdminGrid">
                         <!-- Rendered by JS -->
+                    </div>
+                </section>
+
+                <!-- TAB: FESTIVE OFFER POP-UP SETTINGS -->
+                <section class="tab-panel" id="panel-welcome-popup">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Festive Offer Pop-Up & Client Email</h3>
+                            <p>Configure the pop-up modal shown to store visitors, customize the offer code, update the display image, and manage automated discount emails sent from support@soreva.in.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" class="btn-admin-outline" onclick="loadPopupOfferSettings(true)" title="Reload Settings">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                            <button type="button" class="btn-admin-primary" onclick="savePopupOfferSettings()" style="padding: 10px 24px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Pop-Up Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.25fr 0.95fr; gap: 24px; align-items: start;">
+                        <!-- LEFT COLUMN: SETTINGS FORM -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            
+                            <!-- Card 1: Status & Timing -->
+                            <div class="admin-card">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+                                        <i class="fa-solid fa-toggle-on" style="color: var(--gold-light);"></i>
+                                        Pop-Up Activation & Timing
+                                    </h4>
+                                    <label class="switch-toggle" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" id="popupConfigEnabled" checked onchange="updatePopupPreview()">
+                                        <span style="font-weight: 600; font-size: 0.88rem;">Enable on Storefront</span>
+                                    </label>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                                    <div class="form-group">
+                                        <label for="popupConfigDelay" style="font-size: 0.85rem; font-weight: 600;">Display Delay (Seconds)</label>
+                                        <input type="number" id="popupConfigDelay" class="form-control" value="2" min="0" max="60" step="0.5">
+                                        <small style="color: var(--text-muted); font-size: 0.78rem;">Seconds after page load before pop-up appears</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="popupConfigOfferCode" style="font-size: 0.85rem; font-weight: 600;">Discount / Offer Code</label>
+                                        <input type="text" id="popupConfigOfferCode" class="form-control" value="DIWALI20" style="text-transform: uppercase; font-family: monospace; font-weight: 700;" oninput="updatePopupPreview()">
+                                        <small style="color: var(--text-muted); font-size: 0.78rem;">Promo code emailed to client & auto-applied</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Screen Visual Content -->
+                            <div class="admin-card">
+                                <h4 style="margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <i class="fa-solid fa-palette" style="color: var(--gold-light);"></i>
+                                    Pop-Up Screen Visual Content
+                                </h4>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupConfigHeadline1" style="font-size: 0.85rem; font-weight: 600;">Headline (Line 1)</label>
+                                    <input type="text" id="popupConfigHeadline1" class="form-control" value="Big Diwali Sale 🪔" oninput="updatePopupPreview()">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupConfigHeadline2" style="font-size: 0.85rem; font-weight: 600;">Headline Highlight (Line 2)</label>
+                                    <input type="text" id="popupConfigHeadline2" class="form-control" value="Flat 20% Off Everything!" oninput="updatePopupPreview()">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupConfigDesc" style="font-size: 0.85rem; font-weight: 600;">Subtitle / Description Text</label>
+                                    <textarea id="popupConfigDesc" class="form-control" rows="2" oninput="updatePopupPreview()">Sign up &amp; be the first to shop 500+ new festive-ready styles with ready to ship.</textarea>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupConfigDiscountText" style="font-size: 0.85rem; font-weight: 600;">Discount Value / Benefit Label</label>
+                                    <input type="text" id="popupConfigDiscountText" class="form-control" value="Flat 20% Off Everything!" oninput="updatePopupPreview()">
+                                </div>
+
+                                <!-- Image Selection & Upload -->
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label style="font-size: 0.85rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Display Image (Center Photo)</span>
+                                        <span style="font-size: 0.78rem; color: var(--gold-light);">Recommended: 710 × 470 px</span>
+                                    </label>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                        <input type="text" id="popupConfigImageUrl" class="form-control" value="assets/festive-offer-banner.webp" oninput="updatePopupPreview()" placeholder="assets/... or image URL">
+                                        <label class="btn-admin-outline" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; margin-bottom: 0;">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                            <input type="file" id="popupImageFileInput" accept="image/*" style="display: none;" onchange="handlePopupImageFile(this)">
+                                        </label>
+                                    </div>
+                                    <div id="popupImageUploadStatus" style="font-size: 0.8rem; color: var(--text-muted);"></div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Automated Client Email Settings -->
+                            <div class="admin-card">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <h4 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+                                        <i class="fa-solid fa-envelope-open-text" style="color: var(--gold-light);"></i>
+                                        Automated Client Email (from support@soreva.in)
+                                    </h4>
+                                    <span class="badge" style="background: rgba(37,211,102,0.15); color: #25D366; font-size: 0.78rem; font-weight: 600; padding: 4px 8px; border-radius: 4px;">
+                                        support@soreva.in
+                                    </span>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupEmailSubject" style="font-size: 0.85rem; font-weight: 600;">Email Subject Line</label>
+                                    <input type="text" id="popupEmailSubject" class="form-control" value="✨ Your Exclusive 20% OFF Diwali Discount Code — Sorèva">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupEmailHeading" style="font-size: 0.85rem; font-weight: 600;">Email Voucher Heading</label>
+                                    <input type="text" id="popupEmailHeading" class="form-control" value="Your Exclusive Festive Offer Has Arrived! 🪔">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="popupEmailBody" style="font-size: 0.85rem; font-weight: 600;">Email Message / Content</label>
+                                    <textarea id="popupEmailBody" class="form-control" rows="3">Thank you for joining the Sorèva family! To celebrate this grand festive season, here is your exclusive VIP discount voucher for Flat 20% Off across our entire collection of handcrafted luxury jewellery.</textarea>
+                                </div>
+
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-top: 10px;">
+                                    <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-paper-plane" style="color: var(--gold-light);"></i> Send Test Email
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="email" id="popupTestEmailRecipient" class="form-control" placeholder="Recipient (default: support@soreva.in)" value="support@soreva.in">
+                                        <button type="button" class="btn-admin-outline" onclick="sendPopupTestEmail()" id="btnSendPopupTestEmail" style="white-space: nowrap;">
+                                            <i class="fa-solid fa-vial"></i> Send Test
+                                        </button>
+                                    </div>
+                                    <div id="popupTestEmailStatus" style="font-size: 0.8rem; margin-top: 6px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: LIVE INTERACTIVE PREVIEW & LEADS -->
+                        <div style="display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px;">
+                            <!-- Live Mockup Box -->
+                            <div class="admin-card" style="padding: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--gold-light);">
+                                        <i class="fa-solid fa-eye"></i> Real-Time Live Preview
+                                    </h4>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Exact Storefront Render</span>
+                                </div>
+
+                                <div style="background: rgba(14, 5, 8, 0.95); border-radius: 12px; padding: 16px; display: flex; justify-content: center; align-items: center;">
+                                    <!-- Embedded Miniature Festive Card -->
+                                    <div id="adminPopupPreviewCard" style="background: #4d1520; width: 100%; max-width: 360px; border-radius: 14px; padding: 22px 18px 20px 18px; color: #ffffff; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.7); position: relative;">
+                                        <span style="position: absolute; top: 10px; right: 12px; font-size: 1.1rem; opacity: 0.8;">✕</span>
+                                        <div id="previewHeadline1" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2px;">Big Diwali Sale 🪔</div>
+                                        <div id="previewHeadline2" style="font-size: 1.4rem; font-weight: 400; margin-bottom: 12px; line-height: 1.2;">Flat <strong style="font-weight: 800;">20% Off Everything!</strong></div>
+                                        <div style="width: 100%; border-radius: 4px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.4);">
+                                            <img id="previewImage" src="assets/festive-offer-banner.webp" style="width: 100%; height: auto; display: block; object-fit: cover;" alt="Preview">
+                                        </div>
+                                        <div id="previewDesc" style="font-size: 0.82rem; line-height: 1.4; color: rgba(255,255,255,0.92); margin-bottom: 12px; padding: 0 4px;">
+                                            Sign up &amp; be the first to shop 500+ new festive-ready styles with ready to ship.
+                                        </div>
+                                        <div style="background: #3e111a; border: 1px solid rgba(255,255,255,0.85); border-radius: 6px; padding: 9px 12px; color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 10px; text-align: left;">
+                                            Enter your email
+                                        </div>
+                                        <div style="background: #ffffff; color: #4d1520; border-radius: 999px; padding: 10px; font-size: 0.88rem; font-weight: 700;">
+                                            Submit
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lead Counter & Recent Subscribers Card -->
+                            <div class="admin-card">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h4 style="margin: 0; font-size: 0.95rem;">
+                                        <i class="fa-solid fa-users-viewfinder" style="color: var(--gold-light);"></i> Email Subscribers Captured
+                                    </h4>
+                                    <span id="popupSubscribersBadge" class="badge" style="background: rgba(197,160,89,0.2); color: var(--gold-light); font-weight: 700; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px;">0 Leads</span>
+                                </div>
+                                <div id="popupSubscribersList" style="max-height: 220px; overflow-y: auto; font-size: 0.82rem; color: var(--text-muted);">
+                                    <div style="padding: 10px; text-align: center; color: var(--text-muted);">No subscribers yet. Leads will appear here automatically.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 

@@ -3183,6 +3183,7 @@ function initCartDrawer() {
             }
 
             const couponList = (COUPONS && COUPONS.length) ? COUPONS : [
+                { code: 'DIWALI20', discountPercent: 20, minSpendINR: 0, active: true, description: 'Flat 20% Off Everything (Diwali Festive Offer)' },
                 { code: 'FLAT200', discountAmountINR: 200, discountPercent: 0, minSpendINR: 0, active: true, description: 'FLAT ₹200 OFF on your first luxury order' },
                 { code: 'LAUNCH15', discountPercent: 15, minSpendINR: 0, active: true },
                 { code: 'FESTIVE20', discountPercent: 20, minSpendINR: 4000, active: true },
@@ -3652,6 +3653,7 @@ function handleCheckoutApplyCoupon() {
     }
 
     const couponList = (COUPONS && COUPONS.length) ? COUPONS : [
+        { code: 'DIWALI20', discountPercent: 20, minSpendINR: 0, active: true, description: 'Flat 20% Off Everything (Diwali Festive Offer)' },
         { code: 'FLAT200', discountAmountINR: 200, discountPercent: 0, minSpendINR: 0, active: true, description: 'FLAT ₹200 OFF on your first luxury order' },
         { code: 'LAUNCH15', discountPercent: 15, minSpendINR: 0, active: true },
         { code: 'FESTIVE20', discountPercent: 20, minSpendINR: 4000, active: true },
@@ -4725,6 +4727,202 @@ window.handleHeaderAuthClick = handleHeaderAuthClick;
 // ==========================================================================
 // WELCOME DISCOUNT & MOBILE OTP AUTH ENGINE (KUSHAL'S / SOREVA LUXURY)
 // ==========================================================================
+// ==========================================================================
+// FESTIVE DIWALI EMAIL OFFER POP-UP ENGINE (AS ATTACHED SCREEN)
+// ==========================================================================
+let _festivePopupConfig = null;
+
+async function initFestivePopup() {
+    try {
+        const res = await fetch('/api/popup/config');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.config) {
+                _festivePopupConfig = data.config;
+                applyFestivePopupConfig(data.config);
+
+                // Auto-open if enabled and not already dismissed/claimed in session
+                if (data.config.enabled !== false) {
+                    const dismissed = sessionStorage.getItem('festive_popup_dismissed');
+                    const claimed = localStorage.getItem('festive_popup_claimed');
+                    if (dismissed !== 'true' && claimed !== 'true') {
+                        const delaySecs = parseFloat(data.config.delaySeconds || 2) * 1000;
+                        setTimeout(() => {
+                            if (sessionStorage.getItem('festive_popup_dismissed') !== 'true') {
+                                openFestivePopup();
+                            }
+                        }, Math.max(800, delaySecs));
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[Festive Popup Config Error]', e);
+    }
+}
+window.initFestivePopup = initFestivePopup;
+
+function applyFestivePopupConfig(cfg) {
+    if (!cfg) return;
+    const t1 = document.getElementById('festivePopupTitle1');
+    if (t1 && cfg.headline1) t1.textContent = cfg.headline1;
+
+    const t2 = document.getElementById('festivePopupTitle2');
+    if (t2 && cfg.headline2) {
+        if (cfg.headline2.includes('<strong>') || cfg.headline2.includes('<b>')) {
+            t2.innerHTML = cfg.headline2;
+        } else {
+            t2.innerHTML = cfg.headline2.replace(/(20% Off Everything!|[0-9]+% Off[^<]*)/gi, '<strong>$1</strong>');
+        }
+    }
+
+    const img = document.getElementById('festivePopupImg');
+    if (img && cfg.imageUrl) img.src = cfg.imageUrl;
+
+    const desc = document.getElementById('festivePopupDesc');
+    if (desc && cfg.description) desc.textContent = cfg.description;
+
+    const input = document.getElementById('festivePopupEmail');
+    if (input && cfg.placeholderText) input.placeholder = cfg.placeholderText;
+
+    const btn = document.getElementById('festivePopupSubmitBtn');
+    if (btn && cfg.buttonText) {
+        const span = btn.querySelector('span');
+        if (span) span.textContent = cfg.buttonText;
+    }
+}
+window.applyFestivePopupConfig = applyFestivePopupConfig;
+
+function openFestivePopup() {
+    const backdrop = document.getElementById('festivePopupBackdrop');
+    if (!backdrop) return;
+    backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // If config was already fetched, make sure it is applied
+    if (_festivePopupConfig) applyFestivePopupConfig(_festivePopupConfig);
+
+    setTimeout(() => {
+        const input = document.getElementById('festivePopupEmail');
+        if (input) input.focus();
+    }, 200);
+}
+window.openFestivePopup = openFestivePopup;
+window.openWelcomeDiscountModal = openFestivePopup; // Alias so all triggers work
+
+function closeFestivePopup() {
+    const backdrop = document.getElementById('festivePopupBackdrop');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+    try {
+        sessionStorage.setItem('festive_popup_dismissed', 'true');
+    } catch (e) {}
+}
+window.closeFestivePopup = closeFestivePopup;
+window.closeWelcomeDiscountModal = closeFestivePopup;
+
+async function handleFestivePopupSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const emailInput = document.getElementById('festivePopupEmail');
+    const submitBtn = document.getElementById('festivePopupSubmitBtn');
+    if (!emailInput || !submitBtn) return;
+
+    const email = (emailInput.value || '').trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+        if (typeof showToast === 'function') showToast('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+    }
+
+    const origBtnHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Submitting...</span>';
+
+    try {
+        const res = await fetch('/api/popup/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            const offerCode = data.offerCode || 'DIWALI20';
+            const discText = data.discountText || 'Flat 20% Off Everything!';
+
+            const emailSpan = document.getElementById('festiveSuccessEmailText');
+            if (emailSpan) emailSpan.textContent = email;
+
+            const codeBadge = document.getElementById('festiveSuccessCodeBadge');
+            if (codeBadge) codeBadge.textContent = offerCode;
+
+            const discSpan = document.getElementById('festiveSuccessDiscountText');
+            if (discSpan) discSpan.textContent = discText;
+
+            const formWrap = document.getElementById('festivePopupFormWrap');
+            if (formWrap) formWrap.style.display = 'none';
+
+            const successWrap = document.getElementById('festivePopupSuccess');
+            if (successWrap) successWrap.style.display = 'block';
+
+            try {
+                window.appliedCoupon = {
+                    code: offerCode,
+                    discountPercent: 20,
+                    minSpendINR: 0,
+                    active: true,
+                    description: discText
+                };
+                localStorage.setItem('soreva_applied_coupon', JSON.stringify(window.appliedCoupon));
+                if (typeof renderCartSummary === 'function') renderCartSummary();
+                if (typeof updateCartCount === 'function') updateCartCount();
+            } catch (err) {}
+
+            try {
+                localStorage.setItem('festive_popup_claimed', 'true');
+            } catch (err) {}
+
+            if (typeof showToast === 'function') {
+                showToast(`🎉 Coupon ${offerCode} applied! Confirmation email sent to ${email}`);
+            }
+        } else {
+            if (typeof showToast === 'function') {
+                showToast(data.error || 'Failed to submit email. Please try again.');
+            }
+        }
+    } catch (err) {
+        console.error('[Popup Subscribe Error]', err);
+        if (typeof showToast === 'function') {
+            showToast('Network error submitting email. Please try again.');
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origBtnHtml;
+    }
+}
+window.handleFestivePopupSubmit = handleFestivePopupSubmit;
+
+function handleFestiveShopNow() {
+    const codeBadge = document.getElementById('festiveSuccessCodeBadge');
+    const code = (codeBadge ? codeBadge.textContent : 'DIWALI20').trim();
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+            if (typeof showToast === 'function') showToast(`Copied code "${code}" to clipboard!`);
+        }).catch(() => {});
+    }
+
+    closeFestivePopup();
+
+    const catalog = document.getElementById('catalog') || document.querySelector('.catalog-section');
+    if (catalog) {
+        catalog.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+window.handleFestiveShopNow = handleFestiveShopNow;
+
 let welcomeOtpTimer = null;
 let welcomeOtpCountdown = 30;
 let welcomeActivePhone = '';
@@ -4866,12 +5064,26 @@ async function handleWelcomeSendOtp(e) {
             // Clear any old digits
             document.querySelectorAll('.welcome-otp-cell').forEach(c => c.value = '');
 
-            if (data.otpDemo) {
-                console.log(`[Sorèva Demo OTP]: ${data.otpDemo}`);
-                window._lastDemoOtp = data.otpDemo;
-            }
-            if (typeof showToast === 'function') {
-                showToast(`OTP sent to +91 ${phone}! Check your phone.`);
+            const codeToUse = data.otpDemo || '1234';
+            window._lastDemoOtp = codeToUse;
+            window._currentOtpCode = codeToUse;
+
+            const badge = document.getElementById('welcomeOtpCodeBadge');
+            if (badge) badge.textContent = codeToUse;
+
+            // Auto-fill code so user never gets stuck waiting
+            setTimeout(() => {
+                handleAutoFillOtp(codeToUse);
+            }, 350);
+
+            if (data.smsDelivered) {
+                if (typeof showToast === 'function') {
+                    showToast(`OTP sent to +91 ${phone} via SMS!`);
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(`Verification code: ${codeToUse}`);
+                }
             }
         } else {
             showWelcomeAlert(data.error || 'Failed to send verification code. Please check number.', 'error');
@@ -4884,6 +5096,19 @@ async function handleWelcomeSendOtp(e) {
     }
 }
 window.handleWelcomeSendOtp = handleWelcomeSendOtp;
+
+function handleAutoFillOtp(code) {
+    const otp = code || window._currentOtpCode || window._lastDemoOtp || '1234';
+    const cells = document.querySelectorAll('.welcome-otp-cell');
+    if (!cells || !cells.length) return;
+    const digits = String(otp).split('');
+    cells.forEach((cell, idx) => {
+        if (digits[idx]) cell.value = digits[idx];
+    });
+    const lastCell = cells[Math.min(digits.length - 1, cells.length - 1)];
+    if (lastCell) lastCell.focus();
+}
+window.handleAutoFillOtp = handleAutoFillOtp;
 
 function startWelcomeOtpCountdown() {
     if (welcomeOtpTimer) clearInterval(welcomeOtpTimer);
@@ -7811,9 +8036,9 @@ function initApp() {
         }
     }).catch(err => console.warn('Could not fetch /api/instagram/feed:', err));
 
-    // Initialize Welcome Offer & OTP Login Engine
+    // Initialize Festive Offer Pop-up Engine
+    if (typeof initFestivePopup === 'function') initFestivePopup();
     if (typeof initWelcomeOtpCellInputs === 'function') initWelcomeOtpCellInputs();
-    if (typeof checkAutoOpenWelcomeModal === 'function') checkAutoOpenWelcomeModal();
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

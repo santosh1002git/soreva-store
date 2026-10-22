@@ -401,6 +401,7 @@ function switchTab(tabName) {
         categories: "Category Cards Showcase",
         announcements: "Promotional Announcement Ticker",
         coupons: "Promo Coupons & Discount Codes",
+        'welcome-popup': "Festive Offer Pop-Up & Client Email",
         currencies: "Currency & Exchange Rates",
         spotlight: "Brand Story & Craftsmanship",
         testimonials: "Customer Testimonials",
@@ -421,6 +422,7 @@ function switchTab(tabName) {
     if (tabName === 'instagram') { renderInstagramGrid(); loadInstagramSettingsForm(); }
     if (tabName === 'settings' || tabName === 'payments') loadRazorpaySettings();
     if (tabName === 'notifications') loadNotificationSettings();
+    if (tabName === 'welcome-popup') loadPopupOfferSettings();
     
     // Close mobile sidebar if open
     const sidebar = document.getElementById('adminSidebar');
@@ -4355,6 +4357,270 @@ window.sendTestCustomerWhatsApp = sendTestCustomerWhatsApp;
 window.toggleWaProviderFields = toggleWaProviderFields;
 window.copyVariableTag = copyVariableTag;
 window.togglePasswordVisibility = togglePasswordVisibility;
+
+// ==========================================================================
+// FESTIVE OFFER POP-UP & DISCOUNT EMAIL ADMIN ENGINE
+// ==========================================================================
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[m]);
+}
+
+let activePopupConfig = null;
+
+async function loadPopupOfferSettings(isRefresh = false) {
+    try {
+        const resp = await fetch('/api/admin/popup/config');
+        if (!resp.ok) throw new Error('Failed to fetch pop-up settings');
+        const data = await resp.json();
+        const cfg = data.config || {};
+        activePopupConfig = cfg;
+
+        const chkEnabled = document.getElementById('popupConfigEnabled');
+        if (chkEnabled) chkEnabled.checked = cfg.enabled !== false;
+
+        const inpDelay = document.getElementById('popupConfigDelay');
+        if (inpDelay) inpDelay.value = cfg.delaySeconds !== undefined ? cfg.delaySeconds : 2;
+
+        const inpOffer = document.getElementById('popupConfigOfferCode');
+        if (inpOffer) inpOffer.value = cfg.offerCode || 'DIWALI20';
+
+        const inpH1 = document.getElementById('popupConfigHeadline1');
+        if (inpH1) inpH1.value = cfg.headline1 || 'Big Diwali Sale 🪔';
+
+        const inpH2 = document.getElementById('popupConfigHeadline2');
+        if (inpH2) inpH2.value = cfg.headline2 || 'Flat 20% Off Everything!';
+
+        const inpDesc = document.getElementById('popupConfigDesc');
+        if (inpDesc) inpDesc.value = cfg.description || 'Sign up & be the first to shop 500+ new festive-ready styles with ready to ship.';
+
+        const inpDisc = document.getElementById('popupConfigDiscountText');
+        if (inpDisc) inpDisc.value = cfg.discountText || 'Flat 20% Off Everything!';
+
+        const inpImg = document.getElementById('popupConfigImageUrl');
+        if (inpImg) inpImg.value = cfg.imageUrl || 'assets/festive-offer-banner.webp';
+
+        const inpSubj = document.getElementById('popupEmailSubject');
+        if (inpSubj) inpSubj.value = cfg.emailSubject || '✨ Your Exclusive 20% OFF Diwali Discount Code — Sorèva';
+
+        const inpHd = document.getElementById('popupEmailHeading');
+        if (inpHd) inpHd.value = cfg.emailHeading || 'Your Exclusive Festive Offer Has Arrived! 🪔';
+
+        const inpBody = document.getElementById('popupEmailBody');
+        if (inpBody) inpBody.value = cfg.emailBody || 'Thank you for joining the Sorèva family! To celebrate this grand festive season, here is your exclusive VIP discount voucher for Flat 20% Off across our entire collection of handcrafted luxury jewellery.';
+
+        const badge = document.getElementById('popupSubscribersBadge');
+        if (badge) badge.textContent = `${data.subscribersCount || 0} Leads`;
+
+        const subList = document.getElementById('popupSubscribersList');
+        if (subList) {
+            const subs = data.recentSubscribers || [];
+            if (subs.length === 0) {
+                subList.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-muted);">No subscribers yet. Leads will appear here automatically.</div>';
+            } else {
+                subList.innerHTML = subs.slice().reverse().map(s => `
+                    <div style="padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #fff;">${escapeHtml(s.email)}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">${s.dateFormatted || s.timestamp || ''}</div>
+                        </div>
+                        <span style="font-size: 0.72rem; background: rgba(197,160,89,0.2); color: var(--gold-light); padding: 2px 6px; border-radius: 4px; font-weight: 700;">
+                            ${escapeHtml(s.offerCode || 'DIWALI20')}
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        updatePopupPreview();
+
+        if (isRefresh && typeof showToast === 'function') {
+            showToast('Pop-up offer settings refreshed!');
+        }
+    } catch (err) {
+        console.error('[loadPopupOfferSettings Error]', err);
+        if (typeof showToast === 'function') showToast('Failed to load pop-up settings: ' + err.message);
+    }
+}
+
+function updatePopupPreview() {
+    const h1 = document.getElementById('popupConfigHeadline1')?.value || 'Big Diwali Sale 🪔';
+    const h2 = document.getElementById('popupConfigHeadline2')?.value || 'Flat 20% Off Everything!';
+    const desc = document.getElementById('popupConfigDesc')?.value || 'Sign up & be the first to shop 500+ new festive-ready styles with ready to ship.';
+    const imgUrl = document.getElementById('popupConfigImageUrl')?.value || 'assets/festive-offer-banner.webp';
+    const enabled = document.getElementById('popupConfigEnabled')?.checked;
+
+    const prevCard = document.getElementById('adminPopupPreviewCard');
+    if (prevCard) {
+        prevCard.style.opacity = enabled ? '1' : '0.4';
+    }
+
+    const prevH1 = document.getElementById('previewHeadline1');
+    if (prevH1) prevH1.textContent = h1;
+
+    const prevH2 = document.getElementById('previewHeadline2');
+    if (prevH2) {
+        if (h2.includes('<strong>') || h2.includes('<b>')) {
+            prevH2.innerHTML = h2;
+        } else {
+            prevH2.innerHTML = h2.replace(/(20% Off Everything!|[0-9]+% Off[^<]*)/gi, '<strong style="font-weight: 800;">$1</strong>');
+        }
+    }
+
+    const prevImg = document.getElementById('previewImage');
+    if (prevImg) prevImg.src = imgUrl;
+
+    const prevDesc = document.getElementById('previewDesc');
+    if (prevDesc) prevDesc.textContent = desc;
+}
+
+async function savePopupOfferSettings() {
+    const enabled = document.getElementById('popupConfigEnabled')?.checked ?? true;
+    const delaySeconds = parseFloat(document.getElementById('popupConfigDelay')?.value || '2');
+    const offerCode = (document.getElementById('popupConfigOfferCode')?.value || 'DIWALI20').trim().toUpperCase();
+    const headline1 = (document.getElementById('popupConfigHeadline1')?.value || '').trim();
+    const headline2 = (document.getElementById('popupConfigHeadline2')?.value || '').trim();
+    const description = (document.getElementById('popupConfigDesc')?.value || '').trim();
+    const discountText = (document.getElementById('popupConfigDiscountText')?.value || '').trim();
+    const imageUrl = (document.getElementById('popupConfigImageUrl')?.value || '').trim();
+    const emailSubject = (document.getElementById('popupEmailSubject')?.value || '').trim();
+    const emailHeading = (document.getElementById('popupEmailHeading')?.value || '').trim();
+    const emailBody = (document.getElementById('popupEmailBody')?.value || '').trim();
+
+    const payload = {
+        enabled,
+        delaySeconds,
+        offerCode,
+        headline1,
+        headline2,
+        description,
+        discountText,
+        imageUrl,
+        emailSubject,
+        emailHeading,
+        emailBody
+    };
+
+    try {
+        const resp = await fetch('/api/admin/popup/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+            activePopupConfig = data.config;
+            if (typeof showToast === 'function') {
+                showToast('✨ Pop-Up Offer & Email settings saved successfully!');
+            }
+        } else {
+            throw new Error(data.error || 'Save failed');
+        }
+    } catch (err) {
+        console.error('[savePopupOfferSettings Error]', err);
+        if (typeof showToast === 'function') {
+            showToast('Error saving pop-up settings: ' + err.message);
+        }
+    }
+}
+
+async function handlePopupImageFile(fileInput) {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById('popupImageUploadStatus');
+    if (statusEl) {
+        statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading banner image...';
+        statusEl.style.color = 'var(--gold-light)';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const resp = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.url) {
+            const inp = document.getElementById('popupConfigImageUrl');
+            if (inp) inp.value = data.url;
+            updatePopupPreview();
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Image uploaded & applied!';
+                statusEl.style.color = '#34d399';
+            }
+        } else {
+            throw new Error(data.error || 'Upload returned no URL');
+        }
+    } catch (err) {
+        console.error('[Upload Error]', err);
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Upload failed: ' + err.message;
+            statusEl.style.color = '#f87171';
+        }
+    }
+}
+
+async function sendPopupTestEmail() {
+    const recipient = document.getElementById('popupTestEmailRecipient')?.value?.trim() || 'support@soreva.in';
+    const emailSubject = document.getElementById('popupEmailSubject')?.value?.trim();
+    const emailBody = document.getElementById('popupEmailBody')?.value?.trim();
+    const btn = document.getElementById('btnSendPopupTestEmail');
+    const statusBox = document.getElementById('popupTestEmailStatus');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    }
+    if (statusBox) {
+        statusBox.innerHTML = 'Sending coupon email from support@soreva.in...';
+        statusBox.style.color = 'var(--text-muted)';
+    }
+
+    try {
+        const resp = await fetch('/api/admin/popup/test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: recipient, emailSubject, emailBody })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            if (statusBox) {
+                statusBox.innerHTML = `<span style="color: #34d399;"><i class="fa-solid fa-check"></i> ${data.message}</span>`;
+            }
+            if (typeof showToast === 'function') showToast(data.message);
+        } else {
+            if (statusBox) {
+                statusBox.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-triangle-exclamation"></i> ${data.error || 'Failed to dispatch email'}</span>`;
+            }
+        }
+    } catch (err) {
+        if (statusBox) {
+            statusBox.innerHTML = `<span style="color: #f87171;">Error: ${err.message}</span>`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-vial"></i> Send Test';
+        }
+    }
+}
+
+window.loadPopupOfferSettings = loadPopupOfferSettings;
+window.updatePopupPreview = updatePopupPreview;
+window.savePopupOfferSettings = savePopupOfferSettings;
+window.handlePopupImageFile = handlePopupImageFile;
+window.sendPopupTestEmail = sendPopupTestEmail;
 
 
 async function resendAlertForModalOrder(channel) {
