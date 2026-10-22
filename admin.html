@@ -514,8 +514,8 @@
                             <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="btn-admin-danger" id="btnCompleteStockRefresh" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35)); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; cursor: pointer;" title="Delete all existing products and perform a 100% fresh loading from CZMakers with full category and subcategory mapping">
-                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh
+                            <button type="button" class="btn-admin-danger" id="btnCompleteStockRefresh" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a 100% fresh loading from CZMakers with full category and subcategory mapping">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (Delete & Reload All Products)
                             </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer;" title="Delete all out of stock products">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock
@@ -523,6 +523,22 @@
                             <button class="btn-admin-primary" id="btnOpenCoworkerStock" onclick="openCzmCoworkerModal()" style="background: linear-gradient(135deg, #18181b, #27272a); border: 1px solid rgba(197,160,89,0.4); color: #fef08a;"><i class="fa-solid fa-robot"></i> Stock Co-Worker</button>
                             <button class="btn-admin-outline" id="btnCzmLogin" onclick="openCzmLoginModal()" style="color: #6366f1; border-color: rgba(99,102,241,0.3);"><i class="fa-solid fa-right-to-bracket"></i> CZMakers Auth</button>
                         </div>
+                    </div>
+
+                    <!-- COMPLETE STOCK REFRESH DIRECT ACTION BANNER -->
+                    <div class="complete-refresh-card" style="margin-bottom: 22px; background: linear-gradient(135deg, rgba(220,38,38,0.14), rgba(153,27,27,0.22)); border: 1px solid rgba(239,68,68,0.45); border-radius: 12px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="font-weight: 700; color: #fecaca; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-arrows-rotate" style="color: #ef4444; font-size: 1.15rem;"></i> Complete Stock Refresh (Delete & Reload All Products)
+                                <span style="font-size: 0.72rem; background: rgba(239,68,68,0.3); color: #fca5a5; border: 1px solid rgba(239,68,68,0.5); border-radius: 20px; padding: 3px 10px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
+                            </div>
+                            <div style="font-size: 0.84rem; color: #e4e4e7; line-height: 1.5;">
+                                Wipes existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories with accurate sub-categories and 2.2x retail pricing. Customer records & orders remain 100% untouched.
+                            </div>
+                        </div>
+                        <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="white-space: nowrap; padding: 12px 24px; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; border-radius: 8px; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(220,38,38,0.45);">
+                            <i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh
+                        </button>
                     </div>
 
                     <!-- Inventory summary pills (Clickable quick filters) -->
@@ -876,8 +892,8 @@
                                 <option value="price_desc">Price: High to Low</option>
                             </select>
                             <span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px; margin-right: 8px;" title="Available In Stock Pieces"><i class="fa-solid fa-circle-check"></i> Available: <span id="inStockProductCount">0</span></span>
-                            <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.35)); border: 1px solid rgba(239,68,68,0.5); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Delete all existing products and perform a complete stock refresh from CZMakers">
-                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh
+                            <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; margin-right: 8px; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a complete fresh loading from CZMakers across all 32 categories">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (Delete & Reload All Products)
                             </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Permanently delete all out of stock products from catalog">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock (<span id="oosProductBadge">0</span>)
@@ -3519,7 +3535,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v38_complete_refresh"></script>
+    <script src="admin.js?v=v39_complete_stock_refresh_prominent"></script>
 
     </body>
 </html>
