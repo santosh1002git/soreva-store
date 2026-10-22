@@ -2958,6 +2958,25 @@ function renderProducts(isLoadMore = false) {
             }
             return b.includes(activeBadgeFilter);
         });
+
+        // If viewing New Launch with default featured sort, interleave categories for a diverse showcase
+        if ((activeBadgeFilter.includes('new') || activeBadgeFilter.includes('launch')) && (!catalogSort || catalogSort === 'featured')) {
+            const catMap = {};
+            items.forEach(p => {
+                const c = (p.category || 'other').toLowerCase();
+                if (!catMap[c]) catMap[c] = [];
+                catMap[c].push(p);
+            });
+            const cats = Object.keys(catMap);
+            const mixed = [];
+            const maxLen = Math.max(...cats.map(c => catMap[c].length), 0);
+            for (let i = 0; i < maxLen; i++) {
+                cats.forEach(c => {
+                    if (i < catMap[c].length) mixed.push(catMap[c][i]);
+                });
+            }
+            items = mixed;
+        }
     }
 
     // 3. Category Filter
@@ -8275,8 +8294,25 @@ function renderCuratedBadges() {
     if (newLaunchTrack) {
         let nlItems = PRODUCTS.filter(p => p.badge && (p.badge.toLowerCase().includes('new') || p.badge.toLowerCase().includes('launch')) && !isProductOutOfStock(p));
         if (nlItems.length > 0) {
+            // Group by category and interleave in round-robin fashion so the homepage track shows a varied mix
+            const catMap = {};
+            nlItems.forEach(p => {
+                const c = (p.category || 'other').toLowerCase();
+                if (!catMap[c]) catMap[c] = [];
+                catMap[c].push(p);
+            });
+            const cats = Object.keys(catMap);
+            const mixedNl = [];
+            const maxLen = Math.max(...cats.map(c => catMap[c].length), 0);
+            for (let i = 0; i < maxLen; i++) {
+                cats.forEach(c => {
+                    if (i < catMap[c].length && mixedNl.length < 24) {
+                        mixedNl.push(catMap[c][i]);
+                    }
+                });
+            }
             newLaunchTrack.innerHTML = buildCardsHtml(
-                nlItems.slice(0, 20), 
+                mixedNl.length > 0 ? mixedNl : nlItems.slice(0, 20), 
                 'badge-new-launch', 
                 '<i class="fa-solid fa-sparkles" style="margin-right: 4px; font-size: 0.62rem;"></i>', 
                 'New Launch'

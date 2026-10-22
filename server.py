@@ -567,6 +567,51 @@ def save_stored_data(data):
         except Exception:
             pass
 
+    # Ensure products list is never accidentally erased if caller sent only settings/metadata
+    if 'products' not in data or not data.get('products'):
+        existing_products = None
+        if os.path.exists(STORE_DATA_PATH):
+            try:
+                with open(STORE_DATA_PATH, 'r', encoding='utf-8') as sf:
+                    existing_sd = json.load(sf)
+                    if existing_sd.get('products'):
+                        existing_products = existing_sd['products']
+            except Exception:
+                pass
+        if not existing_products:
+            # Load from SQLite database
+            try:
+                if os.path.exists(PB_DB_PATH):
+                    conn = sqlite3.connect(PB_DB_PATH)
+                    conn.row_factory = sqlite3.Row
+                    cur = conn.cursor()
+                    rows = cur.execute("""
+                        SELECT p.*, COALESCE(i.sku, 'CZM-' || p.id) as sku,
+                               COALESCE(i.status, 'In Stock') as stockStatus,
+                               COALESCE(i.stockQty, 15) as stockQty,
+                               COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale
+                        FROM products p
+                        LEFT JOIN inventory i ON p.id = i.id
+                        WHERE p.disabled = 0 AND p.active = 1
+                        ORDER BY p.rowid ASC
+                    """).fetchall()
+                    conn.close()
+                    existing_products = []
+                    for r in rows:
+                        d = dict(r)
+                        if isinstance(d.get('gallery'), str):
+                            try: d['gallery'] = json.loads(d['gallery'])
+                            except: d['gallery'] = [d.get('primaryImg')]
+                        if isinstance(d.get('more_details'), str):
+                            try: d['more_details'] = json.loads(d['more_details'])
+                            except: d['more_details'] = {}
+                        existing_products.append(d)
+            except Exception as e:
+                print(f"[save_stored_data DB Load Warning] {e}")
+
+        if existing_products:
+            data['products'] = existing_products
+
     # Atomic write to temporary file then replace
     temp_path = STORE_DATA_PATH + '.tmp'
     with open(temp_path, 'w', encoding='utf-8') as f:
