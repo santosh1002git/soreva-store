@@ -215,6 +215,13 @@
   },
   "coupons": [
     {
+      "code": "DIWALI20",
+      "discountPercent": 20,
+      "minSpendINR": 0,
+      "active": true,
+      "description": "Flat 20% Off Everything (Diwali Festive Offer)"
+    },
+    {
       "code": "FLAT200",
       "discountAmountINR": 200,
       "discountPercent": 0,

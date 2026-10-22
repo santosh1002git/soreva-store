@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "headline1": "Big Diwali Sale 🪔",
+  "headline2": "Flat 20% Off Everything!",
+  "description": "Sign up & be the first to shop 500+ new festive-ready styles with ready to ship.",
+  "imageUrl": "assets/festive-offer-banner.webp",
+  "offerCode": "DIWALI20",
+  "discountPercent": 20,
+  "discountText": "Flat 20% Off Everything!",
+  "buttonText": "Submit",
+  "placeholderText": "Enter your email",
+  "emailSubject": "✨ Your Exclusive 20% OFF Diwali Discount Code — Sorèva",
+  "emailHeading": "Your Exclusive Festive Offer Has Arrived! 🪔",
+  "emailBody": "Thank you for joining the Sorèva family! To celebrate this grand festive season, here is your exclusive VIP discount voucher for Flat 20% Off across our entire collection of handcrafted luxury jewellery.",
+  "emailSupportSender": "support@soreva.in",
+  "autoApply": true,
+  "delaySeconds": 2
+}

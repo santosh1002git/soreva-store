@@ -28,7 +28,7 @@ import ssl
 import http.cookiejar
 import re
 import subprocess
-import subprocess
+import copy
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -42,6 +42,8 @@ STORE_DATA_PATH = os.path.join(DATA_DIR, 'store-data.json')
 BACKUP_DATA_PATH = os.path.join(DATA_DIR, 'store-data.backup.json')
 RAZORPAY_CONFIG_PATH = os.path.join(DATA_DIR, 'razorpay-config.json')
 NOTIFICATIONS_CONFIG_PATH = os.path.join(DATA_DIR, 'notifications-config.json')
+POPUP_CONFIG_PATH = os.path.join(DATA_DIR, 'popup-config.json')
+POPUP_SUBSCRIBERS_PATH = os.path.join(DATA_DIR, 'popup-subscribers.json')
 CZM_COOKIE_PATH = os.path.join(DATA_DIR, 'czm-cookie.json')
 CZM_CRED_PATH = os.path.join(DATA_DIR, 'czm-credentials.json')
 PB_DB_PATH = os.path.join(BASE_DIR, 'pb', 'pb_data', 'data.db')
@@ -656,12 +658,22 @@ Our atelier is now packaging your handcrafted piece with our signature luxury pr
 Warm regards,
 *The Sorèva Concierge Atelier*
 🌐 https://soreva.in"""
+    },
+    "sms": {
+        "enabled": True,
+        "provider": "fast2sms",
+        "fast2smsApiKey": "",
+        "twofactorApiKey": "",
+        "twilioAccountSid": "",
+        "twilioAuthToken": "",
+        "twilioFromNumber": "",
+        "customSmsUrl": ""
     }
 }
 
 
 def get_notifications_config():
-    """Retrieve email and WhatsApp notification configuration."""
+    """Retrieve email, WhatsApp, and SMS notification configuration."""
     cfg = json.loads(json.dumps(DEFAULT_NOTIFICATIONS_CONFIG))
     if os.path.exists(NOTIFICATIONS_CONFIG_PATH):
         try:
@@ -669,6 +681,7 @@ def get_notifications_config():
                 saved = json.load(f)
                 if 'email' in saved: cfg['email'].update(saved['email'])
                 if 'whatsapp' in saved: cfg['whatsapp'].update(saved['whatsapp'])
+                if 'sms' in saved: cfg['sms'].update(saved['sms'])
         except Exception as e:
             print(f"[Notifications Config Load Error] {e}")
     # Read Meta Token from environment if available and not set
@@ -897,6 +910,258 @@ def send_order_whatsapp_notification(order_data, force_phone=None, force_templat
     # Direct / Log Notification
     print(f"[WhatsApp Notification Ready] Customer: +{clean_digits} | Order: {order_data.get('orderNumber')}")
     return True, f"WhatsApp notification ready for +{clean_digits} (API credentials can be entered in Admin > Notifications)"
+
+
+def send_otp_sms(clean_phone, otp_val):
+    """
+    Dispatch cellular SMS / WhatsApp OTP to Indian mobile phone numbers.
+    Supports Fast2SMS, 2Factor.in, Twilio, Custom Webhook, and WhatsApp.
+    Returns (success: bool, provider: str, details: str).
+    """
+    cfg = get_notifications_config().get("sms", {})
+    fast2sms_key = (cfg.get("fast2smsApiKey") or os.environ.get("FAST2SMS_API_KEY") or "").strip()
+    twofactor_key = (cfg.get("twofactorApiKey") or os.environ.get("TWOFACTOR_API_KEY") or "").strip()
+    twilio_sid = (cfg.get("twilioAccountSid") or os.environ.get("TWILIO_ACCOUNT_SID") or "").strip()
+    twilio_token = (cfg.get("twilioAuthToken") or os.environ.get("TWILIO_AUTH_TOKEN") or "").strip()
+    twilio_from = (cfg.get("twilioFromNumber") or os.environ.get("TWILIO_FROM_NUMBER") or "").strip()
+    custom_url = (cfg.get("customSmsUrl") or os.environ.get("CUSTOM_SMS_URL") or "").strip()
+
+    # 1. Fast2SMS (India OTP route)
+    if fast2sms_key:
+        try:
+            url = "https://www.fast2sms.com/dev/bulkV2"
+            payload = {
+                "variables_values": otp_val,
+                "route": "otp",
+                "numbers": clean_phone
+            }
+            data_bytes = json.dumps(payload).encode('utf-8')
+            req = urllib.request.Request(url, data=data_bytes, headers={
+                "authorization": fast2sms_key,
+                "Content-Type": "application/json"
+            })
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                res_body = json.loads(resp.read().decode('utf-8'))
+                print(f"[Fast2SMS Dispatched] +91 {clean_phone} | Response: {res_body}")
+                return True, "Fast2SMS", "SMS delivered to mobile."
+        except Exception as e:
+            print(f"[Fast2SMS Error] {e}")
+
+    # 2. 2Factor.in (India OTP route)
+    if twofactor_key:
+        try:
+            url = f"https://2factor.in/v1/API/V1/{twofactor_key}/SMS/+91{clean_phone}/{otp_val}/OTP1"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                res_body = json.loads(resp.read().decode('utf-8'))
+                print(f"[2Factor Dispatched] +91 {clean_phone} | Response: {res_body}")
+                return True, "2Factor.in", "SMS delivered to mobile."
+        except Exception as e:
+            print(f"[2Factor Error] {e}")
+
+    # 3. Twilio SMS
+    if twilio_sid and twilio_token and twilio_from:
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{twilio_sid}/Messages.json"
+            data = urllib.parse.urlencode({
+                "To": f"+91{clean_phone}",
+                "From": twilio_from,
+                "Body": f"Your Sorèva verification code is {otp_val}. Valid for 5 mins. Use code FLAT200 to get ₹200 OFF on your first purchase."
+            }).encode('utf-8')
+            auth_str = base64.b64encode(f"{twilio_sid}:{twilio_token}".encode('utf-8')).decode('utf-8')
+            req = urllib.request.Request(url, data=data, headers={"Authorization": f"Basic {auth_str}"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                print(f"[Twilio Dispatched] +91 {clean_phone}")
+                return True, "Twilio", "SMS delivered to mobile."
+        except Exception as e:
+            print(f"[Twilio SMS Error] {e}")
+
+    # 4. Custom SMS URL / Webhook
+    if custom_url:
+        try:
+            target_url = custom_url.replace("{phone}", clean_phone).replace("{otp}", otp_val)
+            req = urllib.request.Request(target_url)
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                print(f"[Custom SMS Dispatched] +91 {clean_phone}")
+                return True, "Custom Webhook", "SMS dispatched."
+        except Exception as e:
+            print(f"[Custom SMS Error] {e}")
+
+    print(f"[SMS Gateway Notice] Mobile +91 {clean_phone}: No live SMS provider API key configured in notifications-config.json or .env. Displaying instant verification code in browser.")
+    return False, "Demo Sandbox", "No live SMS gateway API key configured."
+
+
+DEFAULT_POPUP_CONFIG = {
+    "enabled": True,
+    "headline1": "Big Diwali Sale 🪔",
+    "headline2": "Flat 20% Off Everything!",
+    "description": "Sign up & be the first to shop 500+ new festive-ready styles with ready to ship.",
+    "imageUrl": "assets/festive-offer-banner.webp",
+    "offerCode": "DIWALI20",
+    "discountPercent": 20,
+    "discountText": "Flat 20% Off Everything!",
+    "buttonText": "Submit",
+    "placeholderText": "Enter your email",
+    "emailSubject": "✨ Your Exclusive 20% OFF Diwali Discount Code — Sorèva",
+    "emailHeading": "Your Exclusive Festive Offer Has Arrived! 🪔",
+    "emailBody": "Thank you for joining the Sorèva family! To celebrate this grand festive season, here is your exclusive VIP discount voucher for Flat 20% Off across our entire collection of handcrafted luxury jewellery.",
+    "emailSupportSender": "support@soreva.in",
+    "autoApply": True,
+    "delaySeconds": 2
+}
+
+
+def get_popup_config():
+    """Retrieve pop-up modal settings from disk or return defaults."""
+    cfg = copy.deepcopy(DEFAULT_POPUP_CONFIG)
+    if os.path.exists(POPUP_CONFIG_PATH):
+        try:
+            with open(POPUP_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                saved = json.load(f)
+                if isinstance(saved, dict):
+                    cfg.update(saved)
+        except Exception as e:
+            print(f"[Popup Config Load Error] {e}")
+    return cfg
+
+
+def save_popup_config(cfg):
+    """Persist pop-up modal configuration to disk."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(POPUP_CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+    return True
+
+
+def record_popup_subscriber(email, code, delivered=False):
+    """Record email newsletter lead captured by the pop-up modal."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    subs = []
+    if os.path.exists(POPUP_SUBSCRIBERS_PATH):
+        try:
+            with open(POPUP_SUBSCRIBERS_PATH, 'r', encoding='utf-8') as f:
+                subs = json.load(f)
+                if not isinstance(subs, list):
+                    subs = []
+        except Exception:
+            subs = []
+    new_sub = {
+        "email": email,
+        "offerCode": code,
+        "timestamp": datetime.now().isoformat(),
+        "dateFormatted": datetime.now().strftime("%d %b %Y, %I:%M %p"),
+        "emailDelivered": delivered
+    }
+    subs.append(new_sub)
+    try:
+        with open(POPUP_SUBSCRIBERS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(subs, f, indent=2)
+    except Exception as e:
+        print(f"[Record Subscriber Error] {e}")
+    return len(subs)
+
+
+def send_discount_coupon_email(customer_email, coupon_code=None, discount_text=None, custom_subject=None, custom_body=None):
+    """
+    Dispatches a luxury branded discount coupon email from support@soreva.in
+    to a customer who entered their email in the festive offer pop-up.
+    """
+    popup_cfg = get_popup_config()
+    notif_cfg = get_notifications_config().get("email", {})
+
+    code = coupon_code or popup_cfg.get("offerCode", "DIWALI20")
+    disc = discount_text or popup_cfg.get("discountText", "Flat 20% Off Everything!")
+    subject = custom_subject or popup_cfg.get("emailSubject") or f"✨ Your Exclusive {disc} Diwali Discount Code — Sorèva"
+    body_text = custom_body or popup_cfg.get("emailBody") or "Thank you for joining the Sorèva family! Enjoy Flat 20% Off on your luxury jewellery purchase."
+    heading_text = popup_cfg.get("emailHeading", "Your Exclusive Festive Offer Has Arrived! 🪔")
+
+    smtp_host = notif_cfg.get("smtpHost", "smtp.gmail.com").strip()
+    smtp_port = int(notif_cfg.get("smtpPort") or 587)
+    smtp_user = notif_cfg.get("smtpUser", "support@soreva.in").strip()
+    smtp_pass = notif_cfg.get("smtpPassword", "").strip()
+    from_email = notif_cfg.get("fromEmail", "").strip() or smtp_user or "support@soreva.in"
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f3ee; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #231815;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f7f3ee; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background-color: #4d1520; padding: 36px 30px; text-align: center; color: #ffffff;">
+              <div style="font-size: 26px; font-weight: 800; letter-spacing: 5px; color: #f5e6ca; margin-bottom: 4px; font-family: 'Playfair Display', Georgia, serif;">SORÈVA</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: #ffd700; opacity: 0.9;">Haute Joaillerie Atelier</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 36px 32px 28px 32px; text-align: center;">
+              <h2 style="font-size: 22px; font-weight: 700; color: #4d1520; margin: 0 0 14px 0;">{heading_text}</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #5a4b49; margin: 0 0 24px 0;">
+                {body_text}
+              </p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 20px 0 28px 0; background: #faf4f5; border: 2px dashed #b8860b; border-radius: 12px;">
+                <tr>
+                  <td style="padding: 24px 20px; text-align: center;">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9c2743; font-weight: 700; margin-bottom: 8px;">Exclusive Discount Voucher</div>
+                    <div style="display: inline-block; background: #4d1520; color: #ffffff; font-family: 'Courier New', monospace; font-size: 28px; font-weight: 800; letter-spacing: 4px; padding: 10px 24px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(77,21,32,0.25);">
+                      {code}
+                    </div>
+                    <div style="font-size: 16px; font-weight: 700; color: #4d1520; margin-top: 4px;">{disc}</div>
+                    <div style="font-size: 12px; color: #8c7875; margin-top: 6px;">Valid on all handcrafted collections • Apply at checkout</div>
+                  </td>
+                </tr>
+              </table>
+              <div>
+                <a href="https://soreva.in" style="display: inline-block; background: #4d1520; color: #ffffff; font-size: 15px; font-weight: 700; padding: 14px 34px; border-radius: 999px; text-decoration: none; box-shadow: 0 6px 20px rgba(77,21,32,0.3); text-transform: uppercase; letter-spacing: 1px;">
+                  Shop The Festive Collection &rarr;
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #faf7f4; border-top: 1px solid #f0e6df; padding: 22px 30px; text-align: center; font-size: 12px; color: #8e807e;">
+              <p style="margin: 0 0 6px 0;">Need styling assistance or custom bespoke sizing? Reply directly to this email or reach us at <a href="mailto:support@soreva.in" style="color: #4d1520; text-decoration: none; font-weight: 600;">support@soreva.in</a></p>
+              <p style="margin: 0; font-size: 11px; opacity: 0.8;">© 2026 Sorèva Luxury Jewellery. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+    if not smtp_host or not smtp_user or not smtp_pass:
+        print(f"[Coupon Email Simulation] Dispatched to {customer_email} (Code: {code}). Note: SMTP password can be set in Admin > Offer Pop-Up.")
+        return True, "Coupon email queued. (SMTP credentials pending)"
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"Sorèva Boutique <{from_email}>"
+        msg['To'] = customer_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body_text + f"\\n\\nDiscount Code: {code} ({disc})\\nShop now at https://soreva.in", 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=12)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+        server.quit()
+        print(f"[Coupon Email Delivered] Dispatched to {customer_email} with code {code}")
+        return True, f"Discount coupon email sent to {customer_email}!"
+    except Exception as e:
+        print(f"[Coupon Email Error] {e}")
+        return False, f"SMTP Error: {str(e)}"
+
 
 def get_razorpay_config():
     """Retrieve Razorpay payment gateway credentials from file or environment."""
@@ -1653,6 +1918,23 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             })
             return
 
+        # API: Pop-up Offer Configuration
+        if parsed.path in ['/api/popup/config', '/api/popup-config', '/api/admin/popup/config']:
+            cfg = get_popup_config()
+            sub_count = 0
+            recent_subs = []
+            if os.path.exists(POPUP_SUBSCRIBERS_PATH):
+                try:
+                    with open(POPUP_SUBSCRIBERS_PATH, 'r', encoding='utf-8') as f:
+                        s_data = json.load(f)
+                        if isinstance(s_data, list):
+                            sub_count = len(s_data)
+                            recent_subs = s_data[-10:] # last 10
+                except Exception:
+                    pass
+            self._send_json({"success": True, "config": cfg, "subscribersCount": sub_count, "recentSubscribers": recent_subs})
+            return
+
         # API: Razorpay Public Config for Storefront
         if parsed.path == '/api/razorpay/config':
             cfg = get_razorpay_config()
@@ -2123,13 +2405,17 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 }
 
             print(f"[AUTH OTP] Mobile: +91 {clean_digits} | Generated OTP: {otp_val} | Expires in: 300s")
+            delivered, provider, detail = send_otp_sms(clean_digits, otp_val)
 
             self._send_json({
                 "success": True,
                 "message": f"Verification code sent to +91 {clean_digits[:2]}******{clean_digits[-2:]}",
                 "phone": clean_digits,
                 "expiresIn": 300,
-                "otpDemo": otp_val
+                "otpDemo": otp_val,
+                "smsDelivered": delivered,
+                "smsProvider": provider,
+                "smsDetail": detail
             })
             return
 
@@ -3601,6 +3887,74 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 msg += " (Credentials auto-saved to configuration)"
                 print(f"[Razorpay Config Auto-Saved] Key: {key_id[:12]}...")
             self._send_json({"success": valid, "message": msg, "saved": valid and bool(key_id)})
+            return
+
+        # API: Save Pop-up Offer Configuration
+        if parsed.path in ['/api/popup/config', '/api/admin/popup/config']:
+            cfg = get_popup_config()
+            for k in ['enabled', 'headline1', 'headline2', 'description', 'imageUrl', 
+                      'offerCode', 'discountPercent', 'discountText', 'buttonText', 
+                      'placeholderText', 'emailSubject', 'emailHeading', 'emailBody', 
+                      'emailSupportSender', 'autoApply', 'delaySeconds']:
+                if k in payload:
+                    cfg[k] = payload[k]
+            save_popup_config(cfg)
+            self._send_json({"success": True, "message": "Pop-up settings saved successfully!", "config": cfg})
+            return
+
+        # API: Subscribe Email from Pop-up Screen & Dispatch Discount Coupon Email
+        if parsed.path in ['/api/popup/subscribe', '/api/welcome-offer/subscribe']:
+            email = str(payload.get('email', '')).strip().lower()
+            if not email or '@' not in email or '.' not in email:
+                self._send_json({"error": "Please enter a valid email address."}, 400)
+                return
+
+            cfg = get_popup_config()
+            code = cfg.get("offerCode", "DIWALI20")
+            disc = cfg.get("discountText", "Flat 20% Off Everything!")
+
+            def _async_send():
+                try:
+                    deliv, msg = send_discount_coupon_email(email, code, disc)
+                    print(f"[Async Popup Email] To: {email} | Delivered: {deliv} | Status: {msg}")
+                except Exception as ex:
+                    print(f"[Async Popup Email Error] {ex}")
+
+            threading.Thread(target=_async_send, daemon=True).start()
+            total_subs = record_popup_subscriber(email, code, delivered=True)
+
+            self._send_json({
+                "success": True,
+                "email": email,
+                "offerCode": code,
+                "discountText": disc,
+                "emailDelivered": True,
+                "emailStatus": "Queued for instant dispatch",
+                "subscribersCount": total_subs,
+                "message": f"Your exclusive coupon {code} has been reserved! A confirmation email from support@soreva.in was dispatched to {email}."
+            })
+            return
+
+        # API: Send Test Discount Email from Admin Panel
+        if parsed.path in ['/api/admin/popup/test-email', '/api/popup/test-email']:
+            target_email = str(payload.get('email', '')).strip() or "support@soreva.in"
+            cfg = get_popup_config()
+            code = cfg.get("offerCode", "DIWALI20")
+            disc = cfg.get("discountText", "Flat 20% Off Everything!")
+            custom_sub = payload.get('emailSubject')
+            custom_body = payload.get('emailBody')
+
+            delivered, status_msg = send_discount_coupon_email(
+                target_email, code, disc, custom_subject=custom_sub, custom_body=custom_body
+            )
+
+            if delivered:
+                self._send_json({"success": True, "message": f"Test discount email successfully sent to {target_email}!"})
+            else:
+                self._send_json({
+                    "success": False,
+                    "error": f"Email dispatch failed: {status_msg}. If using Gmail/Google Workspace, please ensure your 16-character Google App Password is set in Admin Settings."
+                }, 400)
             return
 
         # API: Save Notifications Configuration

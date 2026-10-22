@@ -7668,6 +7668,264 @@ button:disabled.btn-out-of-stock {
     visibility: visible !important;
 }
 
+/* ========================================================
+   FESTIVE DIWALI EMAIL OFFER POP-UP MODAL (ATTACHED SCREEN)
+   ======================================================== */
+.festive-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(14, 5, 8, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.festive-modal-backdrop.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.festive-popup-card {
+    background: #4d1520; /* Deep rich wine / burgundy matching user screenshot */
+    width: 100%;
+    max-width: 440px;
+    border-radius: 16px;
+    padding: 32px 24px 26px 24px;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transform: scale(0.92) translateY(12px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    color: #ffffff;
+    text-align: center;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.festive-modal-backdrop.active .festive-popup-card {
+    transform: scale(1) translateY(0);
+}
+
+.festive-popup-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 1.45rem;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.85;
+    transition: opacity 0.2s, transform 0.2s;
+    padding: 6px;
+    z-index: 10;
+}
+
+.festive-popup-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.festive-popup-header {
+    margin-bottom: 14px;
+}
+
+.festive-popup-title-1 {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+}
+
+.festive-popup-title-2 {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1.85rem;
+    font-weight: 400;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.festive-popup-title-2 strong {
+    font-weight: 800;
+}
+
+.festive-popup-media {
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.festive-popup-media img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+.festive-popup-desc {
+    font-size: 1rem;
+    line-height: 1.42;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 18px 0;
+    padding: 0 6px;
+    font-weight: 400;
+}
+
+.festive-popup-input-box {
+    margin-bottom: 12px;
+}
+
+.festive-popup-input {
+    width: 100%;
+    background: #3e111a;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    padding: 13px 16px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.festive-popup-input::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.festive-popup-input:focus {
+    border-color: #ffffff;
+    background: #46131e;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.festive-popup-submit-btn {
+    width: 100%;
+    background: #ffffff;
+    color: #4d1520;
+    border: none;
+    border-radius: 999px;
+    padding: 13px 20px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.festive-popup-submit-btn:hover {
+    background: #f8f6f2;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.festive-popup-submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Success State */
+.festive-popup-success {
+    padding: 10px 6px 6px 6px;
+    text-align: center;
+    animation: festiveFadeIn 0.3s ease;
+}
+
+@keyframes festiveFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.festive-success-sparkle {
+    font-size: 2.2rem;
+    margin-bottom: 6px;
+}
+
+.festive-success-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+}
+
+.festive-success-desc {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.45;
+    margin: 0 0 16px 0;
+}
+
+.festive-code-pill {
+    background: #390e17;
+    border: 1.5px dashed #ffd700;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.festive-code-label {
+    font-size: 0.72rem;
+    color: #ffd700;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+}
+
+.festive-code-val {
+    font-size: 1.5rem;
+    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 3px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.festive-code-discount {
+    font-size: 0.85rem;
+    color: #fbcfe8;
+}
+
+.festive-popup-shop-btn {
+    width: 100%;
+    background: #ffffff;
+    color: #4d1520;
+    border: none;
+    border-radius: 999px;
+    padding: 13px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.15s ease, background 0.2s;
+}
+
+.festive-popup-shop-btn:hover {
+    background: #f8f6f2;
+    transform: translateY(-1px);
+}
+
 /* ==========================================================================
    WELCOME DISCOUNT & OTP LOGIN MODAL (KUSHAL'S / SOREVA LUXURY STYLE)
    ========================================================================== */
@@ -8056,6 +8314,63 @@ button:disabled.btn-out-of-stock {
 
 .welcome-otp-back-link:hover {
     opacity: 0.8;
+}
+
+.welcome-demo-otp-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fdf2f4;
+    border: 1.5px solid #fecdd3;
+    border-radius: 12px;
+    padding: 9px 14px;
+    margin: 4px 0 16px 0;
+    gap: 10px;
+}
+
+.welcome-demo-otp-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #4b1924;
+}
+
+.welcome-demo-otp-badge {
+    display: inline-block;
+    background: #b31338;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 2px;
+    margin-left: 4px;
+}
+
+.welcome-demo-fill-btn {
+    background: #ffffff;
+    color: #b31338;
+    border: 1px solid #fecdd3;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.welcome-demo-fill-btn:hover {
+    background: #b31338;
+    color: #ffffff;
+    border-color: #b31338;
 }
 
 .welcome-otp-grid {
