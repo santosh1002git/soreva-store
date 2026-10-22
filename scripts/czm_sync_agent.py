@@ -436,30 +436,22 @@ def fetch_category_page(url, ssl_ctx, retries=2):
 # ─── FIFO New Launch Policy Enforcement ──────────────────────────────
 def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_added_ids=None):
     """
-    Enforce First-In-First-Out (FIFO) policy for 'New Launch' collection:
-    1. Newly discovered products added by coworker are marked 'New Launch' with dateAdded timestamp.
-    2. Move Out of Stock or disabled pieces out of 'New Launch' (badge cleared).
-    3. Sort all active 'New Launch' products by entry date (newest first).
-    4. If total active New Launch products exceed `new_launch_capacity`, demote
-       the oldest products (FIFO: First-In, First-Out) to normal category (badge cleared).
-    5. If total active New Launch products are fewer than `new_launch_capacity`,
-       fill remaining slots with the newest in-stock pieces so New Launch is always active.
-    6. Synchronize changes across SQLite and in-memory sd_products.
+    Enforce balanced multi-category First-In-First-Out (FIFO) policy for 'New Launch' collection:
+    1. Ensures New Launch showcases a diverse mix of products across all main jewellery categories
+       (Necklaces, Earrings, Rings, Wristwear/Bracelets, Pendants, Silver, Accessories).
+    2. Newly discovered products added during catalog stock refresh are prioritized and distributed
+       proportionately across their respective categories rather than letting a single category dominate.
+    3. If newly discovered pieces don't fill all slots or if certain categories lack new arrivals,
+       remaining slots are backfilled from the newest active in-stock pieces in each category.
+    4. Selected pieces are interleaved in round-robin order across categories so that customers
+       browsing New Launch experience a varied, alternating showcase (e.g. Necklace -> Earrings -> Ring -> Wristwear...).
+    5. Clears 'New Launch' badge for any Out of Stock, disabled, or demoted pieces.
+    6. Synchronizes changes across SQLite products table and in-memory/store-data products.
     """
     c = conn.cursor()
     sync_time_iso = datetime.utcnow().isoformat() + "Z"
-    
-    # 1. Mark newly added products as 'New Launch'
-    if newly_added_ids:
-        for nid in newly_added_ids:
-            c.execute("""
-                UPDATE products 
-                SET badge = 'New Launch',
-                    dateAdded = CASE WHEN dateAdded IS NULL OR dateAdded = '' THEN ? ELSE dateAdded END
-                WHERE id = ?
-            """, (sync_time_iso, nid))
 
-    # 2. Clear badge for any Out of Stock or disabled products
+    # 1. Clear badge for any Out of Stock or disabled products
     c.execute("""
         UPDATE products 
         SET badge = '' 
@@ -467,9 +459,40 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
           AND (disabled = 1 OR active = 0)
     """)
 
-    # 3. Query all active in-stock products currently tagged New Launch
-    current_nl = c.execute("""
-        SELECT id, dateAdded, lastRefreshed 
+    # 2. Discover all active categories in canonical aesthetic order
+    preferred_order = ['necklace', 'earrings', 'rings', 'bracelets', 'pendants', 'silver', 'accessories']
+    cat_rows = c.execute("""
+        SELECT DISTINCT category 
+        FROM products 
+        WHERE disabled = 0 AND active = 1 AND category IS NOT NULL AND category != ''
+        ORDER BY category ASC
+    """).fetchall()
+    active_cats = [r[0] for r in cat_rows]
+
+    ordered_cats = [cat for cat in preferred_order if cat in active_cats] + [cat for cat in active_cats if cat not in preferred_order]
+    if not ordered_cats:
+        ordered_cats = active_cats or ['necklace']
+
+    # 3. Map newly added IDs to their categories
+    newly_added_set = set(str(nid).strip() for nid in (newly_added_ids or []))
+    new_by_cat = {cat: [] for cat in ordered_cats}
+    if newly_added_set:
+        placeholders_new = ','.join('?' for _ in newly_added_set)
+        new_prod_rows = c.execute(f"""
+            SELECT id, category 
+            FROM products 
+            WHERE id IN ({placeholders_new}) AND disabled = 0 AND active = 1
+            ORDER BY rowid DESC
+        """, list(newly_added_set)).fetchall()
+        for pid, pcat in new_prod_rows:
+            if pcat in new_by_cat:
+                new_by_cat[pcat].append(pid)
+            elif ordered_cats:
+                new_by_cat[ordered_cats[0]].append(pid)
+
+    # 4. Existing active products currently tagged New Launch
+    existing_nl_rows = c.execute("""
+        SELECT id, category 
         FROM products 
         WHERE (LOWER(badge) LIKE '%new%' OR LOWER(badge) LIKE '%launch%')
           AND disabled = 0 AND active = 1
@@ -477,53 +500,129 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
             CASE WHEN dateAdded IS NOT NULL AND dateAdded != '' THEN dateAdded ELSE lastRefreshed END DESC,
             rowid DESC
     """).fetchall()
+    existing_nl_by_cat = {cat: [] for cat in ordered_cats}
+    for pid, pcat in existing_nl_rows:
+        if pid not in newly_added_set:
+            if pcat in existing_nl_by_cat:
+                existing_nl_by_cat[pcat].append(pid)
 
-    retained_ids = [row[0] for row in current_nl[:new_launch_capacity]]
-    demoted_ids = [row[0] for row in current_nl[new_launch_capacity:]]
+    # 5. Build candidate pool for each category (new arrivals first, then existing New Launch, then in-stock backfill)
+    cat_pools = {}
+    needed_per_cat = max(1, (new_launch_capacity // len(ordered_cats)) + 2)
 
-    # 4. If fewer than capacity, backfill from newest in-stock pieces
-    needed = new_launch_capacity - len(retained_ids)
-    if needed > 0:
-        placeholders_ex = ','.join('?' for _ in retained_ids) if retained_ids else "''"
-        fill_query = f"""
-            SELECT id 
-            FROM products 
-            WHERE disabled = 0 AND active = 1 
-              AND (badge IS NULL OR badge = '' OR badge = 'New Launch')
-              AND id NOT IN ({placeholders_ex})
-            ORDER BY 
-                CASE WHEN dateAdded IS NOT NULL AND dateAdded != '' THEN dateAdded ELSE lastRefreshed END DESC,
-                rowid DESC
-            LIMIT ?
-        """
-        fill_params = list(retained_ids) + [needed] if retained_ids else [needed]
-        filled_rows = c.execute(fill_query, fill_params).fetchall()
-        for f_row in filled_rows:
-            retained_ids.append(f_row[0])
-            c.execute("UPDATE products SET badge = 'New Launch' WHERE id = ?", (f_row[0],))
+    for cat in ordered_cats:
+        pool = []
+        seen_in_pool = set()
 
-    # 5. Demote older pieces beyond capacity back to normal category (badge = '')
+        for pid in new_by_cat[cat]:
+            if pid not in seen_in_pool:
+                seen_in_pool.add(pid)
+                pool.append(pid)
+
+        for pid in existing_nl_by_cat[cat]:
+            if pid not in seen_in_pool:
+                seen_in_pool.add(pid)
+                pool.append(pid)
+
+        if len(pool) < needed_per_cat:
+            limit_needed = (needed_per_cat - len(pool)) * 3
+            backfill_rows = c.execute("""
+                SELECT id 
+                FROM products 
+                WHERE category = ? AND disabled = 0 AND active = 1
+                ORDER BY 
+                    CASE WHEN dateAdded IS NOT NULL AND dateAdded != '' THEN dateAdded ELSE lastRefreshed END DESC,
+                    rowid DESC
+                LIMIT ?
+            """, (cat, limit_needed)).fetchall()
+            for (bf_id,) in backfill_rows:
+                if bf_id not in seen_in_pool:
+                    seen_in_pool.add(bf_id)
+                    pool.append(bf_id)
+                    if len(pool) >= needed_per_cat * 2:
+                        break
+
+        cat_pools[cat] = pool
+
+    # 6. Target quota per category
+    num_cats = len(ordered_cats)
+    base_quota = new_launch_capacity // num_cats
+    extra = new_launch_capacity % num_cats
+    category_quotas = {cat: base_quota + (1 if i < extra else 0) for i, cat in enumerate(ordered_cats)}
+
+    # 7. Round-Robin Selection and Interleaving across categories
+    retained_ids = []
+    retained_set = set()
+    max_rounds = max(category_quotas.values()) if category_quotas else 5
+
+    for round_idx in range(max_rounds):
+        for cat in ordered_cats:
+            if len(retained_ids) >= new_launch_capacity:
+                break
+            if round_idx < category_quotas.get(cat, 0):
+                pool = cat_pools.get(cat, [])
+                if round_idx < len(pool):
+                    cand_id = pool[round_idx]
+                    if cand_id not in retained_set:
+                        retained_set.add(cand_id)
+                        retained_ids.append(cand_id)
+
+    # If any slots remain unfilled, fill remaining slots round-robin from spare items
+    if len(retained_ids) < new_launch_capacity:
+        round_idx = max_rounds
+        while len(retained_ids) < new_launch_capacity:
+            added_any = False
+            for cat in ordered_cats:
+                if len(retained_ids) >= new_launch_capacity:
+                    break
+                pool = cat_pools.get(cat, [])
+                if round_idx < len(pool):
+                    cand_id = pool[round_idx]
+                    if cand_id not in retained_set:
+                        retained_set.add(cand_id)
+                        retained_ids.append(cand_id)
+                        added_any = True
+            round_idx += 1
+            if not added_any:
+                break
+
+    # 8. Identify demoted IDs (pieces that had New Launch badge previously, but were rotated out)
+    all_prev_nl_rows = c.execute("""
+        SELECT id FROM products 
+        WHERE (LOWER(badge) LIKE '%new%' OR LOWER(badge) LIKE '%launch%')
+    """).fetchall()
+    demoted_ids = [r[0] for r in all_prev_nl_rows if r[0] not in retained_set]
+
+    # 9. Update SQLite database with balanced New Launch pieces and timestamps
+    if retained_ids:
+        placeholders_ret = ','.join('?' for _ in retained_ids)
+        c.execute(f"""
+            UPDATE products 
+            SET badge = 'New Launch',
+                dateAdded = CASE WHEN dateAdded IS NULL OR dateAdded = '' THEN ? ELSE dateAdded END
+            WHERE id IN ({placeholders_ret})
+        """, [sync_time_iso] + retained_ids)
+
     if demoted_ids:
-        placeholders_demote = ','.join('?' for _ in demoted_ids)
-        c.execute(f"UPDATE products SET badge = '' WHERE id IN ({placeholders_demote})", demoted_ids)
+        placeholders_dem = ','.join('?' for _ in demoted_ids)
+        c.execute(f"UPDATE products SET badge = '' WHERE id IN ({placeholders_dem})", demoted_ids)
 
     conn.commit()
 
-    # 6. Synchronize in-memory sd_products dictionary
-    retained_set = set(retained_ids)
-    demoted_set = set(demoted_ids)
-
-    for item in sd_products:
-        pid = str(item.get('id'))
-        if pid in retained_set:
-            item['badge'] = 'New Launch'
-        elif pid in demoted_set:
-            item['badge'] = ''
-        elif item.get('stockStatus') == 'Out of Stock' or item.get('disabled') == 1 or item.get('active') == 0:
-            if item.get('badge') and ('new' in item['badge'].lower() or 'launch' in item['badge'].lower()):
+    # 10. Synchronize in-memory/store-data products dictionary
+    if sd_products:
+        for item in sd_products:
+            pid = str(item.get('id', '')).strip()
+            if pid in retained_set:
+                item['badge'] = 'New Launch'
+            elif pid in demoted_ids:
                 item['badge'] = ''
+            elif item.get('stockStatus') == 'Out of Stock' or item.get('disabled') == 1 or item.get('active') == 0:
+                if item.get('badge') and ('new' in item['badge'].lower() or 'launch' in item['badge'].lower()):
+                    item['badge'] = ''
 
     return len(retained_ids), len(demoted_ids)
+
 
 
 # ─── Main Co-Worker Agent Execution ──────────────────────────────────
