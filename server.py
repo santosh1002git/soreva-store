@@ -3937,14 +3937,14 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                             SET status = 'Out of Stock', stockQty = 0, usdWholesale = ?, lastRefreshed = ? 
                             WHERE id = ? OR sku = ? OR productName = ?
                         """, (czm_cost, sync_time_iso, item_id, sku, prod_name))
-                        c.execute("UPDATE products SET disabled = 0, active = 1, usdWholesale = ?, priceINR = ?, originalPriceINR = ?, lastRefreshed = ? WHERE id = ? OR name = ?", (czm_cost, retail_inr, orig_inr, sync_time_iso, item_id, prod_name))
+                        c.execute("UPDATE products SET disabled = 1, active = 0, badge = CASE WHEN badge = 'New Launch' THEN '' ELSE badge END, usdWholesale = ?, priceINR = ?, originalPriceINR = ?, lastRefreshed = ? WHERE id = ? OR name = ?", (czm_cost, retail_inr, orig_inr, sync_time_iso, item_id, prod_name))
                     else:
                         c.execute("""
                             UPDATE inventory 
                             SET status = 'Out of Stock', stockQty = 0, lastRefreshed = ? 
                             WHERE id = ? OR sku = ? OR productName = ?
                         """, (sync_time_iso, item_id, sku, prod_name))
-                        c.execute("UPDATE products SET disabled = 0, active = 1, lastRefreshed = ? WHERE id = ? OR name = ?", (sync_time_iso, item_id, prod_name))
+                        c.execute("UPDATE products SET disabled = 1, active = 0, badge = CASE WHEN badge = 'New Launch' THEN '' ELSE badge END, lastRefreshed = ? WHERE id = ? OR name = ?", (sync_time_iso, item_id, prod_name))
 
                 if czm_plating:
                     c.execute("UPDATE products SET plating = ? WHERE id = ? OR name = ?", (czm_plating, item_id, prod_name))
@@ -4176,8 +4176,10 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 p['stockStatus'] = 'Out of Stock'
                                 p['stockQty'] = 0
                                 p['inStock'] = False
-                                p['disabled'] = False
-                                p['active'] = True
+                                p['disabled'] = 1
+                                p['active'] = 0
+                                if p.get('badge') == 'New Launch':
+                                    p['badge'] = ''
                                 p['lastRefreshed'] = sync_time_iso
                                 sd_modified = True
                         elif is_instock:
@@ -5474,6 +5476,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             max_pages = int(payload.get('maxPages', 0))
             verify_unseen = bool(payload.get('verifyUnseen', False))
             wipe_products = bool(payload.get('wipeProducts', False)) or (mode == 'complete_refresh')
+            mark_unmatched_oos = bool(payload.get('markUnmatchedOos', True))
 
             script_path = os.path.join(DATA_DIR, '..', 'scripts', 'czm_sync_agent.py')
             cmd = [sys.executable, script_path, '--mode', mode, '--max-pages', str(max_pages)]
@@ -5481,6 +5484,10 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 cmd.append('--verify-unseen')
             if wipe_products:
                 cmd.append('--wipe-products')
+            if mark_unmatched_oos:
+                cmd.append('--mark-unmatched-oos')
+            else:
+                cmd.append('--no-mark-unmatched-oos')
 
             # Clear stop flag if present
             stop_flag = os.path.join(DATA_DIR, 'czm-sync-stop.flag')
