@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "title": "Join The Sorèva Circle",
+  "description": "Subscribe for private seasonal sales, new collection drops, and receive 15% OFF on your first order.",
+  "couponCode": "WELCOME15",
+  "discountPercent": 15,
+  "discountText": "Flat 15% Off Your First Order",
+  "buttonText": "Subscribe",
+  "placeholderText": "Your email address",
+  "emailSubject": "✨ Welcome to The Sorèva Circle — Your 15% OFF Voucher (WELCOME15)",
+  "emailHeading": "Welcome to The Sorèva Circle",
+  "emailBody": "Thank you for joining our private inner circle. As a valued member, enjoy an exclusive 15% discount on your first acquisition of handcrafted demi-fine luxury jewellery.",
+  "emailSupportSender": "support@soreva.in",
+  "autoApply": true
+}

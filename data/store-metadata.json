@@ -222,6 +222,13 @@
       "description": "Flat 20% Off Everything (Diwali Festive Offer)"
     },
     {
+      "code": "WELCOME15",
+      "discountPercent": 15,
+      "minSpendINR": 0,
+      "active": true,
+      "description": "15% OFF on your first order (The Sorèva Circle)"
+    },
+    {
       "code": "FLAT200",
       "discountAmountINR": 200,
       "discountPercent": 0,

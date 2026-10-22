@@ -236,6 +236,11 @@
                     <span>Offer Pop-Up</span>
                     <span class="badge-count" id="countBadgePopup" style="background: rgba(225,29,72,0.25); color: #f43f5e;">Sale</span>
                 </button>
+                <button class="nav-item" data-tab="newsletter" id="navItemNewsletter">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                    <span>Sorèva Circle</span>
+                    <span class="badge-count" id="countBadgeNewsletter" style="background: rgba(197,160,89,0.25); color: var(--gold-light);">15%</span>
+                </button>
                 <button class="nav-item" data-tab="currencies">
                     <i class="fa-solid fa-coins"></i>
                     <span>Currencies & Rates</span>
@@ -1131,6 +1136,169 @@
                                 </div>
                                 <div id="popupSubscribersList" style="max-height: 220px; overflow-y: auto; font-size: 0.82rem; color: var(--text-muted);">
                                     <div style="padding: 10px; text-align: center; color: var(--text-muted);">No subscribers yet. Leads will appear here automatically.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: SORÈVA CIRCLE NEWSLETTER & WELCOME OFFER -->
+                <section class="tab-panel" id="panel-newsletter">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Sorèva Circle Newsletter & Welcome Offer</h3>
+                            <p>Configure the footer subscription section, manage the automated WELCOME15 discount email sent from support@soreva.in, and track subscriber leads.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" class="btn-admin-outline" onclick="loadNewsletterSettings(true)" title="Reload Settings">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                            <button type="button" class="btn-admin-primary" onclick="saveNewsletterSettings()" style="padding: 10px 24px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Newsletter Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1.25fr 0.95fr; gap: 24px; align-items: start;">
+                        <!-- LEFT COLUMN: SETTINGS FORM -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            
+                            <!-- Card 1: Subscription & Coupon Settings -->
+                            <div class="admin-card" style="padding: 24px; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; background: rgba(26,20,19,0.7);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                                    <h4 style="margin: 0; font-size: 1.05rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-envelope-open-text"></i> Footer Subscription & Offer Settings
+                                    </h4>
+                                    <label class="switch-control" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                                        <span>Active on Website</span>
+                                        <input type="checkbox" id="newsletterConfigEnabled" checked onchange="updateNewsletterPreview()">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Section Title (Headline)</label>
+                                        <input type="text" id="newsletterConfigTitle" value="Join The Sorèva Circle" oninput="updateNewsletterPreview()">
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Subtitle / Description</label>
+                                        <textarea id="newsletterConfigDesc" rows="2" oninput="updateNewsletterPreview()">Subscribe for private seasonal sales, new collection drops, and receive 15% OFF on your first order.</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Welcome Coupon Code</label>
+                                        <input type="text" id="newsletterConfigCouponCode" value="WELCOME15" style="text-transform: uppercase; font-weight: 700; color: var(--gold-light); letter-spacing: 1px;" oninput="updateNewsletterPreview()">
+                                        <small style="color: var(--text-muted); font-size: 0.75rem;">Coupon automatically dispatched to client upon subscribing.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Discount Percentage (%)</label>
+                                        <input type="number" id="newsletterConfigDiscountPercent" value="15" min="1" max="100" oninput="updateNewsletterPreview()">
+                                        <small style="color: var(--text-muted); font-size: 0.75rem;">Discount value deducted from order total.</small>
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Discount Benefit Text</label>
+                                        <input type="text" id="newsletterConfigDiscountText" value="Flat 15% Off Your First Order" oninput="updateNewsletterPreview()">
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label class="switch-control" style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="newsletterConfigAutoApply" checked>
+                                            <span class="switch-slider"></span>
+                                            <span style="font-size: 0.88rem; color: #fff;">Auto-apply coupon to customer's shopping bag immediately after subscribing</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Automated Welcome Email Template -->
+                            <div class="admin-card" style="padding: 24px; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; background: rgba(26,20,19,0.7);">
+                                <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                                    <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-paper-plane"></i> Automated Welcome Email (from support@soreva.in)
+                                    </h4>
+                                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">This luxury-styled HTML email is automatically dispatched to the customer's inbox immediately upon submitting their email.</p>
+                                </div>
+
+                                <div class="form-grid" style="display: flex; flex-direction: column; gap: 14px;">
+                                    <div class="form-group">
+                                        <label>Email Subject Line</label>
+                                        <input type="text" id="newsletterEmailSubject" value="✨ Welcome to The Sorèva Circle — Your 15% OFF Voucher (WELCOME15)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Greeting / Heading</label>
+                                        <input type="text" id="newsletterEmailHeading" value="Welcome to The Sorèva Circle">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Message Body</label>
+                                        <textarea id="newsletterEmailBody" rows="3">Thank you for joining our private inner circle. As a valued member, enjoy an exclusive 15% discount on your first acquisition of handcrafted demi-fine luxury jewellery.</textarea>
+                                    </div>
+
+                                    <!-- Send Test Email Helper -->
+                                    <div style="margin-top: 10px; padding: 16px; background: rgba(0,0,0,0.3); border: 1px dashed rgba(197,160,89,0.3); border-radius: 8px;">
+                                        <label style="font-size: 0.82rem; color: var(--gold-light); font-weight: 600; display: block; margin-bottom: 8px;">
+                                            <i class="fa-solid fa-vial"></i> Send Live Test Welcome Email
+                                        </label>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="email" id="newsletterTestEmailRecipient" placeholder="Recipient email address" value="support@soreva.in" style="flex: 1; padding: 8px 12px; font-size: 0.85rem;">
+                                            <button type="button" id="btnSendNewsletterTestEmail" class="btn-admin-primary" onclick="sendNewsletterTestEmail()" style="padding: 8px 16px; font-size: 0.85rem; white-space: nowrap;">
+                                                <i class="fa-solid fa-paper-plane"></i> Send Test
+                                            </button>
+                                        </div>
+                                        <div id="newsletterTestEmailStatus" style="margin-top: 8px; font-size: 0.78rem; color: var(--text-muted);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: LIVE PREVIEW & SUBSCRIBERS -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            
+                            <!-- Card 3: Exact Storefront Footer Preview -->
+                            <div class="admin-card" style="padding: 24px; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; background: rgba(26,20,19,0.7);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                                    <h4 style="margin: 0; font-size: 1rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                        <i class="fa-solid fa-eye"></i> Storefront Section Preview
+                                    </h4>
+                                    <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Live Footer Widget</span>
+                                </div>
+
+                                <div id="adminNewsletterPreviewCard" style="background: #231d1b; border: 1px solid rgba(197,160,89,0.25); border-radius: 12px; padding: 28px 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 id="previewNewsletterTitle" style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.45rem; color: #fbf8f5; margin: 0 0 6px 0; font-weight: 700;">Join The Sorèva Circle</h4>
+                                        <div style="width: 44px; height: 2px; background: #c5a059; margin-bottom: 14px;"></div>
+                                        <p id="previewNewsletterDesc" style="font-size: 0.9rem; line-height: 1.6; color: #d1c7c2; margin: 0;">
+                                            Subscribe for private seasonal sales, new collection drops, and receive <strong style="color: #fff; font-weight: 700;">15% OFF</strong> on your first order.
+                                        </p>
+                                    </div>
+                                    
+                                    <div style="display: flex; margin-bottom: 18px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2);">
+                                        <input type="text" placeholder="Your email address" readonly style="flex: 1; background: #1a1413; border: none; padding: 12px 14px; color: #aaa; font-size: 0.88rem; outline: none;">
+                                        <button type="button" style="background: linear-gradient(135deg, #c5a059 0%, #aa8232 100%); color: #1a1413; border: none; padding: 12px 20px; font-weight: 700; font-size: 0.88rem; cursor: default;">Subscribe</button>
+                                    </div>
+
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #ddd; font-size: 0.9rem;"><i class="fa-brands fa-instagram"></i></span>
+                                        <span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #ddd; font-size: 0.9rem;"><i class="fa-brands fa-facebook-f"></i></span>
+                                        <span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #ddd; font-size: 0.9rem;"><i class="fa-brands fa-youtube"></i></span>
+                                        <span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #ddd; font-size: 0.9rem;"><i class="fa-brands fa-whatsapp"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Subscribers List & CSV Export -->
+                            <div class="admin-card" style="padding: 24px; border: 1px solid rgba(197,160,89,0.3); border-radius: 12px; background: rgba(26,20,19,0.7);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <h4 style="margin: 0; font-size: 1rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                            <i class="fa-solid fa-users"></i> Circle Subscribers
+                                        </h4>
+                                        <span id="newsletterSubscribersBadge" class="badge" style="background: rgba(197,160,89,0.2); color: var(--gold-light); font-weight: 700; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px;">0 Subscribers</span>
+                                    </div>
+                                    <button type="button" class="btn-admin-outline" onclick="exportNewsletterSubscribers()" style="padding: 6px 12px; font-size: 0.78rem;">
+                                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                                    </button>
+                                </div>
+                                <div id="newsletterSubscribersList" style="max-height: 240px; overflow-y: auto; font-size: 0.82rem; color: var(--text-muted);">
+                                    <div style="padding: 12px; text-align: center; color: var(--text-muted);">No subscribers yet. Leads from 'Join The Sorèva Circle' will appear here.</div>
                                 </div>
                             </div>
                         </div>
