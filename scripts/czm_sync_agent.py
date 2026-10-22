@@ -53,6 +53,7 @@ HEADERS = {
 
 # ─── Comprehensive CZMakers Category Catalog (32 categories) ──────────
 ALL_CZM_CATEGORIES = [
+    # ─── Necklaces ───
     ('necklaces',                     'necklace',    'Necklaces'),
     ('choker-necklaces',              'necklace',    'Choker Necklaces'),
     ('traditional-necklaces',         'necklace',    'Traditional Necklaces'),
@@ -60,31 +61,46 @@ ALL_CZM_CATEGORIES = [
     ('classic-necklace',              'necklace',    'Classic Necklaces'),
     ('collar-necklace',               'necklace',    'Collar Necklaces'),
     ('mangalsutra',                   'necklace',    'Mangalsutra'),
+    ('aurous-collection',             'necklace',    'Aurous Collection'),
+
+    # ─── Earrings ───
     ('earrings',                      'earrings',    'Earrings'),
     ('jhumka-earrings',               'earrings',    'Jhumka Earrings'),
     ('big-size-earrings',             'earrings',    'Big Size Earrings'),
     ('medium-earrings',               'earrings',    'Medium Earrings'),
     ('small-earrings',                'earrings',    'Small Earrings'),
     ('tops-&-studs',                  'earrings',    'Tops & Studs'),
+    ('tops-and-studs',                'earrings',    'Tops & Studs'),
+
+    # ─── Finger Rings ───
     ('finger-rings',                  'rings',       'Finger Rings'),
     ('cz-finger-rings',               'rings',       'CZ Finger Rings'),
+
+    # ─── Pendants ───
     ('pendants',                      'pendants',    'Pendants'),
     ('cz-pendant-set',                'pendants',    'CZ Pendant Sets'),
     ('pendant-with-broad-chain',      'pendants',    'Pendants with Broad Chain'),
     ('pendant-with-medium-chain',     'pendants',    'Pendants with Medium Chain'),
-    ('wristwear',                     'bracelets',   'Wristwear'),
-    ('cz-bangles',                    'bracelets',   'CZ Bangles'),
-    ('cz-braclets',                   'bracelets',   'CZ Bracelets'),
-    ('bracelets-rings-combo',         'bracelets',   'Bracelets & Rings Combo'),
+
+    # ─── Wristwear (Bangles & Bracelets) ───
+    ('wristwear',                     'wristwear',   'Wristwear'),
+    ('cz-bangles',                    'wristwear',   'CZ Bangles'),
+    ('cz-braclets',                   'wristwear',   'CZ Bracelets'),
+    ('cz-bracelets',                  'wristwear',   'CZ Bracelets'),
+    ('bracelets-rings-combo',         'wristwear',   'Bracelets & Rings Combo'),
+
+    # ─── Silver Jewellery ───
     ('silver-jewellery',              'silver',      'Silver Jewellery'),
+    ('sterling-silver',               'silver',      'Sterling Silver'),
     ('925-sterling-silver-earrings',  'silver',      '925 Sterling Silver Earrings'),
     ('925-sterling-finger-rings',     'silver',      '925 Sterling Finger Rings'),
     ('925-sterling-silver-pendants',  'silver',      '925 Sterling Silver Pendants'),
+
+    # ─── Accessories ───
     ('accessories',                   'accessories', 'Accessories'),
     ('cz-accessories',                'accessories', 'CZ Accessories'),
     ('cz-brooch',                     'accessories', 'CZ Brooches'),
     ('mangtika',                      'accessories', 'Mangtika'),
-    ('aurous-collection',             'necklace',    'Aurous Collection'),
 ]
 
 
