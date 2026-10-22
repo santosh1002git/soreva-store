@@ -944,12 +944,54 @@ function isRecentlyAdded(item) {
 }
 
 // ==========================================
+// CANONICAL MASTER CATEGORIES & SUBCATEGORIES
+// Matching CZMakers and Sorèva store taxonomy
+// ==========================================
+const MASTER_CATEGORY_SUBCATEGORIES = {
+    'necklace': [
+        'Necklaces', 'Choker Necklaces', 'Traditional Necklaces', 'Bridal Necklaces',
+        'Classic Necklaces', 'Collar Necklaces', 'Mangalsutra', 'Aurous Collection'
+    ],
+    'earrings': [
+        'Earrings', 'Jhumka Earrings', 'Big Size Earrings', 'Medium Earrings',
+        'Small Earrings', 'Tops & Studs'
+    ],
+    'wristwear': [
+        'Wristwear', 'CZ Bangles', 'CZ Bracelets', 'Bracelets & Rings Combo'
+    ],
+    'rings': [
+        'Finger Rings', 'CZ Finger Rings'
+    ],
+    'pendants': [
+        'Pendants', 'CZ Pendant Sets', 'Pendants with Broad Chain', 'Pendants with Medium Chain'
+    ],
+    'silver': [
+        'Silver Jewellery', 'Sterling Silver', '925 Sterling Silver Earrings',
+        '925 Sterling Finger Rings', '925 Sterling Silver Pendants'
+    ],
+    'accessories': [
+        'Accessories', 'CZ Accessories', 'CZ Brooches', 'Mangtika'
+    ]
+};
+
+// ==========================================
 // SUB-CATEGORY EXTRACTION & SELECT POPULATION
 // ==========================================
 function getDistinctSubCategories(category = 'all', source = 'products') {
     const list = source === 'inventory' ? (inventoryData || []) : (storeData?.products || []);
     const subcats = new Set();
+    const normCategory = (category || 'all').toLowerCase();
+
+    // 1. Seed with canonical master subcategories so filters & datalists are always fully populated
+    if (normCategory === 'all') {
+        Object.values(MASTER_CATEGORY_SUBCATEGORIES).forEach(subs => subs.forEach(s => subcats.add(s)));
+    } else if (normCategory === 'wristwear' || normCategory === 'bracelets') {
+        (MASTER_CATEGORY_SUBCATEGORIES['wristwear'] || []).forEach(s => subcats.add(s));
+    } else if (MASTER_CATEGORY_SUBCATEGORIES[normCategory]) {
+        MASTER_CATEGORY_SUBCATEGORIES[normCategory].forEach(s => subcats.add(s));
+    }
     
+    // 2. Also union with any distinct subcategories present in live inventory/products
     list.forEach(item => {
         const itemCat = (item.category || '').toLowerCase();
         let match = false;
@@ -1010,10 +1052,12 @@ function updateProductSubCategoryOptions(selectedVal = null) {
     updateSubCategoryDatalist();
 }
 
-function updateSubCategoryDatalist() {
+function updateSubCategoryDatalist(catOverride = null) {
     const datalist = document.getElementById('subCategoryDatalist');
     if (!datalist) return;
-    const allSubs = getDistinctSubCategories('all', 'products');
+    const catSelect = document.getElementById('prodCategory');
+    const cat = catOverride || (catSelect ? catSelect.value : 'all');
+    const allSubs = getDistinctSubCategories(cat || 'all', 'products');
     datalist.innerHTML = allSubs.map(s => `<option value="${s.replace(/"/g, '&quot;')}">`).join('');
 }
 
@@ -1641,6 +1685,7 @@ function openProductModal(id = null) {
             document.getElementById('editProductId').value = prod.id;
             document.getElementById('prodName').value = prod.name;
             document.getElementById('prodCategory').value = prod.category;
+            updateSubCategoryDatalist(prod.category);
             document.getElementById('prodSubCategory').value = prod.subCategory || '';
             document.getElementById('prodPlating').value = prod.plating || 'gold';
             document.getElementById('prodPriceINR').value = prod.priceINR;
@@ -1680,6 +1725,8 @@ function openProductModal(id = null) {
         title.textContent = "Add New Jewelry Piece";
         form.reset();
         document.getElementById('editProductId').value = "";
+        const prodCatEl = document.getElementById('prodCategory');
+        updateSubCategoryDatalist(prodCatEl ? prodCatEl.value : 'all');
         const wholesaleReset = document.getElementById('prodUsdWholesale');
         if (wholesaleReset) wholesaleReset.value = '';
         const skuReset = document.getElementById('prodSku');
