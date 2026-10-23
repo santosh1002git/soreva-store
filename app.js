@@ -4462,6 +4462,8 @@ function ensureAuthModalInDOM() {
 }
 
 function openAuthModal(tab = 'signin') {
+    if (typeof closeFestivePopup === 'function') closeFestivePopup();
+    if (typeof closeWelcomeDiscountModal === 'function') closeWelcomeDiscountModal();
     ensureAuthModalInDOM();
     switchAuthTab(tab);
     const backdrop = document.getElementById('authModalBackdrop');
@@ -4732,12 +4734,7 @@ function handleHeaderAuthClick(e) {
             dropdown.classList.toggle('active');
         }
     } else {
-        // If user hasn't claimed welcome offer yet, show the OTP welcome modal
-        if (!localStorage.getItem('soreva_welcome_claimed')) {
-            openWelcomeDiscountModal();
-        } else {
-            openAuthModal('signin');
-        }
+        openAuthModal('signin');
     }
 }
 window.handleHeaderAuthClick = handleHeaderAuthClick;
