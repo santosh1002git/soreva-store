@@ -567,6 +567,11 @@ function switchTab(tabName) {
     // Trigger data refresh on tab switch
     if (tabName === 'orders') fetchOrders();
     if (tabName === 'inventory') fetchInventory();
+    if (tabName === 'products') {
+        if (typeof fetchInventory === 'function') fetchInventory();
+        renderProductsTable();
+        updateBadgeCounts();
+    }
     if (tabName === 'customers') fetchCustomers();
     if (tabName === 'database') fetchDatabaseInfo();
     if (tabName === 'instagram') { renderInstagramGrid(); loadInstagramSettingsForm(); }
@@ -623,7 +628,7 @@ function updateBadgeCounts() {
 
     const setBadge = (id, count) => {
         const el = document.getElementById(id);
-        if (el) el.textContent = count;
+        if (el) el.textContent = (typeof count === 'number') ? count.toLocaleString('en-IN') : count;
     };
 
     setBadge('countBadgeHero', heroCount);
@@ -653,6 +658,11 @@ function updateBadgeCounts() {
     if (inventoryData && inventoryData.length) {
         setBadge('countBadgeInventory', inventoryData.length);
         setBadge('inventoryCountHeader', inventoryData.length);
+        const totalUnits = inventoryData.reduce((acc, i) => acc + (Number(i.stockQty) || 0), 0);
+        setBadge('statTotalInventory', totalUnits);
+    } else {
+        setBadge('countBadgeInventory', prodCount);
+        setBadge('inventoryCountHeader', prodCount);
     }
     if (customersData && customersData.length) {
         setBadge('countBadgeCustomers', customersData.length);
@@ -2350,6 +2360,7 @@ function handleSaveProduct(e) {
     closeProductModal();
     saveAllStoreData();
     filterAdminProducts();
+    if (typeof fetchInventory === 'function') fetchInventory();
 
     // Two-way sync with SQLite database
     try {
@@ -2377,8 +2388,12 @@ async function deleteProduct(id) {
         const prod = storeData.products.find(p => String(p.id) === String(id));
         const name = prod ? prod.name : '';
         storeData.products = storeData.products.filter(p => String(p.id) !== String(id));
+        if (Array.isArray(inventoryData)) {
+            inventoryData = inventoryData.filter(i => String(i.id) !== String(id) && (!prod || !prod.sku || String(i.sku) !== String(prod.sku)));
+        }
         saveAllStoreData();
         filterAdminProducts();
+        if (typeof fetchInventory === 'function') fetchInventory();
         updateBadgeCounts();
         showToast("Product deleted");
 
@@ -3574,6 +3589,26 @@ async function fetchInventory() {
         const resp = await fetch('/api/inventory');
         if (resp.ok) {
             inventoryData = await resp.json();
+
+            // Sync live inventory data into storeData.products in memory
+            if (storeData && Array.isArray(storeData.products)) {
+                const invMap = new Map();
+                inventoryData.forEach(item => {
+                    if (item.id) invMap.set(String(item.id), item);
+                    if (item.sku) invMap.set(String(item.sku), item);
+                });
+                storeData.products.forEach(p => {
+                    const match = invMap.get(String(p.id)) || (p.sku && invMap.get(String(p.sku)));
+                    if (match) {
+                        p.stockQty = Number(match.stockQty) || 0;
+                        p.lowStockThreshold = Number(match.lowStockThreshold) || 5;
+                        p.stockStatus = match.status || (p.stockQty <= 0 ? 'Out of Stock' : 'In Stock');
+                        p.disabled = (match.disabled !== undefined ? match.disabled : (p.stockQty <= 0 ? 1 : 0));
+                        p.active = (match.active !== undefined ? match.active : (p.stockQty <= 0 ? 0 : 1));
+                    }
+                });
+            }
+
             if (typeof updateInventorySubCategoryOptions === 'function') {
                 updateInventorySubCategoryOptions();
             }

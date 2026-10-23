@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Admin Stylesheet -->
-    <link rel="stylesheet" href="admin.css?v=v41_product_catalog_image_visibility">
+    <link rel="stylesheet" href="admin.css?v=v42_stock_catalog_sync">
 
     <!-- Polyfill window.crypto.subtle and pure JS SHA-256 for non-secure HTTP / raw IP access -->
     <script>
@@ -196,7 +196,7 @@
                 <button class="nav-item" data-tab="inventory">
                     <i class="fa-solid fa-boxes-stacked"></i>
                     <span>Stock & Inventory</span>
-                    <span class="badge-count" id="countBadgeInventory">8</span>
+                    <span class="badge-count" id="countBadgeInventory">11,737</span>
                 </button>
                 <button class="nav-item" data-tab="customers">
                     <i class="fa-solid fa-users"></i>
@@ -210,7 +210,7 @@
                 <button class="nav-item" data-tab="products">
                     <i class="fa-solid fa-gem"></i>
                     <span>Product Catalog</span>
-                    <span class="badge-count" id="countBadgeProducts">8</span>
+                    <span class="badge-count" id="countBadgeProducts">11,737</span>
                 </button>
                 <button class="nav-item" data-tab="hero">
                     <i class="fa-solid fa-panorama"></i>
@@ -370,7 +370,7 @@
                         <div class="metric-card" onclick="switchTab('products')">
                             <div class="metric-icon gold"><i class="fa-solid fa-gem"></i></div>
                             <div class="metric-data">
-                                <span class="metric-num" id="statTotalProducts">8</span>
+                                <span class="metric-num" id="statTotalProducts">11,737</span>
                                 <span class="metric-label">Catalog Designs</span>
                             </div>
                         </div>
@@ -510,7 +510,7 @@
                 <section class="tab-panel" id="panel-inventory">
                     <div class="panel-header-row">
                         <div>
-                            <h3>Stock & Inventory Control (<span id="inventoryCountHeader">11,568</span> Items)</h3>
+                            <h3>Stock & Inventory Control (<span id="inventoryCountHeader">11,737</span> Items)</h3>
                             <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -841,7 +841,7 @@
                 <section class="tab-panel" id="panel-products">
                     <div class="panel-header-row">
                         <div>
-                            <h3>Product Catalog (<span id="productsCountLabel">8</span>)</h3>
+                            <h3>Product Catalog (<span id="productsCountLabel">11,737</span>)</h3>
                             <p>Create, modify, price, and organize pieces in your Sorèva jewelry collection. <span style="display: inline-block; margin-left: 8px; color: var(--gold-light); font-size: 0.82rem; background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.3); padding: 2px 8px; border-radius: 6px;"><i class="fa-solid fa-photo-film"></i> Click <strong>Photos & Visibility</strong> on any piece to toggle images ON/OFF or upload custom photos</span></p>
                         </div>
                         <div class="header-tools">
@@ -3651,7 +3651,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v41_product_catalog_image_visibility"></script>
+    <script src="admin.js?v=v42_stock_catalog_sync"></script>
 
     </body>
 </html>

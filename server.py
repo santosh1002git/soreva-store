@@ -460,18 +460,39 @@ def init_extended_tables():
             except Exception:
                 pass
         try:
+            # Bidirectional sync between products and inventory
+            # 1. Align subCategory and category
             c.execute("""
                 UPDATE inventory 
                 SET subCategory = (
                     SELECT COALESCE(products.subCategory, '') 
                     FROM products 
                     WHERE products.id = inventory.id
+                ),
+                category = (
+                    SELECT COALESCE(products.category, inventory.category)
+                    FROM products 
+                    WHERE products.id = inventory.id
                 )
-                WHERE subCategory IS NULL OR subCategory = ''
+                WHERE id IN (SELECT id FROM products)
+            """)
+            # 2. Insert any products missing from inventory
+            c.execute("""
+                INSERT INTO inventory (id, sku, productName, category, subCategory, stockQty, lowStockThreshold, status)
+                SELECT p.id, 'CZM-' || p.id, p.name, p.category, p.subCategory, 15, 5, 'In Stock'
+                FROM products p
+                WHERE p.id NOT IN (SELECT id FROM inventory)
+            """)
+            # 3. Insert any inventory missing from products
+            c.execute("""
+                INSERT INTO products (id, name, category, subCategory, plating, priceINR, originalPriceINR, primaryImg, hoverImg)
+                SELECT i.id, i.productName, i.category, i.subCategory, 'gold', 2999, 3999, 'assets/placeholder-jewelry.svg', 'assets/placeholder-jewelry.svg'
+                FROM inventory i
+                WHERE i.id NOT IN (SELECT id FROM products)
             """)
             conn.commit()
-        except Exception:
-            pass
+        except Exception as sync_err:
+            print(f"[Inventory-Products Sync Warning] {sync_err}")
         c.execute("""
             CREATE TABLE IF NOT EXISTS audit_log (
                 id TEXT PRIMARY KEY,
@@ -5288,7 +5309,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
                 c = conn.cursor()
                 prod_id = gen_pb_id()
-                inv_id = gen_pb_id()
+                inv_id = prod_id
 
                 # Generate unique SKU
                 cat_prefix_map = {
