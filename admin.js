@@ -5124,10 +5124,15 @@ function renderOrders() {
         const destRegion = [o.state, o.pincode ? ('PIN: ' + o.pincode) : ''].filter(Boolean).join(', ');
         const destFullSnippet = [o.shippingAddress, o.addressLine2].filter(Boolean).join(', ');
 
+        const invNum = o.invoiceNumber || ('INV-' + (o.orderNumber || '').replace('SRV-', ''));
+
         return `
             <tr>
                 <td>
                     <strong style="color: var(--gold-light); font-family: var(--font-heading); font-size: 0.95rem; display: block;">${o.orderNumber}</strong>
+                    <a href="/api/orders/invoice?id=${o.id}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #e5c483; background: rgba(197, 160, 89, 0.12); border: 1px solid rgba(197, 160, 89, 0.3); border-radius: 4px; padding: 2px 6px; margin-top: 3px; text-decoration: none;" title="Open Digital Tax Invoice">
+                        <i class="fa-solid fa-file-invoice"></i> ${invNum}
+                    </a>
                     <span style="font-size: 0.74rem; color: var(--admin-muted); display: block; margin-top: 2px;">${o.createdAt || 'Recent'}</span>
                 </td>
                 <td>
@@ -5157,6 +5162,9 @@ function renderOrders() {
                 </td>
                 <td style="text-align: right;">
                     <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                        <a href="/api/orders/invoice?id=${o.id}" target="_blank" class="btn-admin-outline btn-sm" style="color: var(--gold-light); border-color: rgba(197,160,89,0.35); text-decoration: none; padding: 6px 10px; display: inline-flex; align-items: center; gap: 4px;" title="View & Print Official Digital Tax Invoice">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Invoice
+                        </a>
                         <button class="btn-admin-primary btn-sm" onclick="openOrderModal('${o.id}')" title="Inspect Order Details">
                             <i class="fa-solid fa-receipt"></i> Inspect
                         </button>
@@ -5193,6 +5201,17 @@ function openOrderModal(orderId) {
         badge.className = `order-status-badge ${(o.status || 'processing').toLowerCase()}`;
         badge.textContent = o.status || 'Processing';
     }
+
+    // Official Digital Tax Invoice Dossier
+    const invNum = o.invoiceNumber || ('INV-' + (o.orderNumber || '').replace('SRV-', ''));
+    const elInvNum = document.getElementById('inspectInvoiceNum');
+    if (elInvNum) elInvNum.textContent = invNum;
+
+    const elInvDate = document.getElementById('inspectInvoiceDate');
+    if (elInvDate) elInvDate.textContent = o.invoiceCreatedAt ? `Generated: ${o.invoiceCreatedAt}` : `Generated: ${o.createdAt || 'At Order Placement'}`;
+
+    const elInvBtn = document.getElementById('inspectInvoiceViewBtn');
+    if (elInvBtn) elInvBtn.href = `/api/orders/invoice?id=${o.id}`;
 
     // Client Profile
     const elCustName = document.getElementById('inspectCustName');
@@ -5375,6 +5394,40 @@ async function saveOrderStatusFromModal() {
         alert("Server error: " + err.message);
     }
 }
+
+window.viewDigitalInvoice = function(orderId) {
+    window.open(`/api/orders/invoice?id=${orderId}`, '_blank');
+};
+
+window.sendInvoiceEmailFromModal = async function() {
+    if (!currentModalOrder) return;
+    const btn = document.getElementById('inspectInvoiceEmailBtn');
+    const orig = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Dispatching...';
+    }
+    try {
+        const resp = await fetch('/api/orders/send-invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: currentModalOrder.id, orderNumber: currentModalOrder.orderNumber })
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast(`Tax invoice dispatched to ${res.recipient || currentModalOrder.customerEmail}!`, 'success');
+        } else {
+            showToast(`Invoice dispatch status: ${res.message || 'Queued in outbox'}`, 'info');
+        }
+    } catch (err) {
+        showToast(`Failed to dispatch invoice: ${err.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    }
+};
 
 // --- DATABASE HUB CONTROLLER ---
 async function fetchDatabaseInfo() {

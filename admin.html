@@ -3064,6 +3064,32 @@
                     </div>
                 </div>
 
+                <!-- OFFICIAL DIGITAL TAX INVOICE & AUDIT TRAIL CARD -->
+                <div style="background: linear-gradient(135deg, rgba(197, 160, 89, 0.12), rgba(0, 0, 0, 0.45)); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <div style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Official Digital Tax Invoice (GST HSN 7113)
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                                <span id="inspectInvoiceNum" style="font-family: monospace; font-size: 1.15rem; font-weight: 700; color: #fff;">INV-2026-XXXX</span>
+                                <span style="font-size: 0.72rem; color: #81c784; background: rgba(129, 199, 132, 0.12); border: 1px solid rgba(129, 199, 132, 0.3); border-radius: 4px; padding: 2px 8px;">
+                                    <i class="fa-solid fa-database"></i> Retained in Database
+                                </span>
+                            </div>
+                            <div style="font-size: 0.76rem; color: var(--admin-muted); margin-top: 2px;" id="inspectInvoiceDate">Generated: —</div>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a id="inspectInvoiceViewBtn" href="#" target="_blank" class="btn-admin-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 7px 14px;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open / Print Invoice
+                            </a>
+                            <button type="button" class="btn-admin-outline btn-sm" id="inspectInvoiceEmailBtn" onclick="sendInvoiceEmailFromModal()" style="color: var(--gold-light); border-color: rgba(197, 160, 89, 0.5); display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;">
+                                <i class="fa-solid fa-paper-plane"></i> Email to Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 2-COLUMN GRID: CLIENT INFO & FULL ADDRESS DETAILS -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-bottom: 20px;">
                     

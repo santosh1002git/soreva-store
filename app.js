@@ -3893,6 +3893,8 @@ function finalizeSuccessfulOrder(res, name, finalAmount, paymentId = null) {
     // Populate Success View
     const custEl = document.getElementById('successCustName');
     const orderNumEl = document.getElementById('successOrderNum');
+    const invNumEl = document.getElementById('successInvoiceNum');
+    const invBtnEl = document.getElementById('successInvoiceBtn');
     const totalAmtEl = document.getElementById('successTotalAmt');
     const payMethodEl = document.getElementById('successPaymentMethod');
     const payIdRow = document.getElementById('successPaymentIdRow');
@@ -3900,6 +3902,13 @@ function finalizeSuccessfulOrder(res, name, finalAmount, paymentId = null) {
 
     if (custEl) custEl.textContent = name;
     if (orderNumEl) orderNumEl.textContent = res.orderNumber || 'SRV-2026-1085';
+
+    const invNum = res.invoiceNumber || ('INV-' + (res.orderNumber || '').replace('SRV-', ''));
+    if (invNumEl) invNumEl.textContent = invNum;
+    if (invBtnEl) {
+        invBtnEl.href = res.invoiceUrl || `/api/orders/invoice?id=${res.orderId || ''}`;
+    }
+
     if (totalAmtEl) totalAmtEl.textContent = formatPrice(finalAmount);
 
     if (paymentId) {

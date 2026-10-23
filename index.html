@@ -2617,7 +2617,11 @@
                         <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Order Number</span>
                         <strong style="font-family: monospace; font-size: 1.05rem; color: #c5a059;" id="successOrderNum">SRV-2026-1085</strong>
                     </div>
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Tax Invoice (GST HSN 7113)</span>
+                        <strong style="font-family: monospace; font-size: 0.95rem; color: #81c784;" id="successInvoiceNum">INV-2026-1085</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span style="color: rgba(251,248,245,0.7); font-size: 0.88rem;">Payment Method</span>
                         <strong style="color: #81c784;" id="successPaymentMethod">Razorpay (Verified)</strong>
                     </div>
@@ -2635,7 +2639,10 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 14px; justify-content: center;">
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <a id="successInvoiceBtn" href="#" target="_blank" class="btn-primary" style="padding: 12px 22px; background: transparent; color: #dfbd7c; border: 1px solid #c5a059; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> View & Print Tax Invoice
+                    </a>
                     <button class="btn-primary" onclick="closeCheckoutModal()" style="padding: 12px 28px; background: #c5a059; color: #120e0d; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
                         <i class="fa-solid fa-gem"></i> Continue Shopping
                     </button>

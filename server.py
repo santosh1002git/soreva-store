@@ -453,12 +453,25 @@ def init_extended_tables():
             "ALTER TABLE products ADD COLUMN images TEXT",
             "ALTER TABLE inventory ADD COLUMN lastRefreshed TEXT",
             "ALTER TABLE inventory ADD COLUMN dateAdded TEXT",
-            "ALTER TABLE inventory ADD COLUMN subCategory TEXT"
+            "ALTER TABLE inventory ADD COLUMN subCategory TEXT",
+            "ALTER TABLE orders ADD COLUMN invoiceNumber TEXT",
+            "ALTER TABLE orders ADD COLUMN invoiceHtml TEXT",
+            "ALTER TABLE orders ADD COLUMN invoiceCreatedAt TEXT"
         ]:
             try:
                 c.execute(col_stmt)
             except Exception:
                 pass
+
+        try:
+            c.execute("""
+                UPDATE orders 
+                SET invoiceNumber = 'INV-' || REPLACE(orderNumber, 'SRV-', '')
+                WHERE invoiceNumber IS NULL OR invoiceNumber = ''
+            """)
+            conn.commit()
+        except Exception:
+            pass
         try:
             # Canonicalize legacy 'bracelets' category to 'wristwear'
             c.execute("UPDATE products SET category = 'wristwear' WHERE category = 'bracelets'")
@@ -812,9 +825,635 @@ def format_notification_template(tmpl, data):
     return res
 
 
-def generate_customer_order_html_email(order_data):
-    """Generate a responsive, luxury-branded HTML email receipt for the customer."""
+STATE_GST_CODES = {
+    "jammu and kashmir": "01", "himachal pradesh": "02", "punjab": "03", "chandigarh": "04",
+    "uttarakhand": "05", "haryana": "06", "delhi": "07", "rajasthan": "08", "uttar pradesh": "09",
+    "bihar": "10", "sikkim": "11", "arunachal pradesh": "12", "nagaland": "13", "manipur": "14",
+    "mizoram": "15", "tripura": "16", "meghalaya": "17", "assam": "18", "west bengal": "19",
+    "jharkhand": "20", "odisha": "21", "chhattisgarh": "22", "madhya pradesh": "23",
+    "gujarat": "24", "daman and diu": "25", "dadra and nagar haveli": "26", "maharashtra": "27",
+    "andhra pradesh": "37", "karnataka": "29", "goa": "30", "lakshadweep": "31",
+    "kerala": "32", "tamil nadu": "33", "puducherry": "34", "andaman and nicobar": "35",
+    "telangana": "36", "ladakh": "38"
+}
+
+
+def amount_to_inr_words(n):
+    """Convert an amount in INR to Indian Rupee Words."""
+    try:
+        n = int(round(float(n)))
+    except Exception:
+        return "Zero Rupees Only"
+    if n <= 0:
+        return "Zero Rupees Only"
+
+    units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+             "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
+    tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+
+    def _two_digits(val):
+        if val < 20:
+            return units[val]
+        return f"{tens[val // 10]} {units[val % 10]}".strip()
+
+    def _three_digits(val):
+        h = val // 100
+        rem = val % 100
+        parts = []
+        if h > 0:
+            parts.append(f"{units[h]} Hundred")
+        if rem > 0:
+            parts.append(_two_digits(rem))
+        return " ".join(parts).strip()
+
+    parts = []
+    if n >= 10000000:
+        cr = n // 10000000
+        parts.append(f"{amount_to_inr_words(cr).replace(' Rupees Only', '').replace('INR ', '')} Crore")
+        n %= 10000000
+    if n >= 100000:
+        lakh = n // 100000
+        parts.append(f"{_two_digits(lakh)} Lakh")
+        n %= 100000
+    if n >= 1000:
+        th = n // 1000
+        parts.append(f"{_two_digits(th)} Thousand")
+        n %= 1000
+    if n > 0:
+        parts.append(_three_digits(n))
+
+    words = " ".join([p for p in parts if p]).strip()
+    return f"INR {words} Only"
+
+
+def extract_order_items_list(order_data):
+    """Extract structured items list from either items, itemsJson, or itemsSummary."""
+    raw_items = order_data.get("items")
+    if isinstance(raw_items, str):
+        try:
+            raw_items = json.loads(raw_items)
+        except Exception:
+            raw_items = []
+    if not raw_items and order_data.get("itemsJson"):
+        try:
+            raw_items = json.loads(order_data.get("itemsJson"))
+        except Exception:
+            raw_items = []
+
+    if isinstance(raw_items, list) and len(raw_items) > 0 and isinstance(raw_items[0], dict):
+        return raw_items
+
+    # Fallback to itemsSummary string
+    summary = str(order_data.get("itemsSummary", "") or "").strip()
+    total = float(order_data.get("totalAmount", 0) or 0)
+    if not summary:
+        return [{"name": "Sorèva Signature Luxury Jewellery Piece", "qty": 1, "price": total, "finish": "24K Gold Polish"}]
+
+    parsed = []
+    parts = [p.strip() for p in summary.split(",") if p.strip()]
+    per_item_price = round(total / max(1, len(parts)), 2)
+    for p in parts:
+        qty = 1
+        name = p
+        finish = "24K Gold Polish"
+        if "x " in p:
+            q_part, rest = p.split("x ", 1)
+            try:
+                qty = int(q_part.strip())
+            except Exception:
+                qty = 1
+            name = rest.strip()
+        if "(" in name and name.endswith(")"):
+            name_part, finish_part = name.rsplit("(", 1)
+            name = name_part.strip()
+            finish = finish_part.rstrip(")").strip()
+        parsed.append({
+            "name": name,
+            "qty": qty,
+            "price": per_item_price,
+            "finish": finish
+        })
+    return parsed if parsed else [{"name": summary, "qty": 1, "price": total, "finish": "24K Gold Polish"}]
+
+
+def generate_digital_invoice_html(order_data):
+    """Generate a luxury, Indian GST compliant Tax Invoice HTML document."""
     order_num = html.escape(str(order_data.get("orderNumber", "SRV-ORDER")))
+    inv_num = html.escape(str(order_data.get("invoiceNumber") or f"INV-{order_num.replace('SRV-', '')}"))
+    order_id = html.escape(str(order_data.get("orderId") or order_data.get("id") or ""))
+    
+    inv_date = html.escape(str(order_data.get("invoiceCreatedAt") or order_data.get("createdAt") or datetime.now().strftime("%d %b %Y, %I:%M %p")))
+    cust_name = html.escape(str(order_data.get("customerName", "Valued Patron")))
+    cust_email = html.escape(str(order_data.get("customerEmail", "")))
+    cust_phone = html.escape(str(order_data.get("customerPhone", "")))
+    
+    shipping_addr = html.escape(str(order_data.get("shippingAddress", "")))
+    addr2 = html.escape(str(order_data.get("addressLine2", "")))
+    city = html.escape(str(order_data.get("city", "")))
+    state = html.escape(str(order_data.get("state", "")))
+    pincode = html.escape(str(order_data.get("pincode", "")))
+    country = html.escape(str(order_data.get("country", "India")))
+    
+    pay_method = html.escape(str(order_data.get("paymentMethod", "Prepaid")))
+    pay_id = html.escape(str(order_data.get("paymentId", "N/A")))
+    order_notes = html.escape(str(order_data.get("orderNotes", "")))
+    
+    total_val = float(order_data.get("totalAmount", 0) or 0)
+    subtotal_val = float(order_data.get("subtotalAmount", total_val) or total_val)
+    discount_val = float(order_data.get("discountAmount", 0) or 0)
+    coupon_code = html.escape(str(order_data.get("couponCode", "") or ""))
+
+    # Determine Place of Supply and GST classification
+    state_normalized = (state or city).strip().lower()
+    state_code = "29" # Default Karnataka
+    for s_name, s_code in STATE_GST_CODES.items():
+        if s_name in state_normalized:
+            state_code = s_code
+            break
+            
+    is_intra_state = (state_code == "29") or ("karnataka" in state_normalized) or ("bangalore" in state_normalized) or ("bengaluru" in state_normalized)
+    place_of_supply = f"{state or city or 'Karnataka'} (Code: {state_code})"
+
+    # Calculate overall GST amounts (standard 3% on luxury imitation jewelry HSN 7113)
+    # The retail total includes GST
+    taxable_val = round(total_val / 1.03, 2)
+    total_gst = round(total_val - taxable_val, 2)
+    
+    if is_intra_state:
+        cgst_val = round(total_gst / 2.0, 2)
+        sgst_val = round(total_gst - cgst_val, 2)
+        igst_val = 0.0
+    else:
+        cgst_val = 0.0
+        sgst_val = 0.0
+        igst_val = total_gst
+
+    amount_in_words = amount_to_inr_words(total_val)
+    
+    # Process Line Items
+    items_list = extract_order_items_list(order_data)
+    items_rows_html = ""
+    for idx, it in enumerate(items_list, 1):
+        it_name = html.escape(str(it.get("name") or it.get("productName") or "Sorèva Luxury Jewellery Piece"))
+        it_finish = html.escape(str(it.get("finish") or "18K/24K Gold Micron Polish"))
+        it_qty = int(it.get("qty", 1) or 1)
+        it_price = float(it.get("price", 0) or 0)
+        it_gross_line = it_price * it_qty
+        it_taxable = round(it_gross_line / 1.03, 2)
+        it_rate_taxable = round(it_taxable / max(1, it_qty), 2)
+        it_tax = round(it_gross_line - it_taxable, 2)
+
+        if is_intra_state:
+            tax_cell = f"""
+            <div style="font-size: 11px; color: #4b5563;">CGST 1.5%: ₹{it_tax/2:,.2f}</div>
+            <div style="font-size: 11px; color: #4b5563;">SGST 1.5%: ₹{it_tax/2:,.2f}</div>
+            """
+        else:
+            tax_cell = f"""
+            <div style="font-size: 11px; color: #4b5563;">IGST 3.0%: ₹{it_tax:,.2f}</div>
+            """
+
+        items_rows_html += f"""
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px 10px; text-align: center; color: #6b7280; font-size: 12px; vertical-align: top;">{idx}</td>
+            <td style="padding: 12px 10px; vertical-align: top;">
+                <div style="font-weight: 600; color: #111827; font-size: 13px;">{it_name}</div>
+                <div style="font-size: 11px; color: #927238; margin-top: 2px;">Finish: {it_finish}</div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 1px;">Atelier Sealed • 1-Yr Polish Warranty</div>
+            </td>
+            <td style="padding: 12px 10px; text-align: center; color: #374151; font-size: 12px; font-family: monospace; vertical-align: top;">7113</td>
+            <td style="padding: 12px 10px; text-align: center; color: #111827; font-weight: 600; font-size: 13px; vertical-align: top;">{it_qty}</td>
+            <td style="padding: 12px 10px; text-align: right; color: #374151; font-size: 13px; vertical-align: top;">₹{it_rate_taxable:,.2f}</td>
+            <td style="padding: 12px 10px; text-align: right; color: #374151; font-size: 13px; font-weight: 500; vertical-align: top;">₹{it_taxable:,.2f}</td>
+            <td style="padding: 12px 10px; text-align: right; vertical-align: top;">{tax_cell}</td>
+            <td style="padding: 12px 10px; text-align: right; color: #111827; font-weight: 700; font-size: 13px; vertical-align: top;">₹{it_gross_line:,.2f}</td>
+        </tr>
+        """
+
+    # Build GST Tax Summary Rows
+    if is_intra_state:
+        gst_summary_html = f"""
+        <tr>
+            <td style="padding: 4px 0; color: #4b5563; font-size: 12px;">Central GST (CGST @ 1.5%):</td>
+            <td style="padding: 4px 0; text-align: right; color: #111827; font-size: 12px; font-weight: 600;">₹{cgst_val:,.2f}</td>
+        </tr>
+        <tr>
+            <td style="padding: 4px 0; color: #4b5563; font-size: 12px;">State GST (SGST @ 1.5%):</td>
+            <td style="padding: 4px 0; text-align: right; color: #111827; font-size: 12px; font-weight: 600;">₹{sgst_val:,.2f}</td>
+        </tr>
+        """
+    else:
+        gst_summary_html = f"""
+        <tr>
+            <td style="padding: 4px 0; color: #4b5563; font-size: 12px;">Integrated GST (IGST @ 3.0%):</td>
+            <td style="padding: 4px 0; text-align: right; color: #111827; font-size: 12px; font-weight: 600;">₹{igst_val:,.2f}</td>
+        </tr>
+        """
+
+    discount_row_html = ""
+    if discount_val > 0:
+        c_code_label = f" ({coupon_code})" if coupon_code and coupon_code != "None" else ""
+        discount_row_html = f"""
+        <tr>
+            <td style="padding: 4px 0; color: #15803d; font-size: 12px;">Atelier Privilege Discount{c_code_label}:</td>
+            <td style="padding: 4px 0; text-align: right; color: #15803d; font-size: 12px; font-weight: 600;">-₹{discount_val:,.2f}</td>
+        </tr>
+        """
+
+    full_addr_str = ", ".join([p for p in [shipping_addr, addr2, city, state, f"PIN: {pincode}" if pincode else "", country] if p])
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Invoice {inv_num} — Sorèva Luxury Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * {{ box-sizing: border-box; }}
+    body {{
+        margin: 0;
+        padding: 0;
+        background-color: #0c0a09;
+        color: #1f2937;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }}
+    .invoice-appbar {{
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #141110;
+        border-bottom: 1px solid #2a2321;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }}
+    .invoice-appbar .brand {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #f5f2eb;
+    }}
+    .invoice-appbar .brand-title {{
+        font-family: 'Cinzel', Georgia, serif;
+        font-size: 1.15rem;
+        letter-spacing: 2px;
+        color: #e5c483;
+        font-weight: 700;
+    }}
+    .invoice-appbar .brand-badge {{
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: rgba(197, 160, 89, 0.15);
+        color: #c5a059;
+        border: 1px solid rgba(197, 160, 89, 0.35);
+        border-radius: 4px;
+        padding: 2px 8px;
+    }}
+    .invoice-appbar .actions {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+    .btn-action {{
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }}
+    .btn-action-primary {{
+        background: linear-gradient(135deg, #c5a059, #a37c35);
+        color: #171312;
+        border: none;
+    }}
+    .btn-action-primary:hover {{
+        background: linear-gradient(135deg, #d8b26a, #b88d44);
+        transform: translateY(-1px);
+    }}
+    .btn-action-outline {{
+        background: rgba(255,255,255,0.06);
+        color: #f5f2eb;
+        border: 1px solid #38302e;
+    }}
+    .btn-action-outline:hover {{
+        background: rgba(255,255,255,0.12);
+        color: #ffffff;
+    }}
+    
+    .invoice-viewport {{
+        padding: 30px 16px 60px 16px;
+        display: flex;
+        justify-content: center;
+    }}
+    .invoice-card {{
+        width: 100%;
+        max-width: 860px;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        border-top: 5px solid #c5a059;
+        padding: 36px 42px;
+        color: #111827;
+        position: relative;
+    }}
+
+    @media print {{
+        body {{
+            background: #ffffff !important;
+            color: #000000 !important;
+            padding: 0 !important;
+        }}
+        .invoice-appbar {{
+            display: none !important;
+        }}
+        .invoice-viewport {{
+            padding: 0 !important;
+            margin: 0 !important;
+        }}
+        .invoice-card {{
+            max-width: 100% !important;
+            width: 100% !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            border-top: 3px solid #c5a059 !important;
+            padding: 15mm 15mm !important;
+            page-break-after: avoid;
+        }}
+        @page {{
+            size: A4;
+            margin: 8mm;
+        }}
+    }}
+</style>
+</head>
+<body>
+
+    <!-- INTERACTIVE APP BAR (Hidden on Print) -->
+    <div class="invoice-appbar">
+        <div class="brand">
+            <span style="font-size: 1.3rem;">⚜️</span>
+            <div>
+                <div class="brand-title">SORÈVA ATELIER</div>
+                <div style="font-size: 0.72rem; color: #a3958f; margin-top: 1px;">Official Digital Tax Invoice & Archive</div>
+            </div>
+            <span class="brand-badge">{inv_num}</span>
+        </div>
+        <div class="actions">
+            <button class="btn-action btn-action-primary" onclick="window.print()">
+                <i class="fa-solid fa-print"></i> Print / Save PDF
+            </button>
+            <button class="btn-action btn-action-outline" id="btnEmailInvoice" onclick="dispatchInvoiceEmail()">
+                <i class="fa-solid fa-paper-plane"></i> Email to Customer
+            </button>
+            <a href="/" class="btn-action btn-action-outline">
+                <i class="fa-solid fa-store"></i> Boutique
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN INVOICE CONTAINER -->
+    <div class="invoice-viewport">
+        <div class="invoice-card" id="invoiceDocument">
+            
+            <!-- TOP ATELIER & TAX INVOICE HEADER -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom: 2px solid #111827; padding-bottom: 20px; margin-bottom: 20px;">
+                <tr>
+                    <td style="vertical-align: top; width: 58%;">
+                        <div style="font-family: 'Cinzel', Georgia, serif; font-size: 26px; font-weight: 700; letter-spacing: 3px; color: #111827; line-height: 1;">
+                            SORÈVA
+                        </div>
+                        <div style="font-size: 11px; letter-spacing: 2px; color: #927238; font-weight: 700; text-transform: uppercase; margin-top: 3px;">
+                            Haute Joaillerie Atelier & High Crafts
+                        </div>
+                        <div style="font-size: 13px; font-weight: 700; color: #1f2937; margin-top: 8px;">
+                            Sorèva Lifestyle Private Limited
+                        </div>
+                        <div style="font-size: 12px; color: #4b5563; line-height: 1.5; margin-top: 2px; max-width: 380px;">
+                            12th Floor, Prestige Trade Tower, Palace Road, High Grounds,<br>
+                            Bengaluru, Karnataka 560001, India
+                        </div>
+                        <div style="font-size: 12px; color: #1f2937; margin-top: 6px;">
+                            <strong>GSTIN:</strong> 29AALCS1928K1Z5 &bull; <strong>PAN:</strong> AALCS1928K
+                        </div>
+                        <div style="font-size: 11px; color: #4b5563; margin-top: 2px;">
+                            <strong>State:</strong> Karnataka (Code: 29) &bull; <strong>CIN:</strong> U36999KA2024PTC189210
+                        </div>
+                        <div style="font-size: 11px; color: #4b5563; margin-top: 2px;">
+                            Email: support@soreva.in &bull; Tel: +91 97411 18940 &bull; Web: www.soreva.in
+                        </div>
+                    </td>
+                    <td style="vertical-align: top; width: 42%; text-align: right;">
+                        <div style="display: inline-block; background: #111827; color: #f5f2eb; padding: 6px 16px; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">
+                            TAX INVOICE
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            (Original for Recipient &bull; Sec 31 CGST Act)
+                        </div>
+
+                        <div style="margin-top: 14px; text-align: right;">
+                            <table align="right" cellpadding="2" cellspacing="0" border="0" style="font-size: 12px;">
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Invoice No:</td>
+                                    <td style="font-weight: 700; color: #111827; font-family: monospace; font-size: 13px;">{inv_num}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Invoice Date:</td>
+                                    <td style="font-weight: 600; color: #111827;">{inv_date}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Order Ref:</td>
+                                    <td style="font-weight: 700; color: #927238;">{order_num}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Payment Mode:</td>
+                                    <td style="color: #111827;">{pay_method}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Payment Ref:</td>
+                                    <td style="font-family: monospace; color: #374151;">{pay_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Place of Supply:</td>
+                                    <td style="font-weight: 600; color: #111827;">{place_of_supply}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #6b7280; text-align: right; padding-right: 8px;">Reverse Charge:</td>
+                                    <td style="color: #111827;">No</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- BILLED TO & SHIPPED TO DOSSIER -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 22px;">
+                <tr>
+                    <td style="padding: 14px 18px; width: 50%; vertical-align: top; border-right: 1px solid #e5e7eb;">
+                        <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #927238; text-transform: uppercase; margin-bottom: 6px;">
+                            Billed To (Customer Details)
+                        </div>
+                        <div style="font-size: 14px; font-weight: 700; color: #111827;">{cust_name}</div>
+                        <div style="font-size: 12px; color: #4b5563; line-height: 1.5; margin-top: 3px;">
+                            {full_addr_str or 'Address on File'}
+                        </div>
+                        <div style="font-size: 12px; color: #4b5563; margin-top: 4px;">
+                            Phone: <strong>{cust_phone or '—'}</strong> &bull; Email: <strong>{cust_email or '—'}</strong>
+                        </div>
+                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
+                            State of Customer: {state or city or 'Karnataka'} (Code: {state_code})
+                        </div>
+                    </td>
+                    <td style="padding: 14px 18px; width: 50%; vertical-align: top;">
+                        <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #927238; text-transform: uppercase; margin-bottom: 6px;">
+                            Shipped To (Delivery Destination)
+                        </div>
+                        <div style="font-size: 14px; font-weight: 700; color: #111827;">{cust_name}</div>
+                        <div style="font-size: 12px; color: #4b5563; line-height: 1.5; margin-top: 3px;">
+                            {full_addr_str or 'Address on File'}
+                        </div>
+                        <div style="font-size: 12px; color: #15803d; font-weight: 600; margin-top: 4px;">
+                            📦 Insured White-Glove Atelier Courier
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- LINE ITEMS TABLE -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #111827; color: #f5f2eb; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;">
+                        <th style="padding: 10px; text-align: center; width: 5%; border-top-left-radius: 4px;">#</th>
+                        <th style="padding: 10px; text-align: left; width: 38%;">Description of Goods</th>
+                        <th style="padding: 10px; text-align: center; width: 10%;">HSN/SAC</th>
+                        <th style="padding: 10px; text-align: center; width: 6%;">Qty</th>
+                        <th style="padding: 10px; text-align: right; width: 12%;">Unit Rate</th>
+                        <th style="padding: 10px; text-align: right; width: 12%;">Taxable Amt</th>
+                        <th style="padding: 10px; text-align: right; width: 17%;">GST Tax</th>
+                        <th style="padding: 10px; text-align: right; width: 14%; border-top-right-radius: 4px;">Total (INR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items_rows_html}
+                </tbody>
+            </table>
+
+            <!-- FINANCIALS & TAX TOTALS -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                    <td style="width: 55%; vertical-align: top; padding-right: 20px;">
+                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 14px 16px;">
+                            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; font-weight: 700;">
+                                Invoice Total in Words
+                            </div>
+                            <div style="font-size: 13px; font-weight: 700; color: #111827; margin-top: 4px; line-height: 1.4;">
+                                {amount_in_words}
+                            </div>
+                            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #d1d5db; font-size: 11px; color: #4b5563; line-height: 1.5;">
+                                🛡️ <strong>1-Year Atelier Polish Warranty:</strong> Covers anti-tarnish micro-coating, prong inspections, and professional cleaning.<br>
+                                💎 <strong>Quality Grade:</strong> 5A Flawless Cubic Zirconia set in skin-safe, nickel-free brass with 24K gold micron plating.
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 45%; vertical-align: top;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 5px 0; color: #4b5563; font-size: 12px;">Subtotal (Taxable Value):</td>
+                                <td style="padding: 5px 0; text-align: right; color: #111827; font-size: 12px; font-weight: 600;">₹{taxable_val:,.2f}</td>
+                            </tr>
+                            {gst_summary_html}
+                            {discount_row_html}
+                            <tr>
+                                <td style="padding: 5px 0; color: #4b5563; font-size: 12px;">Insured Express Courier:</td>
+                                <td style="padding: 5px 0; text-align: right; color: #15803d; font-size: 12px; font-weight: 600;">FREE (Atelier Privilege)</td>
+                            </tr>
+                            <tr style="border-top: 2px solid #111827;">
+                                <td style="padding: 10px 0 0 0; font-size: 15px; font-weight: 800; color: #111827; text-transform: uppercase;">Total Invoice Value:</td>
+                                <td style="padding: 10px 0 0 0; text-align: right; font-size: 20px; font-weight: 800; color: #927238;">₹{total_val:,.2f}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- LEGAL CERTIFICATION & SIGNATURE -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                <tr>
+                    <td style="width: 60%; vertical-align: top;">
+                        <div style="font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.5px;">Terms & Conditions:</div>
+                        <ol style="margin: 4px 0 0 0; padding-left: 18px; font-size: 10px; color: #6b7280; line-height: 1.5;">
+                            <li>Goods once sold are covered under the Sorèva 1-Year Polish & Anti-Tarnish Guarantee.</li>
+                            <li>All disputes are subject to the exclusive jurisdiction of the competent courts in Bengaluru, Karnataka.</li>
+                            <li>This document constitutes an electronic tax invoice under Section 31 of the CGST Act, 2017.</li>
+                        </ol>
+                    </td>
+                    <td style="width: 40%; vertical-align: top; text-align: right;">
+                        <div style="font-size: 11px; font-weight: 700; color: #111827;">For SORÈVA LIFESTYLE PRIVATE LIMITED</div>
+                        <div style="margin: 10px 0 6px 0; display: inline-block; padding: 6px 14px; border: 1.5px solid #927238; border-radius: 6px; text-align: center; background: #fffcf5;">
+                            <div style="font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1.5px; color: #927238; font-weight: 700;">SORÈVA ATELIER</div>
+                            <div style="font-size: 9px; color: #15803d; font-weight: 600; margin-top: 1px;">✓ DIGITALLY AUTHENTICATED</div>
+                            <div style="font-size: 8px; color: #6b7280;">BENGALURU, INDIA</div>
+                        </div>
+                        <div style="font-size: 10px; color: #6b7280;">Authorized Signatory</div>
+                        <div style="font-size: 9px; color: #9ca3af; margin-top: 2px;">(Computer Generated Document)</div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- Client Dispatch Script -->
+    <script>
+    async function dispatchInvoiceEmail() {{
+        const btn = document.getElementById('btnEmailInvoice');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Dispatching...';
+        try {{
+            const res = await fetch('/api/orders/send-invoice', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{ id: '{order_id}', orderNumber: '{order_num}' }})
+            }});
+            const data = await res.json();
+            if (data.success) {{
+                alert('Tax invoice {inv_num} dispatched successfully to {cust_email}!');
+            }} else {{
+                alert('Invoice dispatch status: ' + (data.message || 'Queued'));
+            }}
+        }} catch (err) {{
+            alert('Error dispatching invoice: ' + err.message);
+        }} finally {{
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }}
+    }}
+    </script>
+</body>
+</html>"""
+
+
+def generate_customer_order_html_email(order_data):
+    """Generate a responsive, luxury-branded HTML email receipt with Tax Invoice details for the customer."""
+    order_num = html.escape(str(order_data.get("orderNumber", "SRV-ORDER")))
+    inv_num = html.escape(str(order_data.get("invoiceNumber") or f"INV-{order_num.replace('SRV-', '')}"))
+    order_id = html.escape(str(order_data.get("orderId") or order_data.get("id") or ""))
+    invoice_view_url = f"https://dev.soreva.in/api/orders/invoice?id={order_id}" if order_id else "https://dev.soreva.in/api/orders/invoice"
+
     cust_name = html.escape(str(order_data.get("customerName", "Valued Patron")))
     cust_email = html.escape(str(order_data.get("customerEmail", "")))
     cust_phone = html.escape(str(order_data.get("customerPhone", "")))
@@ -829,57 +1468,37 @@ def generate_customer_order_html_email(order_data):
     discount_val = float(order_data.get("discountAmount", 0) or 0)
     coupon_code = str(order_data.get("couponCode", "") or "").strip()
     
-    # Parse items list
-    raw_items = order_data.get("items")
-    if isinstance(raw_items, str):
-        try:
-            raw_items = json.loads(raw_items)
-        except Exception:
-            raw_items = []
-    if not isinstance(raw_items, list):
-        raw_items = []
-        
+    # Process structured items
+    items_list = extract_order_items_list(order_data)
     items_rows_html = ""
-    if raw_items:
-        for it in raw_items:
-            it_name = html.escape(str(it.get("name") or it.get("productName") or "Luxury Jewellery Piece"))
-            it_qty = int(it.get("qty", 1) or 1)
-            it_finish = html.escape(str(it.get("finish") or "24K Gold Polish"))
-            it_price = float(it.get("price", 0) or 0)
-            it_subtotal = it_price * it_qty
-            it_img = it.get("image") or it.get("primaryImg") or ""
-            
-            img_tag = ""
-            if it_img:
-                if not it_img.startswith("http"):
-                    it_img = f"https://soreva.in/{it_img.lstrip('/')}"
-                img_tag = f'<img src="{html.escape(it_img)}" width="52" height="52" style="border-radius: 8px; object-fit: cover; border: 1px solid #38302e; display: block;" alt="{it_name}">'
-            else:
-                img_tag = '<div style="width: 52px; height: 52px; background: #251f1e; border-radius: 8px; border: 1px solid #38302e; display: flex; align-items: center; justify-content: center; color: #c5a059; font-size: 20px;">💎</div>'
+    for it in items_list:
+        it_name = html.escape(str(it.get("name") or it.get("productName") or "Luxury Jewellery Piece"))
+        it_qty = int(it.get("qty", 1) or 1)
+        it_finish = html.escape(str(it.get("finish") or "24K Gold Polish"))
+        it_price = float(it.get("price", 0) or 0)
+        it_subtotal = it_price * it_qty
+        it_img = it.get("image") or it.get("primaryImg") or ""
+        
+        img_tag = ""
+        if it_img:
+            if not it_img.startswith("http"):
+                it_img = f"https://soreva.in/{it_img.lstrip('/')}"
+            img_tag = f'<img src="{html.escape(it_img)}" width="52" height="52" style="border-radius: 8px; object-fit: cover; border: 1px solid #38302e; display: block;" alt="{it_name}">'
+        else:
+            img_tag = '<div style="width: 52px; height: 52px; background: #251f1e; border-radius: 8px; border: 1px solid #38302e; display: flex; align-items: center; justify-content: center; color: #c5a059; font-size: 20px;">💎</div>'
 
-            items_rows_html += f"""
-            <tr>
-                <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; width: 60px;">
-                    {img_tag}
-                </td>
-                <td style="padding: 12px 10px; border-bottom: 1px solid #2a2321; vertical-align: middle;">
-                    <div style="font-weight: 600; color: #f5f2eb; font-size: 14px; line-height: 1.3;">{it_name}</div>
-                    <div style="font-size: 12px; color: #c5a059; margin-top: 3px;">Finish: {it_finish}</div>
-                    <div style="font-size: 12px; color: #a3958f; margin-top: 2px;">Qty: {it_qty} × ₹{it_price:,.2f}</div>
-                </td>
-                <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; text-align: right; font-weight: 600; color: #f5f2eb; font-size: 14px;">
-                    ₹{it_subtotal:,.2f}
-                </td>
-            </tr>
-            """
-    else:
-        # Fallback to itemsSummary string
-        summary_str = html.escape(str(order_data.get("itemsSummary", "Jewellery Pieces")))
-        items_rows_html = f"""
+        items_rows_html += f"""
         <tr>
-            <td colspan="3" style="padding: 16px 12px; border-bottom: 1px solid #2a2321; color: #f5f2eb; font-size: 14px;">
-                <div style="font-weight: 600;">{summary_str}</div>
-                <div style="font-size: 12px; color: #c5a059; margin-top: 4px;">Atelier Reserved • Standard Collection</div>
+            <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; width: 60px;">
+                {img_tag}
+            </td>
+            <td style="padding: 12px 10px; border-bottom: 1px solid #2a2321; vertical-align: middle;">
+                <div style="font-weight: 600; color: #f5f2eb; font-size: 14px; line-height: 1.3;">{it_name}</div>
+                <div style="font-size: 12px; color: #c5a059; margin-top: 3px;">Finish: {it_finish} &bull; HSN 7113</div>
+                <div style="font-size: 12px; color: #a3958f; margin-top: 2px;">Qty: {it_qty} × ₹{it_price:,.2f}</div>
+            </td>
+            <td style="padding: 12px 8px; border-bottom: 1px solid #2a2321; vertical-align: middle; text-align: right; font-weight: 600; color: #f5f2eb; font-size: 14px;">
+                ₹{it_subtotal:,.2f}
             </td>
         </tr>
         """
@@ -910,7 +1529,7 @@ def generate_customer_order_html_email(order_data):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Sorèva Order Confirmation — {order_num}</title>
+<title>Your Sorèva Order Confirmation & Tax Invoice — {order_num}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0c0a09; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f5f2eb;">
     <div style="max-width: 620px; margin: 0 auto; background-color: #171312; border: 1px solid #2a2321; border-radius: 12px; overflow: hidden; margin-top: 24px; margin-bottom: 24px;">
@@ -919,22 +1538,22 @@ def generate_customer_order_html_email(order_data):
         <div style="background: linear-gradient(180deg, #221c1a 0%, #171312 100%); padding: 36px 30px 24px 30px; text-align: center; border-bottom: 1px solid #2a2321;">
             <div style="color: #c5a059; font-size: 11px; letter-spacing: 3px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Haute Joaillerie Atelier</div>
             <h1 style="margin: 0; color: #f5f2eb; font-family: Georgia, serif; font-size: 28px; font-weight: 500; letter-spacing: 2px;">SORÈVA</h1>
-            <div style="color: #a3958f; font-size: 11px; letter-spacing: 2px; margin-top: 4px; text-transform: uppercase;">Paris • Mumbai</div>
+            <div style="color: #a3958f; font-size: 11px; letter-spacing: 2px; margin-top: 4px; text-transform: uppercase;">Paris • Mumbai • Bengaluru</div>
         </div>
 
         <!-- HERO CONFIRMATION BANNER -->
         <div style="padding: 28px 30px 10px 30px; text-align: center;">
             <div style="display: inline-block; padding: 8px 18px; background: rgba(197, 160, 89, 0.12); border: 1px solid rgba(197, 160, 89, 0.35); border-radius: 30px; color: #e5c483; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px;">
-                ✨ Order Confirmed & Reserved
+                ✨ Order Confirmed & Tax Invoice Issued
             </div>
             <h2 style="margin: 0 0 10px 0; color: #ffffff; font-size: 22px; font-weight: 500;">Thank you for your order, {cust_name}</h2>
             <p style="margin: 0; color: #a3958f; font-size: 14px; line-height: 1.5;">
-                Your jewellery order <strong style="color: #c5a059;">{order_num}</strong> has been received by our atelier. Our craftsmen are now packaging your handcrafted pieces with signature velvet presentation boxes and certificates of authenticity.
+                Your jewellery order <strong style="color: #c5a059;">{order_num}</strong> has been received by our atelier. Your official digital tax invoice <strong style="color: #ffffff; font-family: monospace;">{inv_num}</strong> is ready for your records.
             </p>
         </div>
 
         <!-- ORDER QUICK METRICS -->
-        <div style="margin: 24px 30px; background: #1f1a19; border: 1px solid #332a28; border-radius: 10px; padding: 18px 20px;">
+        <div style="margin: 24px 30px 14px 30px; background: #1f1a19; border: 1px solid #332a28; border-radius: 10px; padding: 18px 20px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                     <td style="padding: 6px 0; width: 50%; vertical-align: top;">
@@ -948,15 +1567,28 @@ def generate_customer_order_html_email(order_data):
                 </tr>
                 <tr>
                     <td style="padding: 10px 0 0 0; width: 50%; vertical-align: top;">
+                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Tax Invoice Number</div>
+                        <div style="color: #e5c483; font-size: 13px; font-weight: 700; font-family: monospace; margin-top: 2px;">{inv_num}</div>
+                    </td>
+                    <td style="padding: 10px 0 0 0; width: 50%; vertical-align: top;">
                         <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Payment Method</div>
                         <div style="color: #f5f2eb; font-size: 14px; font-weight: 500; margin-top: 2px;">{pay_method}</div>
                     </td>
-                    <td style="padding: 10px 0 0 0; width: 50%; vertical-align: top;">
-                        <div style="color: #8c7e78; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Payment Reference</div>
-                        <div style="color: #c5a059; font-size: 13px; font-family: monospace; margin-top: 2px;">{pay_id}</div>
-                    </td>
                 </tr>
             </table>
+        </div>
+
+        <!-- DIGITAL TAX INVOICE CTA BUTTON -->
+        <div style="margin: 0 30px 24px 30px; background: rgba(197, 160, 89, 0.08); border: 1px solid rgba(197, 160, 89, 0.35); border-radius: 10px; padding: 16px 20px; text-align: center;">
+            <div style="color: #c5a059; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;">
+                Official Digital Tax Invoice &bull; GST HSN 7113
+            </div>
+            <p style="margin: 0 0 12px 0; color: #d1c7bd; font-size: 13px;">
+                Your official digital tax invoice <strong style="color: #ffffff; font-family: monospace;">{inv_num}</strong> is generated and retained in your customer order dossier.
+            </p>
+            <a href="{invoice_view_url}" target="_blank" style="display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #c5a059, #a37c35); color: #171312; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
+                📄 View & Print Digital Tax Invoice (PDF)
+            </a>
         </div>
 
         <!-- ITEMS ORDERED TABLE -->
@@ -979,6 +1611,10 @@ def generate_customer_order_html_email(order_data):
                     <tr>
                         <td style="padding: 5px 0; color: #a3958f; font-size: 13px;">Insured Express Shipping:</td>
                         <td style="padding: 5px 0; text-align: right; color: #4ade80; font-size: 13px; font-weight: 600;">FREE (Insured)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0; color: #a3958f; font-size: 13px;">GST (3% HSN 7113 Included):</td>
+                        <td style="padding: 5px 0; text-align: right; color: #c5a059; font-size: 13px;">₹{round(total_val - (total_val / 1.03), 2):,.2f}</td>
                     </tr>
                     <tr>
                         <td style="padding: 12px 0 0 0; border-top: 1px solid #332a28; color: #f5f2eb; font-size: 15px; font-weight: 700;">Grand Total:</td>
@@ -1170,6 +1806,50 @@ def dispatch_smtp_email(to_email, subject, html_content, text_content=None, from
         return False, err_msg
 
 
+def send_customer_digital_invoice(order_data, force_recipient=None):
+    """Dispatch the luxury digital tax invoice to the customer email ID."""
+    recipient = force_recipient or order_data.get("customerEmail")
+    if not recipient:
+        return False, "No customer email specified"
+
+    order_num = order_data.get("orderNumber", "")
+    inv_num = order_data.get("invoiceNumber") or f"INV-{str(order_num).replace('SRV-', '')}"
+    cust_name = order_data.get("customerName", "Valued Patron")
+    subject = f"📄 Tax Invoice {inv_num} for Sorèva Order {order_num} — {cust_name}"
+
+    html_body = order_data.get("invoiceHtml")
+    if not html_body or len(html_body.strip()) < 50:
+        html_body = generate_digital_invoice_html(order_data)
+
+    order_id = order_data.get("orderId") or order_data.get("id") or ""
+    invoice_link = f"https://dev.soreva.in/api/orders/invoice?id={order_id}" if order_id else "https://dev.soreva.in/api/orders/invoice"
+    total_val = float(order_data.get("totalAmount", 0) or 0)
+
+    text_body = f"""SORÈVA LUXURY JEWELLERY — OFFICIAL TAX INVOICE
+==============================================================
+Invoice Number : {inv_num}
+Order Reference: {order_num}
+Customer Name  : {cust_name}
+Total Amount   : INR {total_val:,.2f}
+GST Category   : Imitation Jewellery (HSN 7113 @ 3% GST)
+
+View & Print Your Official Digital Tax Invoice Online:
+{invoice_link}
+
+Atelier Concierge: support@soreva.in | +91 97411 18940
+Sorèva Lifestyle Private Limited, Bengaluru, Karnataka
+==============================================================
+"""
+
+    return dispatch_smtp_email(
+        to_email=recipient,
+        subject=subject,
+        html_content=html_body,
+        text_content=text_body,
+        from_name="Sorèva Billing & Invoicing"
+    )
+
+
 def send_customer_order_confirmation(order_data, force_recipient=None):
     """Dispatch the luxury customer order confirmation email with itemized receipt."""
     recipient = force_recipient or order_data.get("customerEmail")
@@ -1211,19 +1891,24 @@ def send_admin_order_notification(order_data, force_recipient=None):
 
 def send_order_email_notification(order_data, force_recipient=None):
     """
-    Master email dispatcher: Sends BOTH the Customer Order Confirmation Receipt
-    and the Admin Atelier Notification.
+    Master email dispatcher: Sends:
+    1. Customer Order Confirmation Receipt
+    2. Customer Digital Tax Invoice
+    3. Admin Atelier Notification
     """
     if force_recipient:
-        # If a single recipient is forced (e.g. from Admin Test Email), send the full customer receipt
-        return send_customer_order_confirmation(order_data, force_recipient=force_recipient)
+        # If a single recipient is forced (e.g. from Admin Test Email), send the full customer invoice
+        return send_customer_digital_invoice(order_data, force_recipient=force_recipient)
 
     results = []
-    # 1. Customer Order Confirmation Email
+    # 1. Customer Order Confirmation Email & Digital Tax Invoice Email
     cust_email = order_data.get("customerEmail")
     if cust_email:
         s_cust, m_cust = send_customer_order_confirmation(order_data)
-        results.append(f"Customer ({cust_email}): {m_cust}")
+        results.append(f"Customer Confirmation ({cust_email}): {m_cust}")
+
+        s_inv, m_inv = send_customer_digital_invoice(order_data)
+        results.append(f"Customer Tax Invoice ({cust_email}): {m_inv}")
     else:
         results.append("No customer email on record")
 
@@ -1994,6 +2679,8 @@ def record_order_in_db(
         order_seq = 1080 + count_row + 1
         order_num = f"SRV-2026-{order_seq}"
         order_id = gen_pb_id()
+        invoice_num = f"INV-2026-{order_seq}"
+        invoice_created_at = now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
 
         item_descs = []
         for it in items:
@@ -2003,7 +2690,6 @@ def record_order_in_db(
             item_descs.append(f"{qty}x {title} ({finish})")
         items_summary = ", ".join(item_descs)
 
-        now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
         subtotal = float(subtotal_amount) if subtotal_amount is not None else float(total_amount)
         discount = float(discount_amount or 0)
         items_json_str = json.dumps(items)
@@ -2012,19 +2698,54 @@ def record_order_in_db(
         full_addr_parts = [p for p in [shipping_address, address_line2, city, state, f"PIN: {pincode}" if pincode else "", country] if p]
         full_shipping_destination = ", ".join(full_addr_parts)
 
+        # Generate official digital tax invoice HTML
+        order_invoice_payload = {
+            "id": order_id,
+            "orderId": order_id,
+            "orderNumber": order_num,
+            "invoiceNumber": invoice_num,
+            "invoiceCreatedAt": invoice_created_at,
+            "customerName": customer_name,
+            "customerEmail": customer_email,
+            "customerPhone": customer_phone,
+            "shippingAddress": shipping_address,
+            "addressLine2": address_line2 or "",
+            "city": city,
+            "state": state or "",
+            "pincode": pincode or "",
+            "country": country or "India",
+            "fullAddress": full_shipping_destination,
+            "orderNotes": order_notes or "",
+            "paymentMethod": payment_method,
+            "paymentId": payment_id_str or "N/A",
+            "subtotalAmount": subtotal,
+            "discountAmount": discount,
+            "couponCode": coupon_code or "",
+            "itemsSummary": items_summary,
+            "items": items,
+            "totalAmount": total_amount,
+            "status": order_status,
+            "createdAt": now_str,
+            "gstAmount": gst_amount,
+            "gstRate": gst_rate
+        }
+        invoice_html = generate_digital_invoice_html(order_invoice_payload)
+
         c.execute("""
             INSERT INTO orders (
                 id, orderNumber, customerName, customerEmail, customerPhone, 
                 shippingAddress, addressLine2, city, state, pincode, country, orderNotes,
                 paymentMethod, paymentId, subtotalAmount, discountAmount, couponCode,
-                itemsSummary, itemsJson, totalAmount, status, createdAt
+                itemsSummary, itemsJson, totalAmount, status, createdAt,
+                gstAmount, gstRate, invoiceNumber, invoiceHtml, invoiceCreatedAt
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             order_id, order_num, customer_name, customer_email, customer_phone,
             shipping_address, address_line2 or "", city, state or "", pincode or "", country or "India", order_notes or "",
             payment_method, payment_id_str, subtotal, discount, coupon_code or "",
-            items_summary, items_json_str, total_amount, order_status, now_str
+            items_summary, items_json_str, total_amount, order_status, now_str,
+            gst_amount, gst_rate, invoice_num, invoice_html, invoice_created_at
         ))
 
         # Upsert into customers
@@ -2107,6 +2828,9 @@ def record_order_in_db(
         order_dispatch_info = {
             "orderNumber": order_num,
             "orderId": order_id,
+            "invoiceNumber": invoice_num,
+            "invoiceHtml": invoice_html,
+            "invoiceCreatedAt": invoice_created_at,
             "status": order_status,
             "totalAmount": total_amount,
             "subtotalAmount": subtotal,
@@ -2141,6 +2865,8 @@ def record_order_in_db(
         return {
             "orderNumber": order_num,
             "orderId": order_id,
+            "invoiceNumber": invoice_num,
+            "invoiceUrl": f"/api/orders/invoice?id={order_id}",
             "status": order_status,
             "totalAmount": total_amount,
             "customerName": customer_name,
@@ -2969,12 +3695,86 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                            shippingAddress, addressLine2, city, state, pincode, country, orderNotes,
                            paymentMethod, paymentId, subtotalAmount, discountAmount, couponCode,
                            itemsSummary, itemsJson, totalAmount, status, createdAt,
-                           COALESCE(gstAmount, 0) as gstAmount, COALESCE(gstRate, 3) as gstRate
+                           COALESCE(gstAmount, 0) as gstAmount, COALESCE(gstRate, 3) as gstRate,
+                           COALESCE(invoiceNumber, '') as invoiceNumber,
+                           COALESCE(invoiceCreatedAt, '') as invoiceCreatedAt
                     FROM orders 
                     ORDER BY rowid DESC
                 """).fetchall()
-                orders = [dict(r) for r in rows]
+                orders = []
+                for r in rows:
+                    o = dict(r)
+                    inv_num = o.get('invoiceNumber')
+                    if not inv_num:
+                        inv_num = f"INV-{str(o.get('orderNumber', '')).replace('SRV-', '')}"
+                    o['invoiceNumber'] = inv_num
+                    o['invoiceUrl'] = f"/api/orders/invoice?id={o['id']}"
+                    orders.append(o)
                 self._send_json(orders)
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # API: Official Digital Tax Invoice Viewer & PDF print portal
+        if parsed.path == '/api/orders/invoice':
+            qs = parse_qs(parsed.query)
+            order_id = qs.get('id', [None])[0]
+            order_num = qs.get('orderNumber', [None])[0]
+            fmt = qs.get('format', ['html'])[0]
+
+            if not order_id and not order_num:
+                self._send_json({"error": "Order id or orderNumber is required"}, 400)
+                return
+
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                c = conn.cursor()
+                if order_id:
+                    row = c.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+                else:
+                    row = c.execute("SELECT * FROM orders WHERE orderNumber = ?", (order_num,)).fetchone()
+
+                if not row:
+                    self._send_json({"error": "Order not found"}, 404)
+                    return
+
+                order_dict = dict(row)
+                invoice_html = order_dict.get('invoiceHtml')
+                inv_num = order_dict.get('invoiceNumber')
+                if not inv_num:
+                    inv_num = f"INV-{str(order_dict.get('orderNumber', '')).replace('SRV-', '')}"
+                    order_dict['invoiceNumber'] = inv_num
+
+                if not invoice_html or len(invoice_html.strip()) < 50:
+                    invoice_html = generate_digital_invoice_html(order_dict)
+                    inv_created = order_dict.get('createdAt') or datetime.now().strftime("%d %b %Y, %I:%M %p")
+                    c.execute("""
+                        UPDATE orders 
+                        SET invoiceNumber = ?, invoiceHtml = ?, invoiceCreatedAt = ? 
+                        WHERE id = ?
+                    """, (inv_num, invoice_html, inv_created, order_dict['id']))
+                    conn.commit()
+
+                if fmt == 'json':
+                    self._send_json({
+                        "orderId": order_dict['id'],
+                        "orderNumber": order_dict.get('orderNumber'),
+                        "invoiceNumber": inv_num,
+                        "invoiceHtml": invoice_html
+                    })
+                else:
+                    html_bytes = invoice_html.encode('utf-8')
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.send_header('Content-Length', str(len(html_bytes)))
+                    self._send_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(html_bytes)
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
             finally:
@@ -4696,6 +5496,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 "success": True,
                 "orderNumber": order_res["orderNumber"],
                 "orderId": order_res["orderId"],
+                "invoiceNumber": order_res.get("invoiceNumber"),
+                "invoiceUrl": order_res.get("invoiceUrl"),
                 "paymentId": rzp_payment_id,
                 "status": "Paid (Razorpay)",
                 "totalAmount": total_amount,
@@ -5088,6 +5890,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 "success": True,
                 "orderNumber": order_res["orderNumber"],
                 "orderId": order_res["orderId"],
+                "invoiceNumber": order_res.get("invoiceNumber"),
+                "invoiceUrl": order_res.get("invoiceUrl"),
                 "status": order_res["status"],
                 "totalAmount": order_res["totalAmount"],
                 "customerName": customer_name,
@@ -5132,6 +5936,63 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     "success": True,
                     "status": new_status,
                     "message": f"Order status updated to {new_status}"
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # ----------------------------------------------------
+        # API: Dispatch Digital Tax Invoice Email
+        # ----------------------------------------------------
+        if parsed.path == '/api/orders/send-invoice':
+            order_id = payload.get('id') or payload.get('orderId')
+            order_num = payload.get('orderNumber')
+            target_email = payload.get('email')
+
+            if not order_id and not order_num:
+                self._send_json({"error": "Order id or orderNumber is required"}, 400)
+                return
+
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                c = conn.cursor()
+                if order_id:
+                    row = c.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+                else:
+                    row = c.execute("SELECT * FROM orders WHERE orderNumber = ?", (order_num,)).fetchone()
+
+                if not row:
+                    self._send_json({"error": "Order not found"}, 404)
+                    return
+
+                order_dict = dict(row)
+                if not order_dict.get('invoiceNumber'):
+                    order_dict['invoiceNumber'] = f"INV-{str(order_dict.get('orderNumber', '')).replace('SRV-', '')}"
+                if not order_dict.get('invoiceHtml') or len(order_dict.get('invoiceHtml', '').strip()) < 50:
+                    order_dict['invoiceHtml'] = generate_digital_invoice_html(order_dict)
+                    c.execute("""
+                        UPDATE orders 
+                        SET invoiceNumber = ?, invoiceHtml = ?, invoiceCreatedAt = ? 
+                        WHERE id = ?
+                    """, (order_dict['invoiceNumber'], order_dict['invoiceHtml'], order_dict.get('createdAt'), order_dict['id']))
+                    conn.commit()
+
+                recipient = target_email or order_dict.get('customerEmail')
+                if not recipient:
+                    self._send_json({"error": "No recipient email available for this order"}, 400)
+                    return
+
+                success, msg = send_customer_digital_invoice(order_dict, force_recipient=recipient)
+                self._send_json({
+                    "success": success,
+                    "message": msg,
+                    "recipient": recipient,
+                    "invoiceNumber": order_dict['invoiceNumber']
                 })
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)

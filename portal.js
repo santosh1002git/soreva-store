@@ -1316,7 +1316,12 @@ function renderOrdersTable(orders) {
 
         return `
             <tr>
-                <td><strong style="color: var(--gold-light); font-family: monospace;">${ord.orderNumber}</strong></td>
+                <td>
+                    <strong style="color: var(--gold-light); font-family: monospace; display: block;">${ord.orderNumber}</strong>
+                    <a href="/api/orders/invoice?id=${ord.id}" target="_blank" style="font-size: 0.72rem; color: #e5c483; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-top: 3px;" title="Open Digital Tax Invoice">
+                        <i class="fa-solid fa-file-invoice"></i> ${ord.invoiceNumber || 'INV-' + (ord.orderNumber || '').replace('SRV-', '')}
+                    </a>
+                </td>
                 <td>
                     <strong style="color: var(--text); display: block;">${ord.customerName}</strong>
                     <span style="font-size: 0.76rem; color: var(--text-muted);">${ord.customerEmail} • ${ord.customerPhone || ''}</span>
@@ -1334,14 +1339,19 @@ function renderOrdersTable(orders) {
                     </span>
                 </td>
                 <td style="text-align: right;">
-                    <select class="portal-select" style="padding: 4px 8px; font-size: 0.76rem; width: 120px;" 
-                            onchange="updateOrderStatus('${ord.id}', '${ord.orderNumber}', this.value)">
-                        <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option value="Processing" ${ord.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                        <option value="Shipped" ${ord.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="Delivered" ${ord.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                    </select>
+                    <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end;">
+                        <a href="/api/orders/invoice?id=${ord.id}" target="_blank" class="btn-portal-outline" style="padding: 4px 8px; font-size: 0.74rem; text-decoration: none; color: var(--gold-light); border-color: rgba(197,160,89,0.35); display: inline-flex; align-items: center; gap: 4px;" title="View & Print Official Digital Tax Invoice">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Invoice
+                        </a>
+                        <select class="portal-select" style="padding: 4px 8px; font-size: 0.76rem; width: 110px;" 
+                                onchange="updateOrderStatus('${ord.id}', '${ord.orderNumber}', this.value)">
+                            <option value="Pending" ${ord.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing" ${ord.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Shipped" ${ord.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="Delivered" ${ord.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
                 </td>
             </tr>
         `;
