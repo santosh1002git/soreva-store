@@ -824,6 +824,95 @@ function handleAddCustomImageUrl(context = 'modal') {
     showToast("Added photo URL to piece");
 }
 
+const PORTAL_MASTER_CATEGORY_SUBCATEGORIES = {
+    'necklace': ['Necklaces', 'Choker Necklaces', 'Traditional Necklaces', 'Bridal Necklaces', 'Classic Necklaces', 'Collar Necklaces', 'Mangalsutra', 'Aurous Collection'],
+    'earrings': ['Earrings', 'Jhumka Earrings', 'Big Size Earrings', 'Medium Earrings', 'Small Earrings', 'Tops & Studs'],
+    'wristwear': ['Wristwear', 'CZ Bangles', 'CZ Bracelets', 'Bracelets & Rings Combo'],
+    'rings': ['Finger Rings', 'CZ Finger Rings'],
+    'pendants': ['Pendants', 'CZ Pendant Sets', 'Pendants with Broad Chain', 'Pendants with Medium Chain'],
+    'silver': ['Silver Jewellery', 'Sterling Silver', '925 Sterling Silver Earrings', '925 Sterling Finger Rings', '925 Sterling Silver Pendants'],
+    'accessories': ['Accessories', 'CZ Accessories', 'CZ Brooches', 'Mangtika']
+};
+
+function getPortalDistinctSubCategories(category = 'all') {
+    const subcats = new Set();
+    const norm = (category || 'all').toLowerCase();
+    if (norm === 'all') {
+        Object.values(PORTAL_MASTER_CATEGORY_SUBCATEGORIES).forEach(subs => subs.forEach(s => subcats.add(s)));
+    } else if (norm === 'wristwear' || norm === 'bracelets') {
+        (PORTAL_MASTER_CATEGORY_SUBCATEGORIES['wristwear'] || []).forEach(s => subcats.add(s));
+    } else if (PORTAL_MASTER_CATEGORY_SUBCATEGORIES[norm]) {
+        PORTAL_MASTER_CATEGORY_SUBCATEGORIES[norm].forEach(s => subcats.add(s));
+    }
+    (dbProducts || []).forEach(p => {
+        const c = (p.category || '').toLowerCase();
+        if (norm === 'all' || c === norm || (norm === 'wristwear' && c === 'bracelets')) {
+            const sub = (p.subCategory || '').trim();
+            if (sub && sub !== '—' && sub !== '-') subcats.add(sub);
+        }
+    });
+    return Array.from(subcats).sort();
+}
+
+function populatePortalModalSubCategory(category, currentVal = '') {
+    const select = document.getElementById('prodSubCategorySelect');
+    const input = document.getElementById('prodSubCategory');
+    if (!select) return;
+
+    const cat = category || 'wristwear';
+    const cur = (currentVal || '').trim();
+    const subs = getPortalDistinctSubCategories(cat);
+    let html = '<option value="">— Select Sub-Category —</option>';
+    let found = false;
+
+    subs.forEach(s => {
+        const isSel = (s.toLowerCase() === cur.toLowerCase());
+        if (isSel) found = true;
+        html += `<option value="${s.replace(/"/g, '&quot;')}" ${isSel ? 'selected' : ''}>${s.replace(/</g, '&lt;')}</option>`;
+    });
+
+    if (cur && !found && cur !== '__custom__' && cur !== '—' && cur !== '-') {
+        html += `<option value="${cur.replace(/"/g, '&quot;')}" selected>${cur.replace(/</g, '&lt;')}</option>`;
+        found = true;
+    }
+
+    html += '<option value="__custom__">✏️ Custom Sub-Category...</option>';
+    select.innerHTML = html;
+
+    if (input) {
+        if (cur && !found) {
+            select.value = '__custom__';
+            input.style.display = 'block';
+            input.value = cur;
+        } else {
+            select.value = cur || '';
+            input.style.display = 'none';
+            input.value = cur || '';
+        }
+    }
+}
+
+function handleModalCategoryChange(newCat) {
+    populatePortalModalSubCategory(newCat, '');
+}
+
+function handleModalSubCategorySelectChange(val) {
+    const input = document.getElementById('prodSubCategory');
+    if (!input) return;
+    if (val === '__custom__') {
+        input.style.display = 'block';
+        input.value = '';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.value = val;
+    }
+}
+
+window.handleModalCategoryChange = handleModalCategoryChange;
+window.handleModalSubCategorySelectChange = handleModalSubCategorySelectChange;
+window.populatePortalModalSubCategory = populatePortalModalSubCategory;
+
 function openAddProductModal() {
     const form = document.getElementById('productForm');
     form.reset();
@@ -832,6 +921,7 @@ function openAddProductModal() {
     document.getElementById('productModalTitle').textContent = "Add Jewelry Piece to Database";
     
     updateSkuSuggestion();
+    populatePortalModalSubCategory('wristwear', '');
     modalEditingProductImages = [];
     renderProductImagesManagerGrid('modal');
 
@@ -847,8 +937,8 @@ function openEditProductModal(id) {
     document.getElementById('productModalTitle').textContent = `Edit: ${prod.name}`;
 
     document.getElementById('prodName').value = prod.name || "";
-    document.getElementById('prodCategory').value = prod.category || "necklace";
-    document.getElementById('prodSubCategory').value = prod.subCategory || "";
+    document.getElementById('prodCategory').value = prod.category || "wristwear";
+    populatePortalModalSubCategory(prod.category || "wristwear", prod.subCategory || "");
     document.getElementById('prodPlating').value = prod.plating || "gold";
     document.getElementById('prodBadge').value = prod.badge || "";
     document.getElementById('prodPriceINR').value = prod.priceINR || "";
@@ -879,7 +969,16 @@ async function handleSaveProduct(e) {
     const sku = document.getElementById('prodSkuPreview').value;
     const name = document.getElementById('prodName').value.trim();
     const category = document.getElementById('prodCategory').value;
-    const subCategory = document.getElementById('prodSubCategory').value.trim();
+    const subCatSelect = document.getElementById('prodSubCategorySelect');
+    const subCatInput = document.getElementById('prodSubCategory');
+    let subCategory = '';
+    if (subCatSelect && subCatSelect.value === '__custom__') {
+        subCategory = (subCatInput ? subCatInput.value : '').trim();
+    } else if (subCatSelect && subCatSelect.value) {
+        subCategory = subCatSelect.value.trim();
+    } else if (subCatInput) {
+        subCategory = subCatInput.value.trim();
+    }
     const plating = document.getElementById('prodPlating').value;
     const badge = document.getElementById('prodBadge').value.trim();
     const priceINR = parseInt(document.getElementById('prodPriceINR').value, 10);

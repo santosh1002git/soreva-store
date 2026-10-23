@@ -1071,6 +1071,27 @@ function updateSubCategoryDatalist(catOverride = null) {
     datalist.innerHTML = allSubs.map(s => `<option value="${s.replace(/"/g, '&quot;')}">`).join('');
 }
 
+// Render subcategory <option>s for table row select or modal
+function renderSubCategoryOptionsForSelect(category, currentVal) {
+    const cur = (currentVal || '').trim();
+    const subs = getDistinctSubCategories(category || 'wristwear', 'products');
+    let html = '<option value="">— None —</option>';
+    let found = false;
+
+    subs.forEach(s => {
+        const isSel = (s.toLowerCase() === cur.toLowerCase());
+        if (isSel) found = true;
+        html += `<option value="${s.replace(/"/g, '&quot;')}" ${isSel ? 'selected' : ''}>${s.replace(/</g, '&lt;')}</option>`;
+    });
+
+    if (cur && !found && cur !== '—' && cur !== '-') {
+        html += `<option value="${cur.replace(/"/g, '&quot;')}" selected>${cur.replace(/</g, '&lt;')}</option>`;
+    }
+
+    html += '<option value="__custom__">✏️ Custom...</option>';
+    return html;
+}
+
 function onProductCategoryChange() {
     updateProductSubCategoryOptions();
     filterAdminProducts();
@@ -1326,11 +1347,27 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                     ${p.lastRefreshed ? `<span style="font-size: 0.74rem; color: #a1a1aa; background: rgba(255,255,255,0.04); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);" title="Last stock refresh timestamp"><i class="fa-regular fa-clock" style="color: var(--gold); margin-right: 3px;"></i>Refreshed: ${formatRefreshDate(p.lastRefreshed)}</span>` : ''}
                 </div>
             </td>
-            <td><span class="status-code">${p.category}</span></td>
             <td>
-                <span class="subcat-badge" style="display: inline-block; font-size: 0.78rem; font-weight: 500; color: #fef08a; background: rgba(197, 160, 89, 0.12); border: 1px solid rgba(197, 160, 89, 0.28); border-radius: 4px; padding: 2px 8px; white-space: nowrap;">
-                    ${(p.subCategory || p.sub_category || '—').replace(/</g, '&lt;')}
-                </span>
+                <select class="admin-table-cat-select" data-id="${p.id}" onchange="changeProductCategory('${p.id}', this.value)" title="Change category for this piece">
+                    <option value="wristwear" ${p.category === 'wristwear' ? 'selected' : ''}>Wristwear</option>
+                    <option value="necklace" ${p.category === 'necklace' ? 'selected' : ''}>Necklaces</option>
+                    <option value="earrings" ${p.category === 'earrings' ? 'selected' : ''}>Earrings</option>
+                    <option value="rings" ${p.category === 'rings' ? 'selected' : ''}>Finger Rings</option>
+                    <option value="pendants" ${p.category === 'pendants' ? 'selected' : ''}>Pendants</option>
+                    <option value="silver" ${p.category === 'silver' ? 'selected' : ''}>Silver</option>
+                    <option value="accessories" ${p.category === 'accessories' ? 'selected' : ''}>Accessories</option>
+                    ${!['wristwear', 'necklace', 'earrings', 'rings', 'pendants', 'silver', 'accessories'].includes(p.category) && p.category ? `<option value="${p.category}" selected>${p.category}</option>` : ''}
+                </select>
+            </td>
+            <td>
+                <div class="admin-table-subcat-wrap">
+                    <select class="admin-table-subcat-select" data-id="${p.id}" onchange="changeProductSubCategory('${p.id}', this.value)" title="Change subcategory for this piece">
+                        ${renderSubCategoryOptionsForSelect(p.category, p.subCategory || p.sub_category)}
+                    </select>
+                    <button type="button" class="btn-subcat-edit" onclick="quickEditSubCategoryCustom('${p.id}')" title="Custom subcategory name">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
             </td>
             <td>
                 <strong style="color: var(--gold-light);">₹${(p.priceINR || 0).toLocaleString('en-IN')}</strong>
@@ -1474,6 +1511,112 @@ async function quickEditBadgeCustom(id) {
     if (newBadge === null) return;
     await changeProductBadge(id, newBadge.trim());
     filterAdminProducts();
+}
+
+// Inline Table Category Change
+async function changeProductCategory(id, newCat) {
+    if (!newCat) return;
+    try {
+        const res = await fetch('/api/db/products/category', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, category: newCat, employeeName: 'Admin' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const prod = (storeData.products || []).find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+            if (prod) {
+                prod.category = newCat;
+            }
+            if (window.inventoryData) {
+                const inv = inventoryData.find(i => String(i.id) === String(id) || String(i.sku) === String(prod?.sku));
+                if (inv) inv.category = newCat;
+            }
+            try {
+                const cached = localStorage.getItem('soreva_store_data');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    const cp = (parsed.products || []).find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+                    if (cp) cp.category = newCat;
+                    localStorage.setItem('soreva_store_data', JSON.stringify(parsed));
+                }
+            } catch (e) {}
+
+            // Immediately update the subcategory options for this row
+            const subSel = document.querySelector(`.admin-table-subcat-select[data-id="${id}"]`);
+            if (subSel) {
+                subSel.innerHTML = renderSubCategoryOptionsForSelect(newCat, prod?.subCategory || '');
+            }
+
+            showToast(`Category updated to "${newCat}"`);
+        } else {
+            showToast(data.error || 'Failed to update category');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message);
+    }
+}
+
+// Inline Table SubCategory Change
+async function changeProductSubCategory(id, newSub) {
+    if (newSub === '__custom__') {
+        quickEditSubCategoryCustom(id);
+        return;
+    }
+    const sub = (newSub || '').trim();
+    try {
+        const res = await fetch('/api/db/products/category', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, subCategory: sub, employeeName: 'Admin' })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const prod = (storeData.products || []).find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+            if (prod) {
+                prod.subCategory = sub;
+            }
+            if (window.inventoryData) {
+                const inv = inventoryData.find(i => String(i.id) === String(id) || String(i.sku) === String(prod?.sku));
+                if (inv) inv.subCategory = sub;
+            }
+            try {
+                const cached = localStorage.getItem('soreva_store_data');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    const cp = (parsed.products || []).find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+                    if (cp) cp.subCategory = sub;
+                    localStorage.setItem('soreva_store_data', JSON.stringify(parsed));
+                }
+            } catch (e) {}
+
+            const subSel = document.querySelector(`.admin-table-subcat-select[data-id="${id}"]`);
+            if (subSel) {
+                subSel.innerHTML = renderSubCategoryOptionsForSelect(prod?.category || 'wristwear', sub);
+                subSel.value = sub;
+            }
+
+            showToast(sub ? `Subcategory updated to "${sub}"` : 'Subcategory cleared');
+        } else {
+            showToast(data.error || 'Failed to update subcategory');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message);
+    }
+}
+
+// Quick Custom SubCategory Prompt
+async function quickEditSubCategoryCustom(id) {
+    const product = (storeData.products || []).find(p => String(p.id) === String(id) || String(p.dbId) === String(id));
+    if (!product) return;
+    const current = product.subCategory || product.sub_category || '';
+    const newSub = prompt("Enter subcategory name for this piece (e.g. CZ Bangles, Choker Necklaces, Jhumka Earrings, etc.):", current);
+    if (newSub === null) {
+        const subSel = document.querySelector(`.admin-table-subcat-select[data-id="${id}"]`);
+        if (subSel) subSel.value = current;
+        return;
+    }
+    await changeProductSubCategory(id, newSub.trim());
 }
 
 // Bulk Selection and Update Logic
@@ -1667,6 +1810,103 @@ async function applyBulkBadgeChange() {
             filterAdminProducts();
         } else {
             showToast(data.error || 'Failed to update badges');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message);
+    }
+}
+
+// Bulk Category & SubCategory Actions
+function onBulkCategoryChange(cat) {
+    const subSelect = document.getElementById('bulkSubCategorySelect');
+    if (!subSelect) return;
+    if (!cat) {
+        subSelect.innerHTML = '<option value="">— Select Sub-Category —</option>';
+        return;
+    }
+    const subs = getDistinctSubCategories(cat, 'products');
+    let html = '<option value="">— Select Sub-Category (Optional) —</option>';
+    subs.forEach(s => {
+        html += `<option value="${s.replace(/"/g, '&quot;')}">${s.replace(/</g, '&lt;')}</option>`;
+    });
+    html += '<option value="__custom__">✏️ Custom Sub-Category...</option>';
+    subSelect.innerHTML = html;
+}
+
+async function applyBulkCategoryChange() {
+    const ids = Array.from(adminSelectedProductIds);
+    if (ids.length === 0) {
+        showToast('Please select at least one piece first');
+        return;
+    }
+    const catSel = document.getElementById('bulkCategorySelect');
+    const subSel = document.getElementById('bulkSubCategorySelect');
+    const cat = catSel ? catSel.value.trim() : '';
+    let sub = subSel ? subSel.value.trim() : '';
+
+    if (sub === '__custom__') {
+        const customSub = prompt("Enter custom subcategory for selected pieces:");
+        if (customSub === null) return;
+        sub = customSub.trim();
+    }
+
+    if (!cat && !sub) {
+        showToast('Please select a Category or Subcategory to apply');
+        return;
+    }
+
+    const confirmText = `Are you sure you want to update ${ids.length} selected piece(s)?\n` +
+        (cat ? `• Category: ${cat}\n` : '') +
+        (sub ? `• Subcategory: ${sub}\n` : '');
+    if (!confirm(confirmText)) return;
+
+    try {
+        const res = await fetch('/api/db/products/category', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ids,
+                category: cat || undefined,
+                subCategory: sub !== '' ? sub : undefined,
+                employeeName: 'Admin'
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const idSet = new Set(ids.map(String));
+            (storeData.products || []).forEach(p => {
+                if (idSet.has(String(p.id)) || idSet.has(String(p.dbId))) {
+                    if (cat) p.category = cat;
+                    if (sub !== '') p.subCategory = sub;
+                }
+            });
+            if (window.inventoryData) {
+                (inventoryData || []).forEach(inv => {
+                    if (idSet.has(String(inv.id)) || idSet.has(String(inv.sku))) {
+                        if (cat) inv.category = cat;
+                        if (sub !== '') inv.subCategory = sub;
+                    }
+                });
+            }
+            try {
+                const cached = localStorage.getItem('soreva_store_data');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    (parsed.products || []).forEach(p => {
+                        if (idSet.has(String(p.id)) || idSet.has(String(p.dbId))) {
+                            if (cat) p.category = cat;
+                            if (sub !== '') p.subCategory = sub;
+                        }
+                    });
+                    localStorage.setItem('soreva_store_data', JSON.stringify(parsed));
+                }
+            } catch (e) {}
+
+            showToast(data.message || `Updated category for ${ids.length} piece(s)`);
+            deselectAllProducts();
+            filterAdminProducts();
+        } else {
+            showToast(data.error || 'Failed to apply category change');
         }
     } catch (e) {
         showToast('Error: ' + e.message);
@@ -2234,6 +2474,65 @@ window.handleImageDrop = handleImageDrop;
 window.handleAddCustomImageUrl = handleAddCustomImageUrl;
 window.handleScanSupplierAngles = handleScanSupplierAngles;
 
+// ==========================================
+// MODAL CATEGORY & SUBCATEGORY SYNC
+// ==========================================
+function populateModalSubCategory(category, currentVal = '') {
+    const select = document.getElementById('prodSubCategorySelect');
+    const input = document.getElementById('prodSubCategory');
+    if (!select) return;
+
+    const cat = category || 'wristwear';
+    const cur = (currentVal || '').trim();
+    const subs = getDistinctSubCategories(cat, 'products');
+    let html = '<option value="">— Select Sub-Category —</option>';
+    let found = false;
+
+    subs.forEach(s => {
+        const isSel = (s.toLowerCase() === cur.toLowerCase());
+        if (isSel) found = true;
+        html += `<option value="${s.replace(/"/g, '&quot;')}" ${isSel ? 'selected' : ''}>${s.replace(/</g, '&lt;')}</option>`;
+    });
+
+    if (cur && !found && cur !== '__custom__' && cur !== '—' && cur !== '-') {
+        html += `<option value="${cur.replace(/"/g, '&quot;')}" selected>${cur.replace(/</g, '&lt;')}</option>`;
+        found = true;
+    }
+
+    html += '<option value="__custom__">✏️ Custom Sub-Category...</option>';
+    select.innerHTML = html;
+
+    if (input) {
+        if (cur && !found) {
+            select.value = '__custom__';
+            input.style.display = 'block';
+            input.value = cur;
+        } else {
+            select.value = cur || '';
+            input.style.display = 'none';
+            input.value = cur || '';
+        }
+    }
+    updateSubCategoryDatalist(cat);
+}
+
+function handleModalCategoryChange(newCat) {
+    populateModalSubCategory(newCat, '');
+}
+
+function handleModalSubCategorySelectChange(val) {
+    const input = document.getElementById('prodSubCategory');
+    if (!input) return;
+    if (val === '__custom__') {
+        input.style.display = 'block';
+        input.value = '';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.value = val;
+    }
+}
+
 function openProductModal(id = null) {
     const backdrop = document.getElementById('productModalBackdrop');
     const title = document.getElementById('productModalTitle');
@@ -2245,9 +2544,8 @@ function openProductModal(id = null) {
         if (prod) {
             document.getElementById('editProductId').value = prod.id;
             document.getElementById('prodName').value = prod.name;
-            document.getElementById('prodCategory').value = prod.category;
-            updateSubCategoryDatalist(prod.category);
-            document.getElementById('prodSubCategory').value = prod.subCategory || '';
+            document.getElementById('prodCategory').value = prod.category || 'wristwear';
+            populateModalSubCategory(prod.category || 'wristwear', prod.subCategory || '');
             document.getElementById('prodPlating').value = prod.plating || 'gold';
             document.getElementById('prodPriceINR').value = prod.priceINR;
             document.getElementById('prodOrigPriceINR').value = prod.originalPriceINR || prod.priceINR;
@@ -2286,7 +2584,8 @@ function openProductModal(id = null) {
         form.reset();
         document.getElementById('editProductId').value = "";
         const prodCatEl = document.getElementById('prodCategory');
-        updateSubCategoryDatalist(prodCatEl ? prodCatEl.value : 'all');
+        const initCat = prodCatEl ? prodCatEl.value : 'wristwear';
+        populateModalSubCategory(initCat, '');
         const wholesaleReset = document.getElementById('prodUsdWholesale');
         if (wholesaleReset) wholesaleReset.value = '';
         const skuReset = document.getElementById('prodSku');
@@ -2314,7 +2613,16 @@ function handleSaveProduct(e) {
     const editId = document.getElementById('editProductId').value;
     const name = document.getElementById('prodName').value.trim();
     const category = document.getElementById('prodCategory').value;
-    const subCategory = document.getElementById('prodSubCategory').value.trim();
+    const subCatSelect = document.getElementById('prodSubCategorySelect');
+    const subCatInput = document.getElementById('prodSubCategory');
+    let subCategory = '';
+    if (subCatSelect && subCatSelect.value === '__custom__') {
+        subCategory = (subCatInput ? subCatInput.value : '').trim();
+    } else if (subCatSelect && subCatSelect.value) {
+        subCategory = subCatSelect.value.trim();
+    } else if (subCatInput) {
+        subCategory = subCatInput.value.trim();
+    }
     const plating = document.getElementById('prodPlating').value;
     const priceINR = parseInt(document.getElementById('prodPriceINR').value, 10);
     const originalPriceINR = parseInt(document.getElementById('prodOrigPriceINR').value, 10) || priceINR;
@@ -2352,6 +2660,14 @@ function handleSaveProduct(e) {
             });
             if (usdWholesaleVal !== null && !isNaN(usdWholesaleVal)) p.usdWholesale = usdWholesaleVal;
             if (skuVal) p.sku = skuVal;
+            if (window.inventoryData) {
+                const inv = inventoryData.find(i => String(i.id) === String(editId) || (skuVal && String(i.sku) === String(skuVal)));
+                if (inv) {
+                    inv.productName = name;
+                    inv.category = category;
+                    inv.subCategory = subCategory;
+                }
+            }
         }
         showToast("Product updated!");
     } else {
@@ -7170,5 +7486,13 @@ async function fetchCoworkerStatus() {
     } catch (e) {
         console.warn("Error fetching coworker status:", e);
     }
-}
 window.fetchCoworkerStatus = fetchCoworkerStatus;
+window.renderSubCategoryOptionsForSelect = renderSubCategoryOptionsForSelect;
+window.changeProductCategory = changeProductCategory;
+window.changeProductSubCategory = changeProductSubCategory;
+window.quickEditSubCategoryCustom = quickEditSubCategoryCustom;
+window.onBulkCategoryChange = onBulkCategoryChange;
+window.applyBulkCategoryChange = applyBulkCategoryChange;
+window.populateModalSubCategory = populateModalSubCategory;
+window.handleModalCategoryChange = handleModalCategoryChange;
+window.handleModalSubCategorySelectChange = handleModalSubCategorySelectChange;

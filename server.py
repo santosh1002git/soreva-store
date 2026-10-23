@@ -460,6 +460,10 @@ def init_extended_tables():
             except Exception:
                 pass
         try:
+            # Canonicalize legacy 'bracelets' category to 'wristwear'
+            c.execute("UPDATE products SET category = 'wristwear' WHERE category = 'bracelets'")
+            c.execute("UPDATE inventory SET category = 'wristwear' WHERE category = 'bracelets'")
+
             # Bidirectional sync between products and inventory
             # 1. Align subCategory and category
             c.execute("""
@@ -4077,8 +4081,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 ('jhumka-earrings',               'earrings',    'Jhumka Earrings'),
                 ('finger-rings',                  'rings',       'Finger Rings'),
                 ('pendants',                      'pendants',    'Pendants'),
-                ('cz-bangles',                    'bracelets',   'CZ Bangles'),
-                ('wristwear',                     'bracelets',   'Wristwear'),
+                ('cz-bangles',                    'wristwear',   'CZ Bangles'),
+                ('wristwear',                     'wristwear',   'Wristwear'),
                 ('silver-jewellery',              'silver',      'Silver Jewellery'),
                 ('accessories',                   'accessories', 'Accessories'),
             ]
@@ -4139,11 +4143,12 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 retail_inr = max(1499, int(round((discovered_cost * profit_markup + profit_flat) / 100) * 100) - 1) if discovered_cost > 0 else 2499
                                 orig_inr = int(round(retail_inr * 1.1 / 100) * 100) - 1
 
-                                existing = c.execute("SELECT id FROM products WHERE id = ? OR name = ?", (czm_id, name)).fetchone()
+                                existing = c.execute("SELECT id, category, subCategory FROM products WHERE id = ? OR name = ?", (czm_id, name)).fetchone()
                                 if existing:
                                     c.execute("""
                                         UPDATE products 
-                                        SET category = ?, subCategory = ?, 
+                                        SET category = CASE WHEN category IS NULL OR category = '' OR category = 'bracelets' THEN ? ELSE category END,
+                                            subCategory = CASE WHEN subCategory IS NULL OR subCategory = '' THEN ? ELSE subCategory END,
                                             usdWholesale = CASE WHEN ? > 0 THEN ? ELSE usdWholesale END,
                                             priceINR = CASE WHEN ? > 0 THEN ? ELSE priceINR END,
                                             originalPriceINR = CASE WHEN ? > 0 THEN ? ELSE originalPriceINR END,
@@ -4152,7 +4157,9 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                     """, (cat_default, subcat_name, discovered_cost, discovered_cost, retail_inr, retail_inr, orig_inr, orig_inr, sync_time_iso, czm_id, name))
                                     c.execute("""
                                         UPDATE inventory 
-                                        SET category = ?, subCategory = ?, status = 'In Stock',
+                                        SET category = CASE WHEN category IS NULL OR category = '' OR category = 'bracelets' THEN ? ELSE category END,
+                                            subCategory = CASE WHEN subCategory IS NULL OR subCategory = '' THEN ? ELSE subCategory END,
+                                            status = 'In Stock',
                                             stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END,
                                             usdWholesale = CASE WHEN ? > 0 THEN ? ELSE usdWholesale END,
                                             lastRefreshed = ?
@@ -5279,6 +5286,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             try:
                 name = payload.get('name', '').strip()
                 category = payload.get('category', 'necklace').lower().strip()
+                if category == 'bracelets':
+                    category = 'wristwear'
                 sub_category = payload.get('subCategory', '').strip()
                 plating = payload.get('plating', 'gold').lower().strip()
                 price_inr = int(payload.get('priceINR', 0))
@@ -5904,6 +5913,81 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         # ----------------------------------------------------
+        # API: Update Product Category & Sub-Category (Single or Bulk)
+        # ----------------------------------------------------
+        if parsed.path == '/api/db/products/category':
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                new_cat = payload.get('category')
+                new_sub = payload.get('subCategory')
+                employee_name = payload.get('employeeName', 'Admin')
+                ids = payload.get('ids')
+                if not ids:
+                    single_id = payload.get('id')
+                    ids = [single_id] if single_id else []
+
+                if not ids:
+                    self._send_json({"error": "Product ID(s) required"}, 400)
+                    conn.close()
+                    return
+
+                if new_cat is not None:
+                    new_cat = new_cat.strip().lower()
+                    if new_cat == 'bracelets':
+                        new_cat = 'wristwear'
+                if new_sub is not None:
+                    new_sub = new_sub.strip()
+
+                c = conn.cursor()
+                for pid in ids:
+                    spid = str(pid)
+                    if new_cat is not None and new_sub is not None:
+                        c.execute("UPDATE products SET category = ?, subCategory = ? WHERE id = ? OR name = ?", (new_cat, new_sub, spid, spid))
+                        c.execute("UPDATE inventory SET category = ?, subCategory = ? WHERE id = ? OR sku = ? OR productName = ?", (new_cat, new_sub, spid, spid, spid))
+                    elif new_cat is not None:
+                        c.execute("UPDATE products SET category = ? WHERE id = ? OR name = ?", (new_cat, spid, spid))
+                        c.execute("UPDATE inventory SET category = ? WHERE id = ? OR sku = ? OR productName = ?", (new_cat, spid, spid, spid))
+                    elif new_sub is not None:
+                        c.execute("UPDATE products SET subCategory = ? WHERE id = ? OR name = ?", (new_sub, spid, spid))
+                        c.execute("UPDATE inventory SET subCategory = ? WHERE id = ? OR sku = ? OR productName = ?", (new_sub, spid, spid, spid))
+
+                audit_summary = f"Updated category to '{new_cat or 'unchanged'}' and subCategory to '{new_sub or 'unchanged'}' for {len(ids)} item(s): {', '.join(str(x) for x in ids[:3])}{'...' if len(ids) > 3 else ''}"
+                c.execute("""
+                    INSERT INTO audit_log (id, employeeName, action, targetType, targetId, details)
+                    VALUES (?, ?, 'Update Category', 'Product', ?, ?)
+                """, (f"log_{gen_pb_id()}", employee_name, str(ids[0]), audit_summary))
+
+                conn.commit()
+
+                # Synchronize into store-data.json
+                sd = get_stored_data() or {}
+                if 'products' in sd:
+                    id_set = set(str(x) for x in ids)
+                    for p in sd['products']:
+                        if str(p.get('id')) in id_set or str(p.get('dbId')) in id_set or p.get('name') in id_set:
+                            if new_cat is not None:
+                                p['category'] = new_cat
+                            if new_sub is not None:
+                                p['subCategory'] = new_sub
+                    save_stored_data(sd)
+
+                self._send_json({
+                    "success": True,
+                    "message": f"Category/Subcategory updated for {len(ids)} product(s)",
+                    "category": new_cat,
+                    "subCategory": new_sub,
+                    "ids": ids
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # ----------------------------------------------------
         # API: Update Product Images & Visibility Only
         # ----------------------------------------------------
         if parsed.path == '/api/db/products/images':
@@ -6053,6 +6137,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 prod_id = payload.get('id', '')
                 name = payload.get('name', '').strip()
                 category = payload.get('category', 'necklace').lower().strip()
+                if category == 'bracelets':
+                    category = 'wristwear'
                 sub_category = payload.get('subCategory', '').strip()
                 plating = payload.get('plating', 'gold').lower().strip()
                 price_inr = int(payload.get('priceINR', 0))

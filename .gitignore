@@ -18,6 +18,7 @@ data/inquiries.json
 *.backup
 data/*.backup.*
 data/*.backup
+data/store-data.backup.json
 data/store-data.backup.*.json
 pb/pb_data/*.backup.*
 pb/pb_data/*.backup.*.db

@@ -2720,4 +2720,73 @@ body {
     text-transform: uppercase;
 }
 
+/* ================================================== */
+/* INLINE TABLE CATEGORY & SUBCATEGORY CONTROLS      */
+/* ================================================== */
+.admin-table-cat-select {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(197, 160, 89, 0.35);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--gold-light);
+    cursor: pointer;
+    outline: none;
+    transition: all var(--transition-fast);
+    max-width: 135px;
+}
+
+.admin-table-cat-select:hover,
+.admin-table-cat-select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+    background: #1c1c20;
+}
+
+.admin-table-subcat-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.admin-table-subcat-select {
+    padding: 4px 8px;
+    font-size: 0.76rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(197, 160, 89, 0.25);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fef08a;
+    cursor: pointer;
+    outline: none;
+    transition: all var(--transition-fast);
+    max-width: 165px;
+}
+
+.admin-table-subcat-select:hover,
+.admin-table-subcat-select:focus {
+    border-color: rgba(197, 160, 89, 0.6);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+    background: #1c1c20;
+}
+
+.btn-subcat-edit {
+    padding: 4px 6px;
+    font-size: 0.68rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--admin-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-subcat-edit:hover {
+    color: var(--gold-light);
+    border-color: var(--gold);
+    background: rgba(197, 160, 89, 0.15);
+}
+
+
 
