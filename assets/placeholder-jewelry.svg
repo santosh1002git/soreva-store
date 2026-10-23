@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF9F5"/>
+      <stop offset="50%" stop-color="#F5F2EB"/>
+      <stop offset="100%" stop-color="#EDE8DF"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DFBA73"/>
+      <stop offset="50%" stop-color="#C5A059"/>
+      <stop offset="100%" stop-color="#9E7D3B"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="45%" r="40%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#F5F2EB" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="750" fill="url(#bgGrad)"/>
+  <rect width="600" height="750" fill="url(#halo)"/>
+
+  <!-- Subtle Elegant Border Frame -->
+  <rect x="24" y="24" width="552" height="702" fill="none" stroke="url(#goldGrad)" stroke-width="1" stroke-opacity="0.25"/>
+  <rect x="32" y="32" width="536" height="686" fill="none" stroke="url(#goldGrad)" stroke-width="0.5" stroke-opacity="0.15"/>
+
+  <!-- Center Gemstone / Diamond Icon -->
+  <g transform="translate(300, 310)">
+    <!-- Faceted Gem Silhouette -->
+    <path d="M 0 -45 L 35 -15 L 22 40 L -22 40 L -35 -15 Z" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M -35 -15 L 35 -15" stroke="url(#goldGrad)" stroke-width="1.2" stroke-opacity="0.7"/>
+    <path d="M -15 -15 L -10 40" stroke="url(#goldGrad)" stroke-width="1" stroke-opacity="0.5"/>
+    <path d="M 15 -15 L 10 40" stroke="url(#goldGrad)" stroke-width="1" stroke-opacity="0.5"/>
+    <path d="M 0 -45 L -15 -15" stroke="url(#goldGrad)" stroke-width="1" stroke-opacity="0.5"/>
+    <path d="M 0 -45 L 15 -15" stroke="url(#goldGrad)" stroke-width="1" stroke-opacity="0.5"/>
+    
+    <!-- Sparkle Accents -->
+    <circle cx="0" cy="-45" r="2" fill="url(#goldGrad)"/>
+    <path d="M 50 -30 Q 55 -30 55 -35 Q 55 -30 60 -30 Q 55 -30 55 -25 Q 55 -30 50 -30 Z" fill="#C5A059" opacity="0.6"/>
+    <path d="M -55 -25 Q -50 -25 -50 -30 Q -50 -25 -45 -25 Q -50 -25 -50 -20 Q -50 -25 -55 -25 Z" fill="#C5A059" opacity="0.4"/>
+  </g>
+
+  <!-- Luxury Typography -->
+  <!-- Brand Monogram -->
+  <text x="300" y="420" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="22" font-weight="500" letter-spacing="8" fill="#1C1B1A" text-anchor="middle">SORÈVA</text>
+  
+  <text x="300" y="446" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="9" font-weight="400" letter-spacing="4" fill="#C5A059" text-anchor="middle">QUIET LUXURY</text>
+
+  <!-- Divider Line with Diamond -->
+  <line x1="220" y1="470" x2="280" y2="470" stroke="url(#goldGrad)" stroke-width="0.8" stroke-opacity="0.4"/>
+  <circle cx="300" cy="470" r="2" fill="#C5A059" opacity="0.7"/>
+  <line x1="320" y1="470" x2="380" y2="470" stroke="url(#goldGrad)" stroke-width="0.8" stroke-opacity="0.4"/>
+
+  <!-- Status / Curation Label -->
+  <text x="300" y="500" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" letter-spacing="2" fill="#8C827A" text-anchor="middle" text-transform="uppercase">Image in Curation</text>
+</svg>

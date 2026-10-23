@@ -37,7 +37,6 @@ var fetch = function(){ return Promise.resolve({ json: function(){ return Promis
 
 /* ==========================================================================
    SORÈVA LUXURY JEWELLERY - STORE ENGINE
-   Reference: soreva.in
    Features: Currency Switcher, Interactive Cart Drawer, Free Shipping Meter,
              Quick View Modal, Live Search, Category/Plating Filters,
              Coupon Engine (LAUNCH15).

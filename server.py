@@ -2255,10 +2255,15 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 self._serve_image_file(orig_path, mime)
                 return
 
-        if not target_url:
-            target_url = f"https://indian-jewellery.com/core/thumb_images/product_images/{filename}"
-
         try:
+            candidate_urls = []
+            if target_url:
+                candidate_urls.append(target_url)
+            else:
+                candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_images/{filename}")
+                candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_medium_images/{filename}")
+
+            fetched_content = None
             req_headers = {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Referer': 'https://indian-jewellery.com/',
@@ -2268,42 +2273,67 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 'Sec-Fetch-Mode': 'no-cors',
                 'Sec-Fetch-Site': 'same-origin'
             }
-            req = urllib.request.Request(target_url, headers=req_headers)
-            with urllib.request.urlopen(req, timeout=8) as resp:
-                content = resp.read()
 
-            if len(content) > 100:
-                tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
-                with open(tmp_path, 'wb') as f:
-                    f.write(content)
-                os.replace(tmp_path, orig_path)
+            for cand_url in candidate_urls:
+                try:
+                    req = urllib.request.Request(cand_url, headers=req_headers)
+                    with urllib.request.urlopen(req, timeout=7) as resp:
+                        if resp.status == 200:
+                            data = resp.read()
+                            if len(data) > 100:
+                                fetched_content = data
+                                break
+                except Exception:
+                    continue
 
-                if HAS_PIL:
-                    try:
-                        with Image.open(orig_path) as im:
-                            rgb = im.convert('RGB')
-                            rgb.save(webp_path, 'WEBP', quality=80, method=3)
-                    except Exception:
-                        pass
+            if fetched_content:
+                try:
+                    tmp_path = f"{orig_path}.tmp.{os.getpid()}_{threading.get_ident()}"
+                    with open(tmp_path, 'wb') as f:
+                        f.write(fetched_content)
+                    os.replace(tmp_path, orig_path)
 
-            if client_accepts_webp and os.path.exists(webp_path):
-                self._serve_image_file(webp_path, 'image/webp')
-            elif os.path.exists(orig_path):
-                mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
-                self._serve_image_file(orig_path, mime)
-            else:
-                fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
-                if os.path.exists(fallback_path):
-                    self._serve_image_file(fallback_path, 'image/jpeg')
-        except Exception as e:
-            print(f"[Image Fetch Notice for {filename}] {e} - Serving graceful fallback")
-            fallback_path = os.path.join(BASE_DIR, 'assets', 'hero', 'hero-slide-1.jpg')
-            if os.path.exists(fallback_path):
-                self._serve_image_file(fallback_path, 'image/jpeg')
+                    if HAS_PIL:
+                        try:
+                            with Image.open(orig_path) as im:
+                                rgb = im.convert('RGB')
+                                rgb.save(webp_path, 'WEBP', quality=80, method=3)
+                        except Exception:
+                            pass
+
+                    if client_accepts_webp and os.path.exists(webp_path):
+                        self._serve_image_file(webp_path, 'image/webp')
+                    elif os.path.exists(orig_path):
+                        mime = 'image/webp' if ext.lower() == '.webp' else ('image/png' if ext.lower() == '.png' else 'image/jpeg')
+                        self._serve_image_file(orig_path, mime)
+                    return
+                except Exception as e:
+                    print(f"[Image Cache Write Error for {filename}] {e}")
+
+            # Upstream image was not found (404) or failed.
+            # CRITICAL: NEVER serve hero-slide-1.jpg or another product's photo!
+            # Serve neutral luxury SVG placeholder with HTTP 404 and NO-CACHE so Nginx does not poison cache.
+            placeholder_path = os.path.join(BASE_DIR, 'assets', 'placeholder-jewelry.svg')
+            if os.path.exists(placeholder_path):
+                self._custom_cache_headers = True
+                self.send_response(404)
+                self.send_header('Content-Type', 'image/svg+xml')
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self.send_header('Pragma', 'no-cache')
+                self.send_header('Expires', '0')
+                self._send_cors_headers()
+                self.end_headers()
+                with open(placeholder_path, 'rb') as f:
+                    self.wfile.write(f.read())
                 return
-            self.send_response(502)
-            self._send_cors_headers()
-            self.end_headers()
+            else:
+                self._custom_cache_headers = True
+                self.send_response(404)
+                self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(b"Image not found")
+                return
         finally:
             if is_fetcher:
                 with _IMG_FETCH_LOCK:
