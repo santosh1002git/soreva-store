@@ -464,6 +464,366 @@ function updateSkuSuggestion() {
     }
 }
 
+let modalEditingProductImages = [];
+
+function normalizeProductImages(prod) {
+    if (!prod) return [];
+    
+    // If product already has structured images array
+    if (Array.isArray(prod.images) && prod.images.length > 0) {
+        return prod.images.map((img, idx) => ({
+            id: img.id || ('img_' + Math.random().toString(36).substr(2, 8)),
+            url: typeof img === 'string' ? img : (img.url || ''),
+            visible: typeof img === 'object' && img.visible !== undefined ? !!img.visible : true,
+            isPrimary: typeof img === 'object' && img.isPrimary !== undefined ? !!img.isPrimary : (idx === 0),
+            isHover: typeof img === 'object' && img.isHover !== undefined ? !!img.isHover : (idx === 1)
+        })).filter(item => item.url && item.url.trim() !== '');
+    }
+
+    const list = [];
+    const seen = new Set();
+
+    const addImg = (url, isPrimary = false, isHover = false) => {
+        if (!url || typeof url !== 'string') return;
+        const clean = url.trim();
+        if (!clean || seen.has(clean)) return;
+        seen.add(clean);
+        list.push({
+            id: 'img_' + Math.random().toString(36).substr(2, 8),
+            url: clean,
+            visible: true,
+            isPrimary: isPrimary,
+            isHover: isHover
+        });
+    };
+
+    if (prod.primaryImg) addImg(prod.primaryImg, true, false);
+    if (prod.hoverImg) addImg(prod.hoverImg, list.length === 0, list.length > 0);
+
+    if (Array.isArray(prod.gallery)) {
+        prod.gallery.forEach(u => addImg(u, false, false));
+    }
+
+    if (list.length > 0 && !list.some(i => i.isPrimary)) {
+        list[0].isPrimary = true;
+    }
+    if (list.length > 1 && !list.some(i => i.isHover)) {
+        list[1].isHover = true;
+    }
+
+    return list;
+}
+
+function renderProductImagesManagerGrid(context = 'modal') {
+    const list = modalEditingProductImages;
+    const gridEl = document.getElementById('modalProductImagesGrid');
+    const badgeEl = document.getElementById('modalImagesStatsBadge');
+
+    if (!gridEl) return;
+
+    const total = list.length;
+    const visibleCount = list.filter(i => i.visible !== false).length;
+    const hiddenCount = total - visibleCount;
+
+    if (badgeEl) {
+        badgeEl.innerHTML = `<i class="fa-solid fa-camera"></i> <strong>${total}</strong> Images (${visibleCount} Visible${hiddenCount > 0 ? `, <span style="color:#fca5a5;">${hiddenCount} Hidden</span>` : ''})`;
+    }
+
+    if (total === 0) {
+        gridEl.innerHTML = `
+            <div class="prod-images-empty-state">
+                <i class="fa-regular fa-image" style="font-size: 2rem; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                <strong style="color: var(--text); font-size: 0.95rem;">No Images Added Yet</strong>
+                <p style="margin: 4px 0 0 0; color: var(--text-muted);">
+                    Click <strong>Upload My Own Images</strong> above or drag & drop photos here to add imagery for this piece.
+                </p>
+            </div>
+        `;
+        const primInput = document.getElementById('prodPrimaryImg');
+        const hovInput = document.getElementById('prodHoverImg');
+        if (primInput) primInput.value = '';
+        if (hovInput) hovInput.value = '';
+        return;
+    }
+
+    gridEl.innerHTML = list.map((item, idx) => {
+        const isPrim = !!item.isPrimary;
+        const isHov = !!item.isHover;
+        const isVis = item.visible !== false;
+
+        return `
+        <div class="prod-img-card ${isPrim ? 'is-primary' : ''} ${isHov ? 'is-hover' : ''} ${!isVis ? 'is-hidden' : ''}" id="card_portal_${item.id}">
+            <div class="img-card-thumb-wrap">
+                ${isPrim ? `<div class="card-role-pill pill-primary" title="Primary image shown on catalog cards and initial PDP load"><i class="fa-solid fa-star"></i> Primary</div>` : ''}
+                ${isHov && !isPrim ? `<div class="card-role-pill pill-hover" title="Hover perspective image shown when mousing over catalog card"><i class="fa-solid fa-arrows-rotate"></i> Hover Flip</div>` : ''}
+                
+                <div class="card-status-pill ${isVis ? 'pill-status-visible' : 'pill-status-hidden'}" title="Storefront display status">
+                    ${isVis ? '<i class="fa-solid fa-eye"></i> Visible' : '<i class="fa-solid fa-eye-slash"></i> Hidden'}
+                </div>
+
+                <img src="${item.url}" alt="Photo ${idx + 1}" 
+                     onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" 
+                     onclick="inspectImage('${(item.url || '').replace(/'/g, "\\'")}', 'Product Photo ${idx + 1}')"
+                     style="cursor: pointer;" title="Click to inspect resolution details">
+            </div>
+
+            <div class="img-card-body">
+                <!-- Visibility Toggle Switch -->
+                <button type="button" 
+                        class="visibility-toggle-btn ${isVis ? 'btn-is-visible' : 'btn-is-hidden'}" 
+                        onclick="toggleProductImageVisibility('${item.id}', '${context}')"
+                        title="${isVis ? 'Click to hide this image from storefront' : 'Click to display this image in storefront'}">
+                    ${isVis ? '<i class="fa-solid fa-eye"></i> Display in Store (ON)' : '<i class="fa-solid fa-eye-slash"></i> Hidden from Store (OFF)'}
+                </button>
+
+                <!-- Primary & Hover Selection Buttons -->
+                <div class="card-role-buttons">
+                    <button type="button" 
+                            class="btn-role-action ${isPrim ? 'active-primary' : ''}" 
+                            onclick="setProductImagePrimary('${item.id}', '${context}')"
+                            title="Set as the main featured photo for catalog and PDP">
+                        ${isPrim ? '★ Primary' : 'Make Primary'}
+                    </button>
+                    <button type="button" 
+                            class="btn-role-action ${isHov ? 'active-hover' : ''}" 
+                            onclick="setProductImageHover('${item.id}', '${context}')"
+                            title="Set as card hover flip photo">
+                        ${isHov ? '⟲ Hover' : 'Make Hover'}
+                    </button>
+                </div>
+
+                <!-- Order and Actions Toolbar -->
+                <div class="img-card-actions-row">
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="card-action-icon-btn" ${idx === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveProductImageOrder('${item.id}', -1, '${context}')" title="Move Left / Earlier in Gallery">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <button type="button" class="card-action-icon-btn" ${idx === list.length - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveProductImageOrder('${item.id}', 1, '${context}')" title="Move Right / Later in Gallery">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="card-action-icon-btn btn-delete-img" onclick="deleteProductImageItem('${item.id}', '${context}')" title="Delete image from product">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    const primInput = document.getElementById('prodPrimaryImg');
+    const hovInput = document.getElementById('prodHoverImg');
+    const primItem = list.find(i => i.isPrimary && i.visible !== false) || list.find(i => i.visible !== false) || list[0];
+    const hovItem = list.find(i => i.isHover && i.visible !== false) || (list.filter(i => i.visible !== false)[1] || primItem);
+
+    if (primInput) primInput.value = primItem ? primItem.url : '';
+    if (hovInput) hovInput.value = hovItem ? hovItem.url : (primItem ? primItem.url : '');
+}
+
+function toggleProductImageVisibility(imgId, context) {
+    const list = modalEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    item.visible = item.visible === false ? true : false;
+
+    if (item.isPrimary && item.visible === false) {
+        item.isPrimary = false;
+        const nextVisible = list.find(i => i.visible !== false && i.id !== imgId);
+        if (nextVisible) nextVisible.isPrimary = true;
+    }
+
+    if (item.isHover && item.visible === false) {
+        item.isHover = false;
+        const nextHover = list.find(i => i.visible !== false && !i.isPrimary);
+        if (nextHover) nextHover.isHover = true;
+    }
+
+    renderProductImagesManagerGrid(context);
+    showToast(item.visible ? "Image is now VISIBLE on store" : "Image is now HIDDEN from store");
+}
+
+function setProductImagePrimary(imgId, context) {
+    const list = modalEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    list.forEach(i => {
+        i.isPrimary = (i.id === imgId);
+        if (i.id === imgId) {
+            i.visible = true;
+            if (i.isHover) i.isHover = false;
+        }
+    });
+
+    renderProductImagesManagerGrid(context);
+    showToast("Set as Primary storefront photo");
+}
+
+function setProductImageHover(imgId, context) {
+    const list = modalEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    list.forEach(i => {
+        i.isHover = (i.id === imgId);
+        if (i.id === imgId) {
+            i.visible = true;
+            if (i.isPrimary) i.isPrimary = false;
+        }
+    });
+
+    renderProductImagesManagerGrid(context);
+    showToast("Set as Hover photo");
+}
+
+function moveProductImageOrder(imgId, direction, context) {
+    const list = modalEditingProductImages;
+    const idx = list.findIndex(i => i.id === imgId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= list.length) return;
+
+    const temp = list[idx];
+    list[idx] = list[newIdx];
+    list[newIdx] = temp;
+
+    renderProductImagesManagerGrid(context);
+}
+
+function deleteProductImageItem(imgId, context) {
+    const list = modalEditingProductImages;
+    const idx = list.findIndex(i => i.id === imgId);
+    if (idx < 0) return;
+
+    const removed = list.splice(idx, 1)[0];
+    if (removed.isPrimary && list.length > 0) {
+        const nextVis = list.find(i => i.visible !== false) || list[0];
+        if (nextVis) nextVis.isPrimary = true;
+    }
+
+    renderProductImagesManagerGrid(context);
+    showToast("Image removed from product");
+}
+
+async function uploadImageFile(file, section = 'products') {
+    return new Promise((resolve, reject) => {
+        if (!file) return reject(new Error("No file selected"));
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Data = e.target.result;
+            try {
+                showToast("Uploading image to server...");
+                const resp = await fetch('/api/admin/upload-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        section: section,
+                        data: base64Data
+                    })
+                });
+                const res = await resp.json();
+                if (res.success && res.url) {
+                    showToast("Image uploaded and saved to server!");
+                    resolve(res.url);
+                } else {
+                    showToast("Upload failed: " + (res.error || "Unknown error"));
+                    reject(new Error(res.error || "Upload failed"));
+                }
+            } catch (err) {
+                showToast("Network upload error: " + err.message);
+                reject(err);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function handleModalImageFilesUpload(event, context = 'modal') {
+    const files = event.target.files;
+    if (!files || !files.length) return;
+
+    const list = modalEditingProductImages;
+    showToast(`Uploading ${files.length} image(s) to server...`);
+
+    let uploadedCount = 0;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            const url = await uploadImageFile(file, 'products');
+            if (url) {
+                const isFirst = list.length === 0;
+                list.push({
+                    id: 'img_' + Math.random().toString(36).substr(2, 8),
+                    url: url,
+                    visible: true,
+                    isPrimary: isFirst,
+                    isHover: !isFirst && list.length === 1
+                });
+                uploadedCount++;
+            }
+        } catch (err) {
+            console.error("Upload error for file", file.name, err);
+        }
+    }
+
+    event.target.value = '';
+    renderProductImagesManagerGrid(context);
+    showToast(`Successfully added ${uploadedCount} new product image(s)!`);
+}
+
+function handleImageDropOver(event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.add('drag-active');
+}
+
+function handleImageDropLeave(event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.remove('drag-active');
+}
+
+async function handleImageDrop(event, el, context = 'modal') {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.remove('drag-active');
+
+    const dt = event.dataTransfer;
+    const files = dt?.files;
+    if (files && files.length > 0) {
+        await handleModalImageFilesUpload({ target: { files: files, value: '' } }, context);
+    }
+}
+
+function handleAddCustomImageUrl(context = 'modal') {
+    const input = document.getElementById('modalAddImageUrlInput');
+    if (!input) return;
+    const raw = input.value.trim();
+    if (!raw) {
+        showToast("Please enter an image URL");
+        return;
+    }
+
+    const list = modalEditingProductImages;
+    const isFirst = list.length === 0;
+    list.push({
+        id: 'img_' + Math.random().toString(36).substr(2, 8),
+        url: raw,
+        visible: true,
+        isPrimary: isFirst,
+        isHover: !isFirst && list.length === 1
+    });
+
+    input.value = '';
+    renderProductImagesManagerGrid(context);
+    showToast("Added photo URL to piece");
+}
+
 function openAddProductModal() {
     const form = document.getElementById('productForm');
     form.reset();
@@ -472,8 +832,8 @@ function openAddProductModal() {
     document.getElementById('productModalTitle').textContent = "Add Jewelry Piece to Database";
     
     updateSkuSuggestion();
-    previewPortalImg('', 'prodPrimaryPreview');
-    previewPortalImg('', 'prodHoverPreview');
+    modalEditingProductImages = [];
+    renderProductImagesManagerGrid('modal');
 
     document.getElementById('productModalBackdrop').classList.add('active');
 }
@@ -496,13 +856,11 @@ function openEditProductModal(id) {
     document.getElementById('prodStockQty').value = prod.stockQty !== undefined ? prod.stockQty : 15;
     document.getElementById('prodThreshold').value = prod.lowStockThreshold || 5;
     document.getElementById('prodSkuPreview').value = prod.sku || "";
-    document.getElementById('prodPrimaryImg').value = prod.primaryImg || "";
-    document.getElementById('prodHoverImg').value = prod.hoverImg || "";
     document.getElementById('prodVideoUrl').value = prod.videoUrl || "";
     document.getElementById('prodDescription').value = prod.description || "";
 
-    previewPortalImg(prod.primaryImg, 'prodPrimaryPreview');
-    previewPortalImg(prod.hoverImg, 'prodHoverPreview');
+    modalEditingProductImages = normalizeProductImages(prod);
+    renderProductImagesManagerGrid('modal');
 
     document.getElementById('productModalBackdrop').classList.add('active');
 }
@@ -528,10 +886,24 @@ async function handleSaveProduct(e) {
     const originalPriceINR = parseInt(document.getElementById('prodOrigPriceINR').value, 10) || priceINR;
     const stockQty = parseInt(document.getElementById('prodStockQty').value, 10);
     const lowStockThreshold = parseInt(document.getElementById('prodThreshold').value, 10);
-    const primaryImg = document.getElementById('prodPrimaryImg').value.trim();
-    const hoverImg = document.getElementById('prodHoverImg').value.trim();
     const videoUrl = document.getElementById('prodVideoUrl').value.trim();
     const description = document.getElementById('prodDescription').value.trim();
+
+    const images = modalEditingProductImages;
+    const visibleImages = images.filter(img => img.visible !== false);
+    const primaryImg = images.find(img => img.isPrimary && img.visible !== false)?.url 
+                    || visibleImages[0]?.url 
+                    || (images[0]?.url || document.getElementById('prodPrimaryImg').value.trim());
+    const hoverImg = images.find(img => img.isHover && img.visible !== false)?.url 
+                   || (visibleImages[1]?.url || primaryImg);
+    const gallery = visibleImages.length > 0 ? visibleImages.map(img => img.url) : (primaryImg ? [primaryImg] : []);
+
+    if (!primaryImg && images.length === 0) {
+        showToast("Please add or upload at least one image for this piece.");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Save to Database`;
+        return;
+    }
 
     const payload = {
         id: editId,
@@ -549,6 +921,8 @@ async function handleSaveProduct(e) {
         hoverImg,
         videoUrl,
         description,
+        gallery,
+        images,
         availableFinishes: ["24K Gold", "Rhodium Silver"],
         employeeName: currentStaff ? currentStaff.name : 'Owner'
     };

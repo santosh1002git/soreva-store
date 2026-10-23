@@ -2327,9 +2327,17 @@ function handleSaveProduct(e) {
 
     const images = modalEditingProductImages;
     const visibleImages = images.filter(img => img.visible !== false);
-    const primaryImg = images.find(img => img.isPrimary && img.visible !== false)?.url || visibleImages[0]?.url || document.getElementById('prodPrimaryImg').value.trim();
-    const hoverImg = images.find(img => img.isHover && img.visible !== false)?.url || (visibleImages[1]?.url || primaryImg);
-    const gallery = visibleImages.length > 0 ? visibleImages.map(img => img.url) : [primaryImg, hoverImg].filter(Boolean);
+    const primaryImg = images.find(img => img.isPrimary && img.visible !== false)?.url 
+                    || visibleImages[0]?.url 
+                    || (images[0]?.url || document.getElementById('prodPrimaryImg').value.trim());
+    const hoverImg = images.find(img => img.isHover && img.visible !== false)?.url 
+                   || (visibleImages[1]?.url || primaryImg);
+    const gallery = visibleImages.length > 0 ? visibleImages.map(img => img.url) : (primaryImg ? [primaryImg] : []);
+
+    if (!primaryImg && images.length === 0) {
+        showToast("Please add or upload at least one image for this jewelry piece.");
+        return;
+    }
 
     const usdWholesaleVal = document.getElementById('prodUsdWholesale') ? parseFloat(document.getElementById('prodUsdWholesale').value) : null;
     const skuVal = document.getElementById('prodSku') ? document.getElementById('prodSku').value.trim() : '';

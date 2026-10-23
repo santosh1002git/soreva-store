@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Portal Stylesheet -->
-    <link rel="stylesheet" href="portal.css">
+    <link rel="stylesheet" href="portal.css?v=v43_image_manager_sync">
 </head>
 <body>
 
@@ -494,38 +494,57 @@
                     </div>
                 </div>
 
-                <!-- Primary Image with Live Inspector -->
-                <div class="form-group">
-                    <label>Primary Image URL or File *</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="prodPrimaryImg" required class="portal-input" placeholder="https://... or choose a file" oninput="previewPortalImg(this.value, 'prodPrimaryPreview')" style="flex: 1;">
-                        <label class="btn-portal-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 0.85rem;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
-                            <input type="file" accept="image/*" style="display: none;" onchange="handlePortalFileUpload(event, 'prodPrimaryImg', 'prodPrimaryPreview')">
-                        </label>
+                <!-- PRODUCT MEDIA & IMAGE GALLERY MANAGER -->
+                <div class="form-group product-media-manager-section">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <label style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-photo-film"></i> Product Images & Media Display
+                            </label>
+                            <span style="font-size: 0.78rem; color: var(--text-muted);">
+                                Choose which images to display on your store, toggle visibility ON/OFF, set Primary & Hover views, or upload your own photography.
+                            </span>
+                        </div>
+                        <div id="modalImagesStatsBadge" class="img-count-badge">0 Images (0 Visible)</div>
                     </div>
-                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Upload any image size or aspect ratio (portrait, landscape, square) — displays naturally without cropping or awkward boxes.</div>
-                    <div class="img-preview-box">
-                        <img id="prodPrimaryPreview" src="" alt="Primary Preview">
-                    </div>
-                    <div id="meta_prodPrimaryPreview"></div>
-                </div>
 
-                <!-- Hover Image with Live Inspector -->
-                <div class="form-group">
-                    <label>Hover / Alternate Perspective Image URL or File</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="prodHoverImg" class="portal-input" placeholder="https://... or choose a file" oninput="previewPortalImg(this.value, 'prodHoverPreview')" style="flex: 1;">
-                        <label class="btn-portal-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 0.85rem;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
-                            <input type="file" accept="image/*" style="display: none;" onchange="handlePortalFileUpload(event, 'prodHoverImg', 'prodHoverPreview')">
+                    <!-- Hidden inputs to preserve form submission validation -->
+                    <input type="hidden" id="prodPrimaryImg" value="">
+                    <input type="hidden" id="prodHoverImg" value="">
+
+                    <!-- Uploader & Tools Toolbar -->
+                    <div class="prod-img-toolbar">
+                        <label class="btn-portal-primary" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload My Own Images
+                            <input type="file" id="modalMultiFileInput" multiple accept="image/*" style="display: none;" onchange="handleModalImageFilesUpload(event, 'modal')">
                         </label>
+                        <div class="prod-img-url-input-wrap">
+                            <input type="text" id="modalAddImageUrlInput" class="portal-input" placeholder="Paste image link (https://... or assets/...)">
+                            <button type="button" class="btn-portal-outline" style="padding: 7px 12px; font-size: 0.82rem;" onclick="handleAddCustomImageUrl('modal')">
+                                <i class="fa-solid fa-plus"></i> Add URL
+                            </button>
+                        </div>
                     </div>
-                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Any size or proportion supported — scales naturally without clipping.</div>
-                    <div class="img-preview-box">
-                        <img id="prodHoverPreview" src="" alt="Hover Preview">
+
+                    <!-- Drag & Drop Zone -->
+                    <div class="prod-img-dropzone" id="modalImgDropzone" 
+                         ondragover="handleImageDropOver(event, this)" 
+                         ondragleave="handleImageDropLeave(event, this)" 
+                         ondrop="handleImageDrop(event, this, 'modal')"
+                         onclick="document.getElementById('modalMultiFileInput').click()">
+                        <div class="dropzone-content">
+                            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                            <div class="dropzone-text">
+                                <strong>Drop product photos here</strong> or <span class="browse-link">browse files</span>
+                            </div>
+                            <span class="dropzone-sub">Upload multiple files • Instant server storage • Formats: JPG, PNG, WEBP, AVIF</span>
+                        </div>
                     </div>
-                    <div id="meta_prodHoverPreview"></div>
+
+                    <!-- Live Image Cards Grid -->
+                    <div class="prod-images-cards-grid" id="modalProductImagesGrid">
+                        <!-- Populated dynamically by JS -->
+                    </div>
                 </div>
 
                 <!-- Showcase Video URL -->
@@ -727,6 +746,6 @@
     <div class="portal-toast-container" id="portalToastContainer"></div>
 
     <!-- Portal JavaScript -->
-    <script src="portal.js?v=20260923"></script>
+    <script src="portal.js?v=v43_image_manager_sync"></script>
 </body>
 </html>
