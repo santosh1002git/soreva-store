@@ -2423,7 +2423,7 @@
 
     <!-- PRODUCT MODAL (ADD / EDIT) -->
     <div class="admin-modal-backdrop" id="productModalBackdrop">
-        <div class="admin-modal">
+        <div class="admin-modal" style="max-width: 860px;">
             <div class="modal-top">
                 <h3 id="productModalTitle">Add New Jewelry Piece</h3>
                 <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -2512,36 +2512,60 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Primary Image URL or File *</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="prodPrimaryImg" required class="admin-input" placeholder="https://... or choose a file" onchange="previewImg(this.value, 'prodPrimaryPreview')" oninput="previewImg(this.value, 'prodPrimaryPreview')" style="flex: 1;">
-                        <label class="admin-btn admin-btn-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
-                            <input type="file" accept="image/*" style="display: none;" onchange="handleFileUpload(event, 'prodPrimaryImg', 'prodPrimaryPreview')">
-                        </label>
+                <!-- PRODUCT MEDIA & IMAGE GALLERY MANAGER -->
+                <div class="form-group product-media-manager-section">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <label style="font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-photo-film"></i> Product Images & Media Display
+                            </label>
+                            <span style="font-size: 0.78rem; color: var(--admin-text-muted);">
+                                Choose which images to display on your store, toggle visibility ON/OFF, set Primary & Hover views, or upload your own photography.
+                            </span>
+                        </div>
+                        <div id="modalImagesStatsBadge" class="img-count-badge">0 Images (0 Visible)</div>
                     </div>
-                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Upload any image size or aspect ratio (portrait, landscape, square) — displays naturally without cropping or awkward boxes.</div>
-                    <div class="img-preview-box" id="adminPrimaryBox">
-                        <img id="prodPrimaryPreview" src="" alt="Primary Preview">
-                    </div>
-                    <div id="meta_prodPrimaryPreview"></div>
-                </div>
 
-                <div class="form-group">
-                    <label>Hover / Alternate Perspective Image URL or File</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="prodHoverImg" class="admin-input" placeholder="https://... or choose a file" onchange="previewImg(this.value, 'prodHoverPreview')" oninput="previewImg(this.value, 'prodHoverPreview')" style="flex: 1;">
-                        <label class="admin-btn admin-btn-outline" style="cursor: pointer; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload File
-                            <input type="file" accept="image/*" style="display: none;" onchange="handleFileUpload(event, 'prodHoverImg', 'prodHoverPreview')">
+                    <!-- Hidden inputs to preserve form submission validation -->
+                    <input type="hidden" id="prodPrimaryImg" required value="">
+                    <input type="hidden" id="prodHoverImg" value="">
+
+                    <!-- Uploader & Tools Toolbar -->
+                    <div class="prod-img-toolbar">
+                        <label class="btn-admin-primary btn-sm" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload My Own Images
+                            <input type="file" id="modalMultiFileInput" multiple accept="image/*" style="display: none;" onchange="handleModalImageFilesUpload(event, 'modal')">
                         </label>
+                        <div class="prod-img-url-input-wrap">
+                            <input type="text" id="modalAddImageUrlInput" class="admin-input" placeholder="Paste image link (https://... or assets/...)">
+                            <button type="button" class="btn-admin-outline btn-sm" onclick="handleAddCustomImageUrl('modal')">
+                                <i class="fa-solid fa-plus"></i> Add URL
+                            </button>
+                        </div>
+                        <button type="button" class="btn-admin-outline btn-sm" id="btnDetectSupplierAnglesModal" onclick="handleScanSupplierAngles('modal')" title="Check for alternate angles (A, B, C...) from wholesale repository" style="display: none;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Check Wholesale Angles
+                        </button>
                     </div>
-                    <div class="img-spec-guide"><i class="fa-solid fa-wand-magic-sparkles"></i> <strong>Adaptive Auto-Fit</strong>: Any size or proportion supported — scales naturally without clipping.</div>
-                    <div class="img-preview-box" id="adminHoverBox">
-                        <img id="prodHoverPreview" src="" alt="Hover Preview">
+
+                    <!-- Drag & Drop Zone -->
+                    <div class="prod-img-dropzone" id="modalImgDropzone" 
+                         ondragover="handleImageDropOver(event, this)" 
+                         ondragleave="handleImageDropLeave(event, this)" 
+                         ondrop="handleImageDrop(event, this, 'modal')"
+                         onclick="document.getElementById('modalMultiFileInput').click()">
+                        <div class="dropzone-content">
+                            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                            <div class="dropzone-text">
+                                <strong>Drop product photos here</strong> or <span class="browse-link">browse files</span>
+                            </div>
+                            <span class="dropzone-sub">Upload multiple files • Instant server storage • Formats: JPG, PNG, WEBP, AVIF</span>
+                        </div>
                     </div>
-                    <div id="meta_prodHoverPreview"></div>
+
+                    <!-- Live Image Cards Grid -->
+                    <div class="prod-images-cards-grid" id="modalProductImagesGrid">
+                        <!-- Populated dynamically by JS -->
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -2565,6 +2589,86 @@
                     <button type="submit" class="btn-admin-primary">Save Product</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         PRODUCT IMAGES & VISIBILITY MANAGER MODAL
+         ========================================== -->
+    <div class="admin-modal-backdrop" id="productImagesModalBackdrop">
+        <div class="admin-modal" style="max-width: 920px;">
+            <div class="modal-top">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: rgba(197, 160, 89, 0.15); border: 1px solid rgba(197, 160, 89, 0.4); color: var(--gold-light); width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fa-solid fa-photo-film"></i>
+                    </div>
+                    <div>
+                        <h3 id="quickImagesModalTitle" style="margin: 0; font-size: 1.25rem;">Manage Product Images & Visibility</h3>
+                        <div id="quickImagesModalSubtitle" style="font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 2px;">
+                            Toggle which photos to display, designate Primary & Hover views, or upload your own high-res photography.
+                        </div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeProductImagesQuickModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Product Header Summary Strip -->
+            <div id="quickImagesProductHeader" class="quick-img-prod-header">
+                <!-- Populated dynamically with product thumb, name, SKU, price, category -->
+            </div>
+
+            <div class="modal-form" style="padding: 20px 24px; max-height: calc(85vh - 160px); overflow-y: auto;">
+                <input type="hidden" id="quickImagesProductId" value="">
+
+                <!-- Upload & Toolbar -->
+                <div class="prod-img-toolbar" style="margin-bottom: 12px; margin-top: 0;">
+                    <label class="btn-admin-primary btn-sm" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload My Own Images
+                        <input type="file" id="quickMultiFileInput" multiple accept="image/*" style="display: none;" onchange="handleModalImageFilesUpload(event, 'quick')">
+                    </label>
+                    <div class="prod-img-url-input-wrap" style="flex: 1;">
+                        <input type="text" id="quickAddImageUrlInput" class="admin-input" placeholder="Paste image link (https://... or assets/...)">
+                        <button type="button" class="btn-admin-outline btn-sm" onclick="handleAddCustomImageUrl('quick')">
+                            <i class="fa-solid fa-plus"></i> Add URL
+                        </button>
+                    </div>
+                    <button type="button" class="btn-admin-outline btn-sm" id="btnDetectSupplierAnglesQuick" onclick="handleScanSupplierAngles('quick')" title="Check for alternate angles (A, B, C...) from wholesale repository" style="display: none;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Check Wholesale Angles
+                    </button>
+                </div>
+
+                <!-- Drag & Drop Zone -->
+                <div class="prod-img-dropzone" id="quickImgDropzone" 
+                     ondragover="handleImageDropOver(event, this)" 
+                     ondragleave="handleImageDropLeave(event, this)" 
+                     ondrop="handleImageDrop(event, this, 'quick')"
+                     onclick="document.getElementById('quickMultiFileInput').click()">
+                    <div class="dropzone-content">
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                        <div class="dropzone-text">
+                            <strong>Drag & drop product images here</strong> or <span class="browse-link">click to browse</span>
+                        </div>
+                        <span class="dropzone-sub">Upload multiple files • Instant server storage • Formats: JPG, PNG, WEBP, AVIF</span>
+                    </div>
+                </div>
+
+                <!-- Live Image Cards Grid -->
+                <div class="prod-images-cards-grid" id="quickProductImagesGrid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--admin-border); display: flex; justify-content: space-between; align-items: center;">
+                <div id="quickImagesSummaryStats" style="font-size: 0.82rem; color: var(--admin-text-muted);">
+                    <!-- 3 Images (2 Visible, 1 Hidden) -->
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-admin-outline" onclick="closeProductImagesQuickModal()">Cancel</button>
+                    <button type="button" class="btn-admin-primary" onclick="saveQuickProductImages()">
+                        <i class="fa-solid fa-check"></i> Save Image Visibility & Order
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

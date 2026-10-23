@@ -1272,7 +1272,10 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                 <input type="checkbox" class="prod-row-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="handleProductRowSelect('${p.id}', this.checked)">
             </td>
             <td>
-                <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" style="cursor: pointer;" title="Click to inspect resolution & image specs">
+                <div style="position: relative; display: inline-block;">
+                    <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="openProductImagesQuickModal('${p.id}')" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" style="cursor: pointer;" title="Manage Images & Visibility (Upload, Show/Hide)">
+                    <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: var(--gold-light); font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; pointer-events: none;"><i class="fa-solid fa-camera"></i></span>
+                </div>
             </td>
             <td>
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -1316,6 +1319,9 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
             </td>
             <td>
                 <div class="table-actions">
+                    <button class="btn-icon" onclick="openProductImagesQuickModal('${p.id}')" title="Manage Images & Visibility (Upload, Show/Hide)" style="color: var(--gold-light);">
+                        <i class="fa-solid fa-photo-film"></i>
+                    </button>
                     <button class="btn-icon" onclick="toggleProductDisable('${p.id}')" title="${isOutOfStock ? 'Enable Product' : 'Disable Product'}">
                         <i class="fa-solid ${isOutOfStock ? 'fa-eye' : 'fa-eye-slash'}"></i>
                     </button>
@@ -1673,6 +1679,522 @@ function handleModalBadgeSelectChange(val) {
     }
 }
 
+// ==========================================
+// PRODUCT IMAGES & VISIBILITY MANAGER LOGIC
+// ==========================================
+let modalEditingProductImages = [];
+let quickEditingProductImages = [];
+let quickCurrentProductId = null;
+
+function normalizeProductImages(prod) {
+    if (!prod) return [];
+    
+    // If product already has structured images array
+    if (Array.isArray(prod.images) && prod.images.length > 0) {
+        return prod.images.map((img, idx) => ({
+            id: img.id || ('img_' + Math.random().toString(36).substr(2, 8)),
+            url: typeof img === 'string' ? img : (img.url || ''),
+            visible: typeof img === 'object' && img.visible !== undefined ? !!img.visible : true,
+            isPrimary: typeof img === 'object' && img.isPrimary !== undefined ? !!img.isPrimary : (idx === 0),
+            isHover: typeof img === 'object' && img.isHover !== undefined ? !!img.isHover : (idx === 1)
+        })).filter(item => item.url && item.url.trim() !== '');
+    }
+
+    const list = [];
+    const seen = new Set();
+
+    const addImg = (url, isPrimary = false, isHover = false) => {
+        if (!url || typeof url !== 'string') return;
+        const clean = url.trim();
+        if (!clean || seen.has(clean)) return;
+        seen.add(clean);
+        list.push({
+            id: 'img_' + Math.random().toString(36).substr(2, 8),
+            url: clean,
+            visible: true,
+            isPrimary: isPrimary,
+            isHover: isHover
+        });
+    };
+
+    if (prod.primaryImg) addImg(prod.primaryImg, true, false);
+    if (prod.hoverImg) addImg(prod.hoverImg, list.length === 0, list.length > 0);
+
+    if (Array.isArray(prod.gallery)) {
+        prod.gallery.forEach(u => addImg(u, false, false));
+    }
+
+    // Ensure at least one is primary if list has items
+    if (list.length > 0 && !list.some(i => i.isPrimary)) {
+        list[0].isPrimary = true;
+    }
+    // Ensure hover is set if list has 2+ items
+    if (list.length > 1 && !list.some(i => i.isHover)) {
+        list[1].isHover = true;
+    }
+
+    return list;
+}
+
+function renderProductImagesManagerGrid(context = 'modal') {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const gridEl = document.getElementById(context === 'modal' ? 'modalProductImagesGrid' : 'quickProductImagesGrid');
+    const badgeEl = document.getElementById(context === 'modal' ? 'modalImagesStatsBadge' : 'quickImagesSummaryStats');
+
+    if (!gridEl) return;
+
+    const total = list.length;
+    const visibleCount = list.filter(i => i.visible !== false).length;
+    const hiddenCount = total - visibleCount;
+
+    if (badgeEl) {
+        if (context === 'modal') {
+            badgeEl.innerHTML = `<i class="fa-solid fa-camera"></i> <strong>${total}</strong> Images (${visibleCount} Visible${hiddenCount > 0 ? `, <span style="color:#fca5a5;">${hiddenCount} Hidden</span>` : ''})`;
+        } else {
+            badgeEl.innerHTML = `Showing <strong>${total}</strong> photos: <span style="color: #6ee7b7; font-weight: 600;">${visibleCount} Visible in Store</span>${hiddenCount > 0 ? ` • <span style="color: #fca5a5; font-weight: 600;">${hiddenCount} Hidden from Customers</span>` : ''}`;
+        }
+    }
+
+    // Check wholesale angle button visibility
+    const detectBtn = document.getElementById(context === 'modal' ? 'btnDetectSupplierAnglesModal' : 'btnDetectSupplierAnglesQuick');
+    if (detectBtn) {
+        const prodId = context === 'modal' ? document.getElementById('editProductId').value : quickCurrentProductId;
+        const prod = storeData?.products?.find(p => String(p.id) === String(prodId));
+        const hasCzmPattern = (prod?.sku && /^\d+/.test(prod.sku)) || (prod?.primaryImg && prod.primaryImg.includes('indian-jewellery.com'));
+        detectBtn.style.display = hasCzmPattern ? 'inline-flex' : 'none';
+    }
+
+    if (total === 0) {
+        gridEl.innerHTML = `
+            <div class="prod-images-empty-state">
+                <i class="fa-regular fa-image" style="font-size: 2rem; color: var(--gold); margin-bottom: 8px; display: block;"></i>
+                <strong style="color: var(--admin-text); font-size: 0.95rem;">No Images Added Yet</strong>
+                <p style="margin: 4px 0 0 0; color: var(--admin-text-muted);">
+                    Click <strong>Upload My Own Images</strong> above or drag & drop photos here to add imagery for this piece.
+                </p>
+            </div>
+        `;
+        if (context === 'modal') {
+            const primInput = document.getElementById('prodPrimaryImg');
+            const hovInput = document.getElementById('prodHoverImg');
+            if (primInput) primInput.value = '';
+            if (hovInput) hovInput.value = '';
+        }
+        return;
+    }
+
+    gridEl.innerHTML = list.map((item, idx) => {
+        const isPrim = !!item.isPrimary;
+        const isHov = !!item.isHover;
+        const isVis = item.visible !== false;
+        const optUrl = getOptimizedImgUrl(item.url);
+
+        return `
+        <div class="prod-img-card ${isPrim ? 'is-primary' : ''} ${isHov ? 'is-hover' : ''} ${!isVis ? 'is-hidden' : ''}" id="card_${context}_${item.id}">
+            <div class="img-card-thumb-wrap">
+                ${isPrim ? `<div class="card-role-pill pill-primary" title="Primary image shown on catalog cards and initial PDP load"><i class="fa-solid fa-star"></i> Primary</div>` : ''}
+                ${isHov && !isPrim ? `<div class="card-role-pill pill-hover" title="Hover perspective image shown when mousing over catalog card"><i class="fa-solid fa-arrows-rotate"></i> Hover Flip</div>` : ''}
+                
+                <div class="card-status-pill ${isVis ? 'pill-status-visible' : 'pill-status-hidden'}" title="Storefront display status">
+                    ${isVis ? '<i class="fa-solid fa-eye"></i> Visible' : '<i class="fa-solid fa-eye-slash"></i> Hidden'}
+                </div>
+
+                <img src="${optUrl}" alt="Photo ${idx + 1}" 
+                     onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" 
+                     onclick="inspectImageDetails('${(item.url || '').replace(/'/g, "\\'")}', 'prodPrimaryPreview', 'Product Photo ${idx + 1}')"
+                     style="cursor: pointer;" title="Click to inspect resolution details">
+            </div>
+
+            <div class="img-card-body">
+                <!-- Visibility Toggle Switch -->
+                <button type="button" 
+                        class="visibility-toggle-btn ${isVis ? 'btn-is-visible' : 'btn-is-hidden'}" 
+                        onclick="toggleProductImageVisibility('${item.id}', '${context}')"
+                        title="${isVis ? 'Click to hide this image from storefront' : 'Click to display this image in storefront'}">
+                    ${isVis ? '<i class="fa-solid fa-eye"></i> Display in Store (ON)' : '<i class="fa-solid fa-eye-slash"></i> Hidden from Store (OFF)'}
+                </button>
+
+                <!-- Primary & Hover Selection Buttons -->
+                <div class="card-role-buttons">
+                    <button type="button" 
+                            class="btn-role-action ${isPrim ? 'active-primary' : ''}" 
+                            onclick="setProductImagePrimary('${item.id}', '${context}')"
+                            title="Set as the main featured photo for catalog and PDP">
+                        ${isPrim ? '★ Primary' : 'Make Primary'}
+                    </button>
+                    <button type="button" 
+                            class="btn-role-action ${isHov ? 'active-hover' : ''}" 
+                            onclick="setProductImageHover('${item.id}', '${context}')"
+                            title="Set as card hover flip photo">
+                        ${isHov ? '⟲ Hover' : 'Make Hover'}
+                    </button>
+                </div>
+
+                <!-- Order and Actions Toolbar -->
+                <div class="img-card-actions-row">
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="card-action-icon-btn" ${idx === 0 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveProductImageOrder('${item.id}', -1, '${context}')" title="Move Left / Earlier in Gallery">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <button type="button" class="card-action-icon-btn" ${idx === list.length - 1 ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="moveProductImageOrder('${item.id}', 1, '${context}')" title="Move Right / Later in Gallery">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button type="button" class="card-action-icon-btn" onclick="inspectImageDetails('${(item.url || '').replace(/'/g, "\\'")}', 'prodPrimaryPreview', 'Image Specs')" title="Inspect Specs & Resolution">
+                            <i class="fa-solid fa-expand"></i>
+                        </button>
+                        <button type="button" class="card-action-icon-btn btn-delete-img" onclick="deleteProductImageItem('${item.id}', '${context}')" title="Delete image from product">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+
+    // Sync form hidden inputs if in Product Modal
+    if (context === 'modal') {
+        const primInput = document.getElementById('prodPrimaryImg');
+        const hovInput = document.getElementById('prodHoverImg');
+        const primItem = list.find(i => i.isPrimary && i.visible !== false) || list.find(i => i.visible !== false) || list[0];
+        const hovItem = list.find(i => i.isHover && i.visible !== false) || (list.filter(i => i.visible !== false)[1] || primItem);
+
+        if (primInput) primInput.value = primItem ? primItem.url : '';
+        if (hovInput) hovInput.value = hovItem ? hovItem.url : (primItem ? primItem.url : '');
+    }
+}
+
+function toggleProductImageVisibility(imgId, context) {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    item.visible = item.visible === false ? true : false;
+
+    // If we hid the primary image, pick the next available visible image as primary
+    if (item.isPrimary && item.visible === false) {
+        item.isPrimary = false;
+        const nextVisible = list.find(i => i.visible !== false && i.id !== imgId);
+        if (nextVisible) {
+            nextVisible.isPrimary = true;
+        }
+    }
+
+    // If we hid the hover image, clear or reassign
+    if (item.isHover && item.visible === false) {
+        item.isHover = false;
+        const nextHover = list.find(i => i.visible !== false && !i.isPrimary);
+        if (nextHover) {
+            nextHover.isHover = true;
+        }
+    }
+
+    renderProductImagesManagerGrid(context);
+    showToast(item.visible ? "Image is now VISIBLE on store" : "Image is now HIDDEN from store");
+}
+
+function setProductImagePrimary(imgId, context) {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    list.forEach(i => {
+        i.isPrimary = (i.id === imgId);
+        if (i.id === imgId) {
+            i.visible = true; // Auto-enable visibility
+            if (i.isHover) i.isHover = false;
+        }
+    });
+
+    renderProductImagesManagerGrid(context);
+    showToast("Set as Primary storefront photo");
+}
+
+function setProductImageHover(imgId, context) {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const item = list.find(i => i.id === imgId);
+    if (!item) return;
+
+    list.forEach(i => {
+        i.isHover = (i.id === imgId);
+        if (i.id === imgId) {
+            i.visible = true; // Auto-enable visibility
+            if (i.isPrimary) i.isPrimary = false;
+        }
+    });
+
+    renderProductImagesManagerGrid(context);
+    showToast("Set as Catalog Hover Flip photo");
+}
+
+function moveProductImageOrder(imgId, direction, context) {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const idx = list.findIndex(i => i.id === imgId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= list.length) return;
+
+    const temp = list[idx];
+    list[idx] = list[newIdx];
+    list[newIdx] = temp;
+
+    renderProductImagesManagerGrid(context);
+}
+
+function deleteProductImageItem(imgId, context) {
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const idx = list.findIndex(i => i.id === imgId);
+    if (idx < 0) return;
+
+    const removed = list.splice(idx, 1)[0];
+    if (removed.isPrimary && list.length > 0) {
+        const nextVis = list.find(i => i.visible !== false) || list[0];
+        if (nextVis) nextVis.isPrimary = true;
+    }
+
+    renderProductImagesManagerGrid(context);
+    showToast("Image removed from product");
+}
+
+async function handleModalImageFilesUpload(event, context) {
+    const files = event.target.files;
+    if (!files || !files.length) return;
+
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    showToast(`Uploading ${files.length} image(s) to server...`);
+
+    let uploadedCount = 0;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            const url = await uploadImageFile(file, 'products');
+            if (url) {
+                const isFirst = list.length === 0;
+                list.push({
+                    id: 'img_' + Math.random().toString(36).substr(2, 8),
+                    url: url,
+                    visible: true,
+                    isPrimary: isFirst,
+                    isHover: !isFirst && list.length === 1
+                });
+                uploadedCount++;
+            }
+        } catch (err) {
+            console.error("Upload error for file", file.name, err);
+        }
+    }
+
+    event.target.value = '';
+    renderProductImagesManagerGrid(context);
+    showToast(`Successfully added ${uploadedCount} new product image(s)!`);
+}
+
+function handleImageDropOver(event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.add('drag-active');
+}
+
+function handleImageDropLeave(event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.remove('drag-active');
+}
+
+async function handleImageDrop(event, el, context) {
+    event.preventDefault();
+    event.stopPropagation();
+    el.classList.remove('drag-active');
+
+    const dt = event.dataTransfer;
+    const files = dt?.files;
+    if (files && files.length > 0) {
+        await handleModalImageFilesUpload({ target: { files: files, value: '' } }, context);
+    }
+}
+
+function handleAddCustomImageUrl(context) {
+    const input = document.getElementById(context === 'modal' ? 'modalAddImageUrlInput' : 'quickAddImageUrlInput');
+    if (!input) return;
+    const raw = input.value.trim();
+    if (!raw) {
+        showToast("Please enter an image URL");
+        return;
+    }
+
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const isFirst = list.length === 0;
+    list.push({
+        id: 'img_' + Math.random().toString(36).substr(2, 8),
+        url: raw,
+        visible: true,
+        isPrimary: isFirst,
+        isHover: !isFirst && list.length === 1
+    });
+
+    input.value = '';
+    renderProductImagesManagerGrid(context);
+    showToast("Image URL added to piece!");
+}
+
+async function handleScanSupplierAngles(context) {
+    const prodId = context === 'modal' ? document.getElementById('editProductId').value : quickCurrentProductId;
+    const prod = storeData?.products?.find(p => String(p.id) === String(prodId));
+    if (!prod || !prod.primaryImg) {
+        showToast("No base image to scan candidate angles for");
+        return;
+    }
+
+    const basePrimary = prod.primaryImg;
+    const match = basePrimary.match(/^(.*?)(([A-Za-z0-9]+?)(\.[a-zA-Z0-9]+))$/);
+    if (!match) {
+        showToast("Could not determine base wholesale image pattern");
+        return;
+    }
+
+    showToast("Checking supplier angles repository...");
+    const list = context === 'modal' ? modalEditingProductImages : quickEditingProductImages;
+    const existingUrls = new Set(list.map(i => i.url));
+
+    const candidates = ['A', 'B', 'C', 'D'];
+    let addedAngles = 0;
+
+    for (const suffix of candidates) {
+        let candidateUrl = '';
+        if (basePrimary.endsWith('.jpg') || basePrimary.endsWith('.jpeg') || basePrimary.endsWith('.png') || basePrimary.endsWith('.webp')) {
+            const ext = basePrimary.substring(basePrimary.lastIndexOf('.'));
+            const stem = basePrimary.substring(0, basePrimary.lastIndexOf('.')).replace(/[A-Z]$/, '');
+            candidateUrl = `${stem}${suffix}${ext}`;
+        }
+
+        if (candidateUrl && !existingUrls.has(candidateUrl)) {
+            try {
+                const testUrl = getOptimizedImgUrl(candidateUrl);
+                const resp = await fetch(testUrl, { method: 'HEAD' });
+                if (resp.ok) {
+                    list.push({
+                        id: 'img_' + Math.random().toString(36).substr(2, 8),
+                        url: candidateUrl,
+                        visible: true,
+                        isPrimary: false,
+                        isHover: (list.length === 1)
+                    });
+                    existingUrls.add(candidateUrl);
+                    addedAngles++;
+                }
+            } catch (e) {}
+        }
+    }
+
+    renderProductImagesManagerGrid(context);
+    if (addedAngles > 0) {
+        showToast(`Found and added ${addedAngles} alternate angle(s) from wholesale repository!`);
+    } else {
+        showToast("No additional alternate angles found. You can upload your own photos!");
+    }
+}
+
+// ----------------------------------------------------
+// QUICK PRODUCT IMAGES MODAL OPEN & SAVE
+// ----------------------------------------------------
+function openProductImagesQuickModal(productId) {
+    const prod = storeData?.products?.find(p => String(p.id) === String(productId));
+    if (!prod) {
+        showToast("Product not found");
+        return;
+    }
+
+    quickCurrentProductId = productId;
+    const idField = document.getElementById('quickImagesProductId');
+    if (idField) idField.value = productId;
+
+    // Populate header preview
+    const headerEl = document.getElementById('quickImagesProductHeader');
+    if (headerEl) {
+        headerEl.innerHTML = `
+            <img src="${getOptimizedImgUrl(prod.primaryImg)}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" class="quick-img-prod-thumb" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
+            <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <h4 style="margin: 0; color: var(--gold-light); font-size: 1.05rem;">${(prod.name || 'Jewelry Piece').replace(/</g, '&lt;')}</h4>
+                    <span class="subcat-badge" style="font-size: 0.72rem; padding: 1px 6px;">${prod.category || 'Jewelry'}</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-top: 3px;">
+                    SKU: <strong>${prod.sku || prod.id}</strong> • Selling Price: <strong style="color: var(--gold);">₹${(prod.priceINR || 0).toLocaleString('en-IN')}</strong>
+                </div>
+            </div>
+        `;
+    }
+
+    quickEditingProductImages = normalizeProductImages(prod);
+    renderProductImagesManagerGrid('quick');
+
+    const backdrop = document.getElementById('productImagesModalBackdrop');
+    if (backdrop) backdrop.classList.add('active');
+}
+
+function closeProductImagesQuickModal() {
+    const backdrop = document.getElementById('productImagesModalBackdrop');
+    if (backdrop) backdrop.classList.remove('active');
+}
+
+async function saveQuickProductImages() {
+    if (!quickCurrentProductId) return;
+    const prod = storeData?.products?.find(p => String(p.id) === String(quickCurrentProductId));
+    if (!prod) return;
+
+    const list = quickEditingProductImages;
+    const visibleList = list.filter(i => i.visible !== false);
+
+    const primaryImg = list.find(i => i.isPrimary && i.visible !== false)?.url || visibleList[0]?.url || prod.primaryImg;
+    const hoverImg = list.find(i => i.isHover && i.visible !== false)?.url || (visibleList[1]?.url || primaryImg);
+    const gallery = visibleList.length > 0 ? visibleList.map(i => i.url) : [primaryImg, hoverImg].filter(Boolean);
+
+    // Update in-memory product
+    prod.images = list;
+    prod.gallery = gallery;
+    prod.primaryImg = primaryImg;
+    prod.hoverImg = hoverImg;
+
+    saveAllStoreData(true);
+    filterAdminProducts();
+    closeProductImagesQuickModal();
+
+    showToast("Product images & visibility saved!");
+
+    try {
+        await fetch('/api/db/products/images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: prod.dbId || prod.id,
+                images: list,
+                primaryImg: primaryImg,
+                hoverImg: hoverImg,
+                gallery: gallery
+            })
+        });
+    } catch (e) {
+        console.warn("Could not sync images to database:", e);
+    }
+}
+
+window.openProductImagesQuickModal = openProductImagesQuickModal;
+window.closeProductImagesQuickModal = closeProductImagesQuickModal;
+window.saveQuickProductImages = saveQuickProductImages;
+window.toggleProductImageVisibility = toggleProductImageVisibility;
+window.setProductImagePrimary = setProductImagePrimary;
+window.setProductImageHover = setProductImageHover;
+window.moveProductImageOrder = moveProductImageOrder;
+window.deleteProductImageItem = deleteProductImageItem;
+window.handleModalImageFilesUpload = handleModalImageFilesUpload;
+window.handleImageDropOver = handleImageDropOver;
+window.handleImageDropLeave = handleImageDropLeave;
+window.handleImageDrop = handleImageDrop;
+window.handleAddCustomImageUrl = handleAddCustomImageUrl;
+window.handleScanSupplierAngles = handleScanSupplierAngles;
+
 function openProductModal(id = null) {
     const backdrop = document.getElementById('productModalBackdrop');
     const title = document.getElementById('productModalTitle');
@@ -1712,14 +2234,13 @@ function openProductModal(id = null) {
                 badgeInput.value = badgeVal;
             }
             document.getElementById('prodFinishes').value = (prod.availableFinishes || []).join(', ');
-            document.getElementById('prodPrimaryImg').value = prod.primaryImg;
-            document.getElementById('prodHoverImg').value = prod.hoverImg;
             document.getElementById('prodDescription').value = prod.description || '';
             document.getElementById('prodRating').value = prod.rating || 5.0;
             document.getElementById('prodReviews').value = prod.reviews || 25;
 
-            previewImg(prod.primaryImg, 'prodPrimaryPreview');
-            previewImg(prod.hoverImg, 'prodHoverPreview');
+            // Load & render product images manager
+            modalEditingProductImages = normalizeProductImages(prod);
+            renderProductImagesManagerGrid('modal');
         }
     } else {
         title.textContent = "Add New Jewelry Piece";
@@ -1738,8 +2259,8 @@ function openProductModal(id = null) {
             badgeInput.value = 'Sorèva Exclusive';
             badgeInput.style.display = 'none';
         }
-        previewImg('', 'prodPrimaryPreview');
-        previewImg('', 'prodHoverPreview');
+        modalEditingProductImages = [];
+        renderProductImagesManagerGrid('modal');
     }
 
     backdrop.classList.add('active');
@@ -1761,33 +2282,38 @@ function handleSaveProduct(e) {
     const badge = document.getElementById('prodBadge').value.trim();
     const finishesRaw = document.getElementById('prodFinishes').value.trim();
     const availableFinishes = finishesRaw ? finishesRaw.split(',').map(s => s.trim()) : ["24K Gold", "Rhodium Silver"];
-    const primaryImg = document.getElementById('prodPrimaryImg').value.trim();
-    const hoverImg = document.getElementById('prodHoverImg').value.trim();
     const description = document.getElementById('prodDescription').value.trim();
     const rating = parseFloat(document.getElementById('prodRating').value) || 5.0;
     const reviews = parseInt(document.getElementById('prodReviews').value, 10) || 10;
 
+    const images = modalEditingProductImages;
+    const visibleImages = images.filter(img => img.visible !== false);
+    const primaryImg = images.find(img => img.isPrimary && img.visible !== false)?.url || visibleImages[0]?.url || document.getElementById('prodPrimaryImg').value.trim();
+    const hoverImg = images.find(img => img.isHover && img.visible !== false)?.url || (visibleImages[1]?.url || primaryImg);
+    const gallery = visibleImages.length > 0 ? visibleImages.map(img => img.url) : [primaryImg, hoverImg].filter(Boolean);
+
+    const usdWholesaleVal = document.getElementById('prodUsdWholesale') ? parseFloat(document.getElementById('prodUsdWholesale').value) : null;
+    const skuVal = document.getElementById('prodSku') ? document.getElementById('prodSku').value.trim() : '';
+
     if (editId) {
-        const p = storeData.products.find(item => item.id === parseInt(editId, 10));
+        const p = storeData.products.find(item => item.id === parseInt(editId, 10) || String(item.id) === String(editId));
         if (p) {
-            const usdWholesaleVal = document.getElementById('prodUsdWholesale') ? parseFloat(document.getElementById('prodUsdWholesale').value) : null;
-            const skuVal = document.getElementById('prodSku') ? document.getElementById('prodSku').value.trim() : '';
             Object.assign(p, {
                 name, category, subCategory, plating, priceINR, originalPriceINR,
                 badge, availableFinishes, primaryImg, hoverImg, description,
-                rating, reviews, gallery: [primaryImg, hoverImg]
+                rating, reviews, gallery, images
             });
             if (usdWholesaleVal !== null && !isNaN(usdWholesaleVal)) p.usdWholesale = usdWholesaleVal;
             if (skuVal) p.sku = skuVal;
         }
         showToast("Product updated!");
     } else {
-        const newId = storeData.products.length ? Math.max(...storeData.products.map(p => p.id)) + 1 : 1;
+        const newId = storeData.products.length ? Math.max(...storeData.products.map(p => typeof p.id === 'number' ? p.id : 0)) + 1 : 1;
         storeData.products.push({
             id: newId,
             name, category, subCategory, plating, priceINR, originalPriceINR,
             badge, availableFinishes, primaryImg, hoverImg, description,
-            rating, reviews, gallery: [primaryImg, hoverImg], launchOffer: true
+            rating, reviews, gallery, images, launchOffer: true
         });
         showToast("New jewelry piece added!");
     }
@@ -1805,9 +2331,10 @@ function handleSaveProduct(e) {
                 id: editId,
                 name, category, subCategory, plating, priceINR, originalPriceINR,
                 badge, availableFinishes, primaryImg, hoverImg, description,
+                gallery, images,
                 stockQty: 15, lowStockThreshold: 5,
-                usdWholesale: (typeof usdWholesaleVal !== 'undefined' && usdWholesaleVal !== null && !isNaN(usdWholesaleVal)) ? usdWholesaleVal : (p ? p.usdWholesale : 0.0),
-                sku: (typeof skuVal !== 'undefined' && skuVal) ? skuVal : (p ? p.sku : ''),
+                usdWholesale: (typeof usdWholesaleVal !== 'undefined' && usdWholesaleVal !== null && !isNaN(usdWholesaleVal)) ? usdWholesaleVal : 0.0,
+                sku: skuVal || '',
                 employeeName: 'Owner'
             })
         });

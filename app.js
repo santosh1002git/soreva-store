@@ -6675,7 +6675,9 @@ function populateQuickViewModal(product) {
 
     // Gallery Thumbs
     if (modalThumbs) {
-        const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
+        const gallery = (Array.isArray(product.images) && product.images.length)
+            ? product.images.filter(i => i && (typeof i === 'string' || i.visible !== false)).map(i => typeof i === 'string' ? i : i.url)
+            : ((product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean));
         modalThumbs.innerHTML = gallery.map((rawImg, i) => {
             const optImg = getOptimizedImgUrl(rawImg);
             return `
@@ -7586,7 +7588,9 @@ function renderProductPageContent(product) {
 
     const pdpThumbs = document.getElementById('pdpThumbs');
     if (pdpThumbs) {
-        const gallery = (product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean);
+        const gallery = (Array.isArray(product.images) && product.images.length)
+            ? product.images.filter(i => i && (typeof i === 'string' || i.visible !== false)).map(i => typeof i === 'string' ? i : i.url)
+            : ((product.gallery && product.gallery.length) ? product.gallery : [product.primaryImg].filter(Boolean));
         let galleryHtml = gallery.map((rawImg, idx) => {
             const optImg = getOptimizedImgUrl(rawImg);
             return `

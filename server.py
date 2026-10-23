@@ -450,6 +450,7 @@ def init_extended_tables():
         for col_stmt in [
             "ALTER TABLE products ADD COLUMN lastRefreshed TEXT",
             "ALTER TABLE products ADD COLUMN dateAdded TEXT",
+            "ALTER TABLE products ADD COLUMN images TEXT",
             "ALTER TABLE inventory ADD COLUMN lastRefreshed TEXT",
             "ALTER TABLE inventory ADD COLUMN dateAdded TEXT",
             "ALTER TABLE inventory ADD COLUMN subCategory TEXT"
@@ -2727,6 +2728,11 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 prod_dict['gallery'] = json.loads(prod_dict['gallery'])
                             except:
                                 prod_dict['gallery'] = [prod_dict.get('primaryImg')]
+                        if isinstance(prod_dict.get('images'), str):
+                            try:
+                                prod_dict['images'] = json.loads(prod_dict['images'])
+                            except:
+                                prod_dict['images'] = []
                         if isinstance(prod_dict.get('more_details'), str):
                             try:
                                 prod_dict['more_details'] = json.loads(prod_dict['more_details'])
@@ -2981,6 +2987,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         p.setContents, p.stoneColor, p.stoneSize,
                         p.priceINR, p.originalPriceINR, p.badge, 
                         p.primaryImg, p.hoverImg, p.videoUrl, p.gallery, p.description, p.rating, p.reviews,
+                        p.images,
                         COALESCE(p.disabled, 0) as disabled,
                         COALESCE(p.active, 0) as active,
                         COALESCE(p.usdWholesale, 0.0) as usdWholesale,
@@ -2993,7 +3000,20 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     LEFT JOIN inventory i ON i.id = p.id
                     ORDER BY p.rowid DESC
                 """).fetchall()
-                products = [dict(r) for r in rows]
+                products = []
+                for r in rows:
+                    item = dict(r)
+                    if isinstance(item.get('gallery'), str):
+                        try:
+                            item['gallery'] = json.loads(item['gallery'])
+                        except Exception:
+                            item['gallery'] = [item.get('primaryImg')] if item.get('primaryImg') else []
+                    if isinstance(item.get('images'), str):
+                        try:
+                            item['images'] = json.loads(item['images'])
+                        except Exception:
+                            item['images'] = []
+                    products.append(item)
                 self._send_json(products)
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
@@ -5282,18 +5302,40 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 count_existing = c.execute("SELECT COUNT(*) FROM inventory WHERE category = ?", (category,)).fetchone()[0]
                 sku = payload.get('sku', '').strip() or f"SRV-{cat_code}-{count_existing + 1:03d}"
 
+                images = payload.get('images', [])
+                gallery = payload.get('gallery')
+                if gallery is None:
+                    gallery = [img.get('url') for img in images if img.get('visible') is not False and img.get('url')]
+                    if not gallery:
+                        gallery = [primary_img, hover_img] if hover_img != primary_img else [primary_img]
+
                 # 1. Insert into SQLite products
-                c.execute("""
-                    INSERT INTO products (
-                        id, name, category, subCategory, plating, 
-                        priceINR, originalPriceINR, badge, 
-                        primaryImg, hoverImg, description, rating, reviews
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    prod_id, name, category, sub_category, plating,
-                    price_inr, orig_price_inr, badge,
-                    primary_img, hover_img, description, rating, reviews
-                ))
+                try:
+                    c.execute("""
+                        INSERT INTO products (
+                            id, name, category, subCategory, plating, 
+                            priceINR, originalPriceINR, badge, 
+                            primaryImg, hoverImg, description, rating, reviews,
+                            gallery, images
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        prod_id, name, category, sub_category, plating,
+                        price_inr, orig_price_inr, badge,
+                        primary_img, hover_img, description, rating, reviews,
+                        json.dumps(gallery), json.dumps(images)
+                    ))
+                except Exception:
+                    c.execute("""
+                        INSERT INTO products (
+                            id, name, category, subCategory, plating, 
+                            priceINR, originalPriceINR, badge, 
+                            primaryImg, hoverImg, description, rating, reviews
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        prod_id, name, category, sub_category, plating,
+                        price_inr, orig_price_inr, badge,
+                        primary_img, hover_img, description, rating, reviews
+                    ))
 
                 # 2. Insert into SQLite inventory
                 c.execute("""
@@ -5337,7 +5379,8 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     "description": description,
                     "rating": rating,
                     "reviews": reviews,
-                    "gallery": [primary_img, hover_img]
+                    "gallery": gallery,
+                    "images": images
                 }
                 sd['products'].append(new_sd_prod)
                 save_stored_data(sd)
@@ -5839,6 +5882,73 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 conn.close()
             return
 
+        # ----------------------------------------------------
+        # API: Update Product Images & Visibility Only
+        # ----------------------------------------------------
+        if parsed.path == '/api/db/products/images':
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                prod_id = payload.get('id', '')
+                images = payload.get('images', [])
+                primary_img = payload.get('primaryImg', '').strip()
+                hover_img = payload.get('hoverImg', '').strip()
+                gallery = payload.get('gallery')
+                if gallery is None:
+                    gallery = [img.get('url') for img in images if img.get('visible') is not False and img.get('url')]
+                
+                if not prod_id:
+                    self._send_json({"error": "Product ID is required"}, 400)
+                    conn.close()
+                    return
+
+                if not primary_img and len(gallery) > 0:
+                    primary_img = gallery[0]
+                if not hover_img:
+                    hover_img = gallery[1] if len(gallery) > 1 else primary_img
+
+                c = conn.cursor()
+                try:
+                    c.execute("""
+                        UPDATE products 
+                        SET primaryImg = ?, hoverImg = ?, gallery = ?, images = ?
+                        WHERE id = ?
+                    """, (primary_img, hover_img, json.dumps(gallery), json.dumps(images), str(prod_id)))
+                except Exception:
+                    c.execute("""
+                        UPDATE products 
+                        SET primaryImg = ?, hoverImg = ?, gallery = ?
+                        WHERE id = ?
+                    """, (primary_img, hover_img, json.dumps(gallery), str(prod_id)))
+                conn.commit()
+
+                # Sync with store-data.json
+                sd = get_stored_data() or {}
+                for p in sd.get('products', []):
+                    if str(p.get('id')) == str(prod_id) or str(p.get('dbId')) == str(prod_id):
+                        p['primaryImg'] = primary_img
+                        p['hoverImg'] = hover_img
+                        p['gallery'] = gallery
+                        p['images'] = images
+                        break
+                save_stored_data(sd)
+
+                self._send_json({
+                    "success": True, 
+                    "message": "Product images and visibility updated successfully",
+                    "primaryImg": primary_img,
+                    "hoverImg": hover_img,
+                    "gallery": gallery,
+                    "images": images
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
         if parsed.path == '/api/db/products/bulk-status':
             conn = get_db()
             if not conn:
@@ -5953,18 +6063,59 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 orig_row = c.execute("SELECT name FROM products WHERE id = ?", (prod_id,)).fetchone()
                 orig_name = orig_row['name'] if orig_row else name
 
+                images_payload = payload.get('images')
+                gallery_payload = payload.get('gallery')
+                if gallery_payload is not None:
+                    visible_gallery = gallery_payload
+                elif images_payload is not None:
+                    visible_gallery = [img.get('url') for img in images_payload if img.get('visible') is not False and img.get('url')]
+                    if not visible_gallery and primary_img:
+                        visible_gallery = [primary_img]
+                else:
+                    visible_gallery = [primary_img, hover_img] if hover_img and hover_img != primary_img else [primary_img]
+
                 # 1. Update SQLite products
-                c.execute("""
-                    UPDATE products 
-                    SET name = ?, category = ?, subCategory = ?, plating = ?,
-                        priceINR = ?, originalPriceINR = ?, badge = ?,
-                        primaryImg = ?, hoverImg = ?, videoUrl = ?, description = ?
-                    WHERE id = ?
-                """, (
-                    name, category, sub_category, plating,
-                    price_inr, orig_price_inr, badge,
-                    primary_img, hover_img, video_url, description, prod_id
-                ))
+                try:
+                    if images_payload is not None:
+                        c.execute("""
+                            UPDATE products 
+                            SET name = ?, category = ?, subCategory = ?, plating = ?,
+                                priceINR = ?, originalPriceINR = ?, badge = ?,
+                                primaryImg = ?, hoverImg = ?, videoUrl = ?, description = ?,
+                                gallery = ?, images = ?
+                            WHERE id = ?
+                        """, (
+                            name, category, sub_category, plating,
+                            price_inr, orig_price_inr, badge,
+                            primary_img, hover_img, video_url, description,
+                            json.dumps(visible_gallery), json.dumps(images_payload), prod_id
+                        ))
+                    else:
+                        c.execute("""
+                            UPDATE products 
+                            SET name = ?, category = ?, subCategory = ?, plating = ?,
+                                priceINR = ?, originalPriceINR = ?, badge = ?,
+                                primaryImg = ?, hoverImg = ?, videoUrl = ?, description = ?,
+                                gallery = ?
+                            WHERE id = ?
+                        """, (
+                            name, category, sub_category, plating,
+                            price_inr, orig_price_inr, badge,
+                            primary_img, hover_img, video_url, description,
+                            json.dumps(visible_gallery), prod_id
+                        ))
+                except Exception:
+                    c.execute("""
+                        UPDATE products 
+                        SET name = ?, category = ?, subCategory = ?, plating = ?,
+                            priceINR = ?, originalPriceINR = ?, badge = ?,
+                            primaryImg = ?, hoverImg = ?, videoUrl = ?, description = ?
+                        WHERE id = ?
+                    """, (
+                        name, category, sub_category, plating,
+                        price_inr, orig_price_inr, badge,
+                        primary_img, hover_img, video_url, description, prod_id
+                    ))
 
                 disabled_val = payload.get('disabled')
                 if disabled_val is not None:
@@ -6007,7 +6158,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 for p in sd['products']:
                     if p.get('dbId') == prod_id or p.get('id') == prod_id or p.get('name') == orig_name:
                         found = True
-                        p.update({
+                        upd = {
                             "name": name,
                             "category": category,
                             "subCategory": sub_category,
@@ -6023,8 +6174,11 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                             "active": bool(payload.get('active', True if disabled_val == 0 else p.get('active', True))),
                             "stockStatus": stock_status,
                             "stockQty": stock_qty,
-                            "gallery": [primary_img, hover_img]
-                        })
+                            "gallery": visible_gallery
+                        }
+                        if images_payload is not None:
+                            upd["images"] = images_payload
+                        p.update(upd)
                         break
 
                 # If enabled piece was not yet in store-data.json, add it
