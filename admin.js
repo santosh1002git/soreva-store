@@ -243,6 +243,7 @@ async function handleAdminLogin(e) {
         submitBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Unlock Admin Panel</span>`;
     }
 }
+window.handleAdminLogin = handleAdminLogin;
 
 // Handle Logout
 function handleAdminLogout() {
@@ -252,6 +253,7 @@ function handleAdminLogout() {
         showToast("Logged out successfully");
     }
 }
+window.handleAdminLogout = handleAdminLogout;
 
 // Toggle Password Visibility
 function togglePasswordVisibility(inputId, btn) {
@@ -7486,6 +7488,8 @@ async function fetchCoworkerStatus() {
     } catch (e) {
         console.warn("Error fetching coworker status:", e);
     }
+}
+
 window.fetchCoworkerStatus = fetchCoworkerStatus;
 window.renderSubCategoryOptionsForSelect = renderSubCategoryOptionsForSelect;
 window.changeProductCategory = changeProductCategory;
