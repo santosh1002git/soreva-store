@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Admin Stylesheet -->
-    <link rel="stylesheet" href="admin.css?v=v24_modal_zindex">
+    <link rel="stylesheet" href="admin.css?v=v41_product_catalog_image_visibility">
 
     <!-- Polyfill window.crypto.subtle and pure JS SHA-256 for non-secure HTTP / raw IP access -->
     <script>
@@ -842,7 +842,7 @@
                     <div class="panel-header-row">
                         <div>
                             <h3>Product Catalog (<span id="productsCountLabel">8</span>)</h3>
-                            <p>Create, modify, price, and organize pieces in your Sorèva jewelry collection.</p>
+                            <p>Create, modify, price, and organize pieces in your Sorèva jewelry collection. <span style="display: inline-block; margin-left: 8px; color: var(--gold-light); font-size: 0.82rem; background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.3); padding: 2px 8px; border-radius: 6px;"><i class="fa-solid fa-photo-film"></i> Click <strong>Photos & Visibility</strong> on any piece to toggle images ON/OFF or upload custom photos</span></p>
                         </div>
                         <div class="header-tools">
                             <div class="search-input-box">
@@ -883,6 +883,12 @@
                                 <option value="all">All Products</option>
                                 <option value="in_stock">🟢 In Stock (Available)</option>
                                 <option value="out_of_stock">🔴 Out of Stock</option>
+                            </select>
+                            <select id="productImageFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 185px;">
+                                <option value="all">🖼️ All Photos & Visibility</option>
+                                <option value="has_hidden">👁️‍🗨️ Has Hidden Photos (OFF)</option>
+                                <option value="multiple">📸 Multiple Angles (2+)</option>
+                                <option value="single">📷 Single Photo Only</option>
                             </select>
                             <select id="productSortFilter" onchange="filterAdminProducts()" class="admin-select" style="min-width: 175px;">
                                 <option value="default">Sort: Default (Category)</option>
@@ -959,7 +965,7 @@
                                     <th style="width: 36px; text-align: center;">
                                         <input type="checkbox" id="selectAllProdsCheckbox" onchange="toggleSelectAllProds(this.checked)" title="Select all on this page">
                                     </th>
-                                    <th style="width: 70px;">Image</th>
+                                    <th style="width: 140px;" title="View photos, toggle visibility, and upload images">Photos & Visibility</th>
                                     <th>Piece Name</th>
                                     <th>Category</th>
                                     <th>Sub-Category</th>
@@ -3645,7 +3651,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v39_complete_stock_refresh_prominent"></script>
+    <script src="admin.js?v=v41_product_catalog_image_visibility"></script>
 
     </body>
 </html>

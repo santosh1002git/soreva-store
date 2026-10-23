@@ -2609,3 +2609,115 @@ body {
     flex-shrink: 0;
 }
 
+/* Product Catalog Table - Media & Visibility Controls */
+.prod-table-media-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.prod-table-thumbs-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    padding: 2px;
+    border-radius: 8px;
+    transition: transform 0.15s ease;
+}
+
+.prod-table-thumbs-preview:hover {
+    transform: scale(1.04);
+}
+
+.table-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #121214;
+    border: 1.5px solid rgba(197, 160, 89, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.table-mini-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.table-mini-thumb.is-off {
+    opacity: 0.35;
+    border-color: #ef4444;
+    filter: grayscale(1);
+}
+
+.table-thumb-more {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    background: rgba(197, 160, 89, 0.15);
+    border: 1px solid rgba(197, 160, 89, 0.3);
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.btn-manage-media-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(197, 160, 89, 0.12);
+    border: 1px solid rgba(197, 160, 89, 0.35);
+    color: var(--gold-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.btn-manage-media-pill:hover {
+    background: rgba(197, 160, 89, 0.25);
+    border-color: var(--gold);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(197, 160, 89, 0.2);
+}
+
+.btn-manage-media-pill.has-hidden {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.12);
+    color: #fde68a;
+}
+
+.btn-manage-media-pill.has-hidden:hover {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.22);
+}
+
+.badge-hidden-alert {
+    background: rgba(239, 68, 68, 0.85);
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 8px;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+}
+
+

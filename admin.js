@@ -1122,11 +1122,12 @@ function filterAdminProducts() {
     const badge = document.getElementById('productBadgeFilter') ? document.getElementById('productBadgeFilter').value : 'all';
     const stock = document.getElementById('productStockFilter') ? document.getElementById('productStockFilter').value : 'all';
     const sort = document.getElementById('productSortFilter') ? document.getElementById('productSortFilter').value : 'default';
+    const imageFilter = document.getElementById('productImageFilter') ? document.getElementById('productImageFilter').value : 'all';
     adminCatalogPage = 1;
-    renderProductsTable(text, cat, badge, stock, sort, subCat, plating);
+    renderProductsTable(text, cat, badge, stock, sort, subCat, plating, imageFilter);
 }
 
-function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = 'all', filterStock = 'all', filterSort = 'default', filterSubCat = 'all', filterPlating = 'all') {
+function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = 'all', filterStock = 'all', filterSort = 'default', filterSubCat = 'all', filterPlating = 'all', filterImages = 'all') {
     const tbody = document.getElementById('productsAdminTbody');
     if (!tbody) return;
 
@@ -1147,6 +1148,9 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
     }
     if (filterSort === 'default' && document.getElementById('productSortFilter')) {
         filterSort = document.getElementById('productSortFilter').value || 'default';
+    }
+    if (filterImages === 'all' && document.getElementById('productImageFilter')) {
+        filterImages = document.getElementById('productImageFilter').value || 'all';
     }
 
     let items = [...(storeData?.products || [])];
@@ -1194,6 +1198,15 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
         } else {
             items = items.filter(p => (p.badge || '').trim().toLowerCase() === filterBadge.toLowerCase());
         }
+    }
+    if (filterImages && filterImages !== 'all') {
+        items = items.filter(p => {
+            const imgs = normalizeProductImages(p);
+            if (filterImages === 'has_hidden') return imgs.some(i => i.visible === false);
+            if (filterImages === 'multiple') return imgs.length > 1;
+            if (filterImages === 'single') return imgs.length === 1;
+            return true;
+        });
     }
     if (filterText) {
         const q = filterText.toLowerCase();
@@ -1265,6 +1278,12 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
         const badgeVal = (p.badge || '').trim();
         const knownBadges = ['Sorèva Exclusive', 'Trending', 'New Launch', 'Bestseller'];
         const isCustom = badgeVal && !knownBadges.includes(badgeVal);
+
+        const prodImgs = normalizeProductImages(p);
+        const totalImgs = prodImgs.length;
+        const visibleImgs = prodImgs.filter(i => i.visible !== false).length;
+        const hiddenImgs = totalImgs - visibleImgs;
+        const optPrimary = getOptimizedImgUrl(p.primaryImg || (prodImgs[0]?.url || ''));
         
         html += `
         <tr style="opacity: ${opacity};" id="row_prod_${p.id}">
@@ -1272,9 +1291,19 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                 <input type="checkbox" class="prod-row-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="handleProductRowSelect('${p.id}', this.checked)">
             </td>
             <td>
-                <div style="position: relative; display: inline-block;">
-                    <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="openProductImagesQuickModal('${p.id}')" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" style="cursor: pointer;" title="Manage Images & Visibility (Upload, Show/Hide)">
-                    <span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: var(--gold-light); font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; pointer-events: none;"><i class="fa-solid fa-camera"></i></span>
+                <div class="prod-table-media-cell" onclick="openProductImagesQuickModal('${p.id}')" title="Click to manage photos, set visibility ON/OFF, or upload">
+                    <div class="prod-table-thumbs-preview">
+                        <img src="${optPrimary}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
+                        ${prodImgs.slice(1, 3).map(img => `
+                            <img src="${getOptimizedImgUrl(img.url)}" class="table-mini-thumb ${img.visible === false ? 'is-off' : ''}" title="${img.visible === false ? 'Hidden from storefront' : 'Visible on storefront'}" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
+                        `).join('')}
+                        ${totalImgs > 3 ? `<span class="table-thumb-more">+${totalImgs - 3}</span>` : ''}
+                    </div>
+                    <button type="button" class="btn-manage-media-pill ${hiddenImgs > 0 ? 'has-hidden' : ''}" onclick="event.stopPropagation(); openProductImagesQuickModal('${p.id}')" title="Click to manage images: toggle ON/OFF, set Primary/Hover, upload custom photos">
+                        <i class="fa-solid fa-photo-film"></i>
+                        <span>${visibleImgs}/${totalImgs} Visible</span>
+                        ${hiddenImgs > 0 ? `<span class="badge-hidden-alert">${hiddenImgs} Off</span>` : ''}
+                    </button>
                 </div>
             </td>
             <td>
@@ -1319,7 +1348,7 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
             </td>
             <td>
                 <div class="table-actions">
-                    <button class="btn-icon" onclick="openProductImagesQuickModal('${p.id}')" title="Manage Images & Visibility (Upload, Show/Hide)" style="color: var(--gold-light);">
+                    <button class="btn-icon" onclick="openProductImagesQuickModal('${p.id}')" title="Manage Images & Visibility (Upload, Show/Hide)" style="color: var(--gold-light); background: rgba(197, 160, 89, 0.16); border: 1px solid rgba(197, 160, 89, 0.4);">
                         <i class="fa-solid fa-photo-film"></i>
                     </button>
                     <button class="btn-icon" onclick="toggleProductDisable('${p.id}')" title="${isOutOfStock ? 'Enable Product' : 'Disable Product'}">
