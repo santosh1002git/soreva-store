@@ -2625,7 +2625,7 @@ function openCheckoutModal() {
             id: item.productId,
             name: item.name || 'Bespoke Jewellery Piece',
             priceINR: Number(item.priceINR) || 0,
-            primaryImg: item.primaryImg || 'assets/hero/hero-slide-1.jpg'
+            primaryImg: item.primaryImg || 'assets/placeholder-jewelry.svg'
         };
         const price = prod.priceINR || 0;
         const itemTot = price * (item.qty || 1);
@@ -2634,7 +2634,7 @@ function openCheckoutModal() {
         return `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${prod.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img src="${prod.primaryImg || 'assets/placeholder-jewelry.svg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">${(prod.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</div>
                         <div style="font-size: 0.75rem; color: rgba(251,248,245,0.6);">${item.qty || 1} × ${formatPrice(price)} • ${(item.finish || '24K Gold').replace(/</g, '&lt;')}</div>
@@ -3934,7 +3934,7 @@ function updateCartUI() {
             id: item.productId,
             name: item.name || 'Bespoke Jewellery Piece',
             priceINR: Number(item.priceINR) || 0,
-            primaryImg: item.primaryImg || 'assets/hero/hero-slide-1.jpg'
+            primaryImg: item.primaryImg || 'assets/placeholder-jewelry.svg'
         };
 
         // Keep snapshot fresh
@@ -3949,7 +3949,7 @@ function updateCartUI() {
 
         return `
             <div class="cart-item" data-index="${idx}" data-product-id="${item.productId}">
-                <img class="cart-item-thumb" src="${product.primaryImg || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img class="cart-item-thumb" src="${product.primaryImg || 'assets/placeholder-jewelry.svg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                 <div class="cart-item-info">
                     <h4 class="cart-item-title">${(product.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</h4>
                     <p class="cart-item-variant">Finish: <strong>${(item.finish || '24K Gold').replace(/</g, '&lt;')}</strong></p>
@@ -4762,11 +4762,11 @@ function renderSearchSuggestions(query, results, totalCount) {
         const priceStr = (typeof formatPrice === 'function') ? formatPrice(p.priceINR || 0) : `₹${p.priceINR}`;
         const subText = p.subCategory || (p.category ? (p.category.charAt(0).toUpperCase() + p.category.slice(1)) : 'Demi-Fine Jewellery');
         const finishText = formatPlating(p.plating || p.finish);
-        const img = p.primaryImg || 'assets/hero/hero-slide-1.jpg';
+        const img = p.primaryImg || 'assets/placeholder-jewelry.svg';
 
         html += `
             <div class="search-item-match" onclick="handleSearchResultClick('${escapeHtml(p.id)}')" role="button" tabindex="0">
-                <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                 <div style="flex: 1; min-width: 0;">
                     <h5 class="search-item-title">${escapeHtml(p.name)}</h5>
                     <span class="search-item-meta">${escapeHtml(subText)} • ${escapeHtml(finishText)}</span>

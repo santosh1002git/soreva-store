@@ -1272,7 +1272,7 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                 <input type="checkbox" class="prod-row-checkbox" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="handleProductRowSelect('${p.id}', this.checked)">
             </td>
             <td>
-                <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';" style="cursor: pointer;" title="Click to inspect resolution & image specs">
+                <img src="${getOptimizedImgUrl(p.primaryImg)}" alt="${(p.name || '').replace(/"/g, '&quot;')}" class="table-thumb" onclick="inspectImageDetails('${(p.primaryImg || '').replace(/'/g, "\'")}', 'prodPrimaryPreview', '${(p.name || 'Product').replace(/'/g, "\'")}')" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';" style="cursor: pointer;" title="Click to inspect resolution & image specs">
             </td>
             <td>
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">

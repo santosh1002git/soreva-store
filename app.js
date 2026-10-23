@@ -974,7 +974,7 @@ function renderSpotlight(spotlight) {
     if (desc2El && spotlight.desc2) desc2El.innerHTML = spotlight.desc2;
     if (imgMainEl && spotlight.imgMain) {
         imgMainEl.src = getOptimizedImgUrl(spotlight.imgMain);
-        imgMainEl.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+        imgMainEl.onerror = function() { this.onerror = null; this.src = 'assets/placeholder-jewelry.svg'; };
     }
     if (imgSubEl && spotlight.imgSub) {
         imgSubEl.src = getOptimizedImgUrl(spotlight.imgSub);
@@ -3055,7 +3055,7 @@ function renderProducts(isLoadMore = false) {
             return `
             <div class="product-card ${isProductOutOfStock(product) ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="handleProductCardClick(event, '${product.id}')" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -3795,7 +3795,7 @@ function openCheckoutModal() {
             id: item.productId,
             name: item.name || 'Bespoke Jewellery Piece',
             priceINR: Number(item.priceINR) || 0,
-            primaryImg: item.primaryImg || 'assets/hero/hero-slide-1.jpg'
+            primaryImg: item.primaryImg || 'assets/placeholder-jewelry.svg'
         };
         const price = prod.priceINR || 0;
         const itemTot = price * (item.qty || 1);
@@ -3804,7 +3804,7 @@ function openCheckoutModal() {
         return `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08);">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${getOptimizedImgUrl(prod.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img src="${getOptimizedImgUrl(prod.primaryImg) || 'assets/placeholder-jewelry.svg'}" alt="${(prod.name || '').replace(/"/g, '&quot;')}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(197,160,89,0.2);" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: #fff;">${(prod.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</div>
                         <div style="font-size: 0.75rem; color: rgba(251,248,245,0.6);">${item.qty || 1} × ${formatPrice(price)} • ${(item.finish || '24K Gold').replace(/</g, '&lt;')}</div>
@@ -5831,7 +5831,7 @@ function updateCartUI() {
             id: item.productId,
             name: item.name || 'Bespoke Jewellery Piece',
             priceINR: Number(item.priceINR) || 0,
-            primaryImg: item.primaryImg || 'assets/hero/hero-slide-1.jpg'
+            primaryImg: item.primaryImg || 'assets/placeholder-jewelry.svg'
         };
 
         // Keep snapshot fresh
@@ -5846,7 +5846,7 @@ function updateCartUI() {
 
         return `
             <div class="cart-item" data-index="${idx}" data-product-id="${item.productId}">
-                <img class="cart-item-thumb" src="${getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img class="cart-item-thumb" src="${getOptimizedImgUrl(product.primaryImg) || 'assets/placeholder-jewelry.svg'}" alt="${(product.name || '').replace(/"/g, '&quot;')}" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                 <div class="cart-item-info">
                     <h4 class="cart-item-title">${(product.name || 'Bespoke Jewellery').replace(/</g, '&lt;')}</h4>
                     <p class="cart-item-variant">Finish: <strong>${(item.finish || '24K Gold').replace(/</g, '&lt;')}</strong></p>
@@ -6592,8 +6592,8 @@ function populateQuickViewModal(product) {
     }
 
     if (modalImg) {
-        modalImg.src = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
-        modalImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+        modalImg.src = getOptimizedImgUrl(product.primaryImg) || 'assets/placeholder-jewelry.svg';
+        modalImg.onerror = function() { this.onerror = null; this.src = 'assets/placeholder-jewelry.svg'; };
     }
     if (modalCat) modalCat.textContent = `${product.category || 'Jewellery'} • ${product.subCategory || 'Collection'}`;
     if (modalTitle) modalTitle.textContent = product.name || 'Jewellery Piece';
@@ -6679,7 +6679,7 @@ function populateQuickViewModal(product) {
         modalThumbs.innerHTML = gallery.map((rawImg, i) => {
             const optImg = getOptimizedImgUrl(rawImg);
             return `
-            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${optImg}" alt="Thumbnail" onclick="switchModalImage(this, '${optImg}')" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+            <img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${optImg}" alt="Thumbnail" onclick="switchModalImage(this, '${optImg}')" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
         `;
         }).join('');
     }
@@ -6713,7 +6713,7 @@ function switchModalImage(thumbEl, src) {
     const mainImg = document.getElementById('modalMainImg');
     if (mainImg && src) {
         mainImg.src = getOptimizedImgUrl(src);
-        mainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+        mainImg.onerror = function() { this.onerror = null; this.src = 'assets/placeholder-jewelry.svg'; };
     }
 }
 
@@ -6928,11 +6928,11 @@ function renderSearchSuggestions(query, results, totalCount) {
         const priceStr = (typeof formatPrice === 'function') ? formatPrice(p.priceINR || 0) : `₹${p.priceINR}`;
         const subText = p.subCategory || (p.category ? (p.category.charAt(0).toUpperCase() + p.category.slice(1)) : 'Demi-Fine Jewellery');
         const finishText = formatPlating(p.plating || p.finish);
-        const img = getOptimizedImgUrl(p.primaryImg) || 'assets/hero/hero-slide-1.jpg';
+        const img = getOptimizedImgUrl(p.primaryImg) || 'assets/placeholder-jewelry.svg';
 
         html += `
             <div class="search-item-match" onclick="handleSearchResultClick('${escapeHtml(p.id)}')" role="button" tabindex="0">
-                <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                <img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                 <div style="flex: 1; min-width: 0;">
                     <h5 class="search-item-title">${escapeHtml(p.name)}</h5>
                     <span class="search-item-meta">${escapeHtml(subText)} • ${escapeHtml(finishText)}</span>
@@ -7564,16 +7564,16 @@ function renderProductPageContent(product) {
     if (pdpTitle) pdpTitle.textContent = product.name || 'Jewellery Piece';
 
     const pdpMainImg = document.getElementById('pdpMainImg');
-    const optPrimary = getOptimizedImgUrl(product.primaryImg) || 'assets/hero/hero-slide-1.jpg';
+    const optPrimary = getOptimizedImgUrl(product.primaryImg) || 'assets/placeholder-jewelry.svg';
     if (pdpMainImg) {
-        pdpMainImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+        pdpMainImg.onerror = function() { this.onerror = null; this.src = 'assets/placeholder-jewelry.svg'; };
         if (pdpMainImg.tagName && pdpMainImg.tagName.toLowerCase() === 'video') {
             const newImg = document.createElement('img');
             newImg.id = 'pdpMainImg';
             newImg.src = optPrimary;
             newImg.style.cssText = pdpMainImg.style ? pdpMainImg.style.cssText : '';
             newImg.alt = product.name || 'Product Image';
-            newImg.onerror = function() { this.onerror = null; this.src = 'assets/hero/hero-slide-1.jpg'; };
+            newImg.onerror = function() { this.onerror = null; this.src = 'assets/placeholder-jewelry.svg'; };
             if (typeof pdpMainImg.replaceWith === 'function') {
                 pdpMainImg.replaceWith(newImg);
             } else {
@@ -7591,8 +7591,8 @@ function renderProductPageContent(product) {
             const optImg = getOptimizedImgUrl(rawImg);
             return `
             <img src="${optImg}" class="pdp-thumb-img ${idx === 0 ? 'active' : ''}" 
-                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${optImg}'; imgEl.style=main.getAttribute('style'); imgEl.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; main.replaceWith(imgEl); } else { main.src='${optImg}'; main.onerror=function(){this.onerror=null;this.src='assets/hero/hero-slide-1.jpg';}; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
-                 onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';"
+                 onclick="const main=document.getElementById('pdpMainImg'); if(main.tagName==='VIDEO'){ const imgEl=document.createElement('img'); imgEl.id='pdpMainImg'; imgEl.src='${optImg}'; imgEl.style=main.getAttribute('style'); imgEl.onerror=function(){this.onerror=null;this.src='assets/placeholder-jewelry.svg';}; main.replaceWith(imgEl); } else { main.src='${optImg}'; main.onerror=function(){this.onerror=null;this.src='assets/placeholder-jewelry.svg';}; } document.querySelectorAll('.pdp-thumb-img').forEach(el=>el.style.borderColor='transparent'); this.style.borderColor='var(--gold-accent)';" 
+                 onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';"
                  style="width: 80px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${idx === 0 ? 'var(--gold-accent)' : 'transparent'};">
             `;
         }).join('');
@@ -7963,7 +7963,7 @@ function renderSimilarProducts(currentProduct) {
         return `
             <div class="product-card ${oos ? 'is-out-of-stock' : ''}" data-id="${product.id}" onclick="handleProductCardClick(event, '${product.id}')" style="cursor: pointer;">
                 <div class="product-thumb-wrap ${!hasHover ? 'scale-hover-only' : ''}">
-                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                    <img class="product-thumb primary-img" src="${primaryUrl}" alt="${escapeHtml(product.name)}" ${priorityAttrs} onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                     ${hasHover ? `<img class="product-thumb hover-img" data-src="${hoverUrl}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('scale-hover-only');">` : ''}
                     
                     <div class="product-badges">
@@ -8249,7 +8249,7 @@ function renderCuratedBadges() {
             return `
                 <div class="curation-card" onclick="handleProductCardClick(event, '${p.id}')" role="button" tabindex="0" aria-label="${p.name}">
                     <div class="curation-media-wrap">
-                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='assets/hero/hero-slide-1.jpg';">
+                        <img class="curation-img" src="${getOptimizedImgUrl(p.primaryImg)}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='assets/placeholder-jewelry.svg';">
                         <div class="product-badges">
                             <span class="product-badge ${badgeClass}">${badgeIcon}${badgeLabel}</span>
                         </div>
