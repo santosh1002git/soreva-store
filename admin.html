@@ -514,8 +514,14 @@
                             <p>Monitor warehouse availability in real-time. Stock is auto-deducted when customers complete checkout.</p>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="btn-admin-danger" id="btnCompleteStockRefresh" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a 100% fresh loading from CZMakers with full category and subcategory mapping">
-                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (Delete & Reload All Products)
+                            <button type="button" class="btn-admin-danger" id="btnCompleteStockRefresh" onclick="confirmCompleteStockRefresh('all')" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a 100% fresh loading from CZMakers across all 32 categories">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (All Products)
+                            </button>
+                            <button type="button" class="btn-admin-danger" id="btnCategoryCompleteRefreshHeader" onclick="openCategoryCompleteRefreshModal(document.getElementById('inventoryCategoryFilter') ? document.getElementById('inventoryCategoryFilter').value : 'all')" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #b91c1c, #7f1d1d); border: 1px solid #f87171; color: #ffffff; cursor: pointer; box-shadow: 0 3px 12px rgba(185,28,28,0.35);" title="Wipe & Reload a specific category from CZMakers without touching other categories">
+                                <i class="fa-solid fa-arrows-rotate"></i> Category Complete Refresh
+                            </button>
+                            <button type="button" class="btn-admin-primary" id="btnCategoryStockRefreshInv" onclick="openCategoryStockRefresh(document.getElementById('inventoryCategoryFilter') ? document.getElementById('inventoryCategoryFilter').value : 'all')" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 15px; border-radius: 8px; font-weight: 600; background: rgba(197,160,89,0.18); border: 1px solid rgba(197,160,89,0.4); color: #fef08a;" title="Refresh stock and pricing by category without duplication">
+                                <i class="fa-solid fa-filter"></i> Refresh Stock by Category
                             </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer;" title="Delete all out of stock products">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock
@@ -525,20 +531,73 @@
                         </div>
                     </div>
 
-                    <!-- COMPLETE STOCK REFRESH DIRECT ACTION BANNER -->
-                    <div class="complete-refresh-card" style="margin-bottom: 22px; background: linear-gradient(135deg, rgba(220,38,38,0.14), rgba(153,27,27,0.22)); border: 1px solid rgba(239,68,68,0.45); border-radius: 12px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                        <div style="flex: 1; min-width: 280px;">
-                            <div style="font-weight: 700; color: #fecaca; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                                <i class="fa-solid fa-arrows-rotate" style="color: #ef4444; font-size: 1.15rem;"></i> Complete Stock Refresh (Delete & Reload All Products)
-                                <span style="font-size: 0.72rem; background: rgba(239,68,68,0.3); color: #fca5a5; border: 1px solid rgba(239,68,68,0.5); border-radius: 20px; padding: 3px 10px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
-                            </div>
-                            <div style="font-size: 0.84rem; color: #e4e4e7; line-height: 1.5;">
-                                Wipes existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories with accurate sub-categories and 2.2x retail pricing. Non-matching or unavailable items are marked Out of Stock. Customer records & orders remain 100% untouched.
+                    <!-- COMPLETE STOCK REFRESH DIRECT ACTION BANNER (ALL PRODUCTS OR CATEGORY-WISE) -->
+                    <div class="complete-refresh-card" style="margin-bottom: 22px; background: linear-gradient(135deg, rgba(220,38,38,0.16), rgba(153,27,27,0.26)); border: 1px solid rgba(239,68,68,0.45); border-radius: 12px; padding: 20px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-bottom: 14px;">
+                            <div style="flex: 1; min-width: 280px;">
+                                <div style="font-weight: 700; color: #fecaca; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <i class="fa-solid fa-arrows-rotate" style="color: #ef4444; font-size: 1.2rem;"></i>
+                                    <span>Complete Stock Refresh (Category-Wise OR All Products)</span>
+                                    <span id="bannerRefreshModeBadge" style="font-size: 0.72rem; background: rgba(239,68,68,0.3); color: #fca5a5; border: 1px solid rgba(239,68,68,0.5); border-radius: 20px; padding: 3px 10px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
+                                </div>
+                                <div id="bannerRefreshDescription" style="font-size: 0.84rem; color: #e4e4e7; line-height: 1.5;">
+                                    Wipes existing products from catalog & inventory for the selected scope, then performs a complete fresh reload directly from czmakers.com with accurate sub-categories, 2.2x retail pricing, photos, and videos. Non-matching items are marked Out of Stock. Customer accounts (16) and order records (13) remain 100% untouched.
+                                </div>
                             </div>
                         </div>
-                        <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="white-space: nowrap; padding: 12px 24px; font-weight: 700; font-size: 0.9rem; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; border-radius: 8px; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(220,38,38,0.45);">
-                            <i class="fa-solid fa-arrows-rotate"></i> Start Complete Refresh
-                        </button>
+
+                        <!-- Scope Selector and Trigger Bar -->
+                        <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px;">
+                                <label for="bannerCompleteRefreshCat" style="font-size: 0.84rem; font-weight: 700; color: #fef08a; white-space: nowrap; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-filter" style="color: #f87171;"></i> Select Scope:
+                                </label>
+                                <select id="bannerCompleteRefreshCat" class="admin-select" style="background: #141416; border: 1px solid rgba(239,68,68,0.55); color: #ffffff; padding: 8px 14px; font-weight: 600; border-radius: 6px; font-size: 0.85rem; flex: 1; min-width: 220px;" onchange="handleBannerCategoryChange()">
+                                    <option value="all" selected>🌟 All Categories (Delete & Reload Entire 11,700+ Catalog)</option>
+                                    <optgroup label="Single Category Complete Refresh (Other Categories 100% Safe)">
+                                        <option value="necklace">📿 Necklaces & Chokers Only</option>
+                                        <option value="earrings">✨ Earrings & Jhumkas Only</option>
+                                        <option value="rings">💍 Finger Rings Only</option>
+                                        <option value="wristwear">💫 Wristwear & Bangles Only</option>
+                                        <option value="pendants">💎 Pendants & Sets Only</option>
+                                        <option value="silver">🥈 Silver Jewellery (925 Sterling) Only</option>
+                                        <option value="accessories">👑 Accessories & Brooches Only</option>
+                                    </optgroup>
+                                    <optgroup label="Specific Sub-Categories">
+                                        <option value="choker-necklaces">Choker Necklaces</option>
+                                        <option value="traditional-necklaces">Traditional Necklaces</option>
+                                        <option value="bridal-necklaces">Bridal Necklaces</option>
+                                        <option value="classic-necklace">Classic Necklaces</option>
+                                        <option value="collar-necklace">Collar Necklaces</option>
+                                        <option value="mangalsutra">Mangalsutra</option>
+                                        <option value="aurous-collection">Aurous Collection</option>
+                                        <option value="jhumka-earrings">Jhumka Earrings</option>
+                                        <option value="big-size-earrings">Big Size Earrings</option>
+                                        <option value="medium-earrings">Medium Earrings</option>
+                                        <option value="small-earrings">Small Earrings</option>
+                                        <option value="tops-&-studs">Tops & Studs</option>
+                                        <option value="cz-finger-rings">CZ Finger Rings</option>
+                                        <option value="cz-bangles">CZ Bangles</option>
+                                        <option value="cz-bracelets">CZ Bracelets</option>
+                                        <option value="bracelets-rings-combo">Bracelets & Rings Combo</option>
+                                        <option value="cz-pendant-set">CZ Pendant Sets</option>
+                                        <option value="pendant-with-broad-chain">Pendants with Broad Chain</option>
+                                        <option value="pendant-with-medium-chain">Pendants with Medium Chain</option>
+                                        <option value="925-sterling-silver-earrings">925 Sterling Silver Earrings</option>
+                                        <option value="925-sterling-finger-rings">925 Sterling Finger Rings</option>
+                                        <option value="925-sterling-silver-pendants">925 Sterling Silver Pendants</option>
+                                        <option value="cz-accessories">CZ Accessories</option>
+                                        <option value="cz-brooch">CZ Brooches</option>
+                                        <option value="mangtika">Mangtika</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="button" class="btn-admin-danger" id="btnBannerCompleteRefresh" onclick="confirmCompleteStockRefresh(document.getElementById('bannerCompleteRefreshCat').value)" style="white-space: nowrap; padding: 10px 22px; font-weight: 700; font-size: 0.88rem; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; border-radius: 8px; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(220,38,38,0.45);">
+                                    <i class="fa-solid fa-arrows-rotate"></i> <span id="btnBannerCompleteRefreshText">Start Complete Refresh (All Products)</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Inventory summary pills (Clickable quick filters) -->
@@ -583,6 +642,11 @@
                                 <select id="inventorySubCategoryFilter" class="admin-select" onchange="handleInventoryFilter(true)">
                                     <option value="all">All Sub-Categories</option>
                                 </select>
+                            </div>
+                            <div>
+                                <button type="button" class="btn-admin-outline" id="btnQuickRefreshCategoryInv" onclick="openCategoryStockRefresh(document.getElementById('inventoryCategoryFilter') ? document.getElementById('inventoryCategoryFilter').value : 'all')" style="padding: 7px 14px; font-size: 0.8rem; color: #fef08a; border-color: rgba(197,160,89,0.4); background: rgba(197,160,89,0.08); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; height: 38px;" title="Refresh stock and pricing for the currently selected category">
+                                    <i class="fa-solid fa-arrows-rotate" style="color: #c5a059;"></i> Refresh Category Stock
+                                </button>
                             </div>
                             <div style="min-width: 180px;">
                                 <select id="inventoryStatusFilter" class="admin-select" onchange="handleInventoryFilter(true)">
@@ -898,8 +962,14 @@
                                 <option value="price_desc">Price: High to Low</option>
                             </select>
                             <span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px; margin-right: 8px;" title="Available In Stock Pieces"><i class="fa-solid fa-circle-check"></i> Available: <span id="inStockProductCount">0</span></span>
-                            <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; margin-right: 8px; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a complete fresh loading from CZMakers across all 32 categories">
-                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (Delete & Reload All Products)
+                            <button type="button" class="btn-admin-danger" onclick="confirmCompleteStockRefresh('all')" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #dc2626, #991b1b); border: 1px solid #ef4444; color: #ffffff; cursor: pointer; margin-right: 8px; box-shadow: 0 3px 12px rgba(220,38,38,0.35);" title="Delete all existing products and perform a complete fresh loading from CZMakers across all 32 categories">
+                                <i class="fa-solid fa-arrows-rotate"></i> Complete Stock Refresh (All Products)
+                            </button>
+                            <button type="button" class="btn-admin-danger" onclick="openCategoryCompleteRefreshModal(document.getElementById('productCategoryFilter') ? document.getElementById('productCategoryFilter').value : 'all')" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 15px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #b91c1c, #7f1d1d); border: 1px solid #f87171; color: #ffffff; cursor: pointer; margin-right: 8px; box-shadow: 0 3px 12px rgba(185,28,28,0.35);" title="Wipe & Reload a specific category from CZMakers without touching other categories">
+                                <i class="fa-solid fa-arrows-rotate"></i> Category Complete Refresh
+                            </button>
+                            <button type="button" class="btn-admin-primary" onclick="openCategoryStockRefresh(document.getElementById('productCategoryFilter') ? document.getElementById('productCategoryFilter').value : 'all')" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 8px; font-weight: 600; background: rgba(197,160,89,0.18); border: 1px solid rgba(197,160,89,0.4); color: #fef08a; margin-right: 8px;" title="Refresh stock and pricing for a specific category without duplication">
+                                <i class="fa-solid fa-filter"></i> Category Refresh
                             </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Permanently delete all out of stock products from catalog">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock (<span id="oosProductBadge">0</span>)
@@ -3565,18 +3635,79 @@
                 </div>
 
                 <!-- Co-Worker Action Options Form -->
-                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; margin-bottom: 18px;">
+                    
+                    <!-- STEP 1: TARGET CATEGORY SCOPE -->
+                    <div style="background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(24,24,27,0.9)); border: 1.5px solid rgba(197,160,89,0.45); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
+                            <label for="coworkerCategory" style="font-size: 0.92rem; font-weight: 700; color: #fef08a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-layer-group" style="color: #c5a059; font-size: 1rem;"></i> 
+                                <span>1. Choose Target Category Scope:</span>
+                            </label>
+                            <span id="coworkerCategoryNotice" style="font-size: 0.74rem; color: #a7f3d0; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); border-radius: 4px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-shield-check" style="color: #34d399;"></i>
+                                <span>Zero Duplication: Existing stock updated, only new arrivals added.</span>
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <select id="coworkerCategory" class="admin-select" style="padding: 10px 14px; font-size: 0.9rem; flex: 1; min-width: 280px; font-weight: 600; color: #ffffff; background: #0c0a09; border: 1.5px solid #c5a059; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.4);" onchange="handleCoworkerCategoryChange()">
+                                <option value="all" selected>🌟 ALL CATEGORIES (Full Store Catalog)</option>
+                                <optgroup label="── Main Jewellery Categories ──">
+                                    <option value="necklace">📿 Necklaces & Chokers Only (Collar, Classic, Bridal, Traditional, Mangalsutra)</option>
+                                    <option value="earrings">✨ Earrings & Jhumkas Only (Jhumka, Big, Medium, Small, Tops & Studs)</option>
+                                    <option value="rings">💍 Finger Rings Only (CZ Finger Rings, 925 Silver Rings)</option>
+                                    <option value="wristwear">💫 Wristwear & Bangles Only (CZ Bangles, CZ Bracelets, Combos)</option>
+                                    <option value="pendants">💎 Pendants & Sets Only (CZ Pendant Sets, Broad & Medium Chain)</option>
+                                    <option value="silver">🥈 Silver Jewellery Only (925 Sterling Rings, Earrings, Pendants)</option>
+                                    <option value="accessories">👑 Accessories & Brooches Only (CZ Brooches, Mangtika, Hairware)</option>
+                                </optgroup>
+                                <optgroup label="── Specific CZMakers Subcategories ──">
+                                    <option value="choker-necklaces">Choker Necklaces</option>
+                                    <option value="traditional-necklaces">Traditional Necklaces</option>
+                                    <option value="bridal-necklaces">Bridal Necklaces</option>
+                                    <option value="classic-necklace">Classic Necklaces</option>
+                                    <option value="collar-necklace">Collar Necklaces</option>
+                                    <option value="mangalsutra">Mangalsutra</option>
+                                    <option value="aurous-collection">Aurous Collection</option>
+                                    <option value="jhumka-earrings">Jhumka Earrings</option>
+                                    <option value="big-size-earrings">Big Size Earrings</option>
+                                    <option value="medium-earrings">Medium Earrings</option>
+                                    <option value="small-earrings">Small Earrings</option>
+                                    <option value="tops-&-studs">Tops & Studs</option>
+                                    <option value="cz-finger-rings">CZ Finger Rings</option>
+                                    <option value="cz-bangles">CZ Bangles</option>
+                                    <option value="cz-bracelets">CZ Bracelets</option>
+                                    <option value="bracelets-rings-combo">Bracelets & Rings Combo</option>
+                                    <option value="cz-pendant-set">CZ Pendant Sets</option>
+                                    <option value="pendant-with-broad-chain">Pendants with Broad Chain</option>
+                                    <option value="pendant-with-medium-chain">Pendants with Medium Chain</option>
+                                    <option value="925-sterling-silver-earrings">925 Sterling Silver Earrings</option>
+                                    <option value="925-sterling-finger-rings">925 Sterling Finger Rings</option>
+                                    <option value="925-sterling-silver-pendants">925 Sterling Silver Pendants</option>
+                                    <option value="cz-accessories">CZ Accessories</option>
+                                    <option value="cz-brooch">CZ Brooches</option>
+                                    <option value="mangtika">Mangtika</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div style="font-size: 0.74rem; color: #a1a1aa; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-circle-info" style="color: #c5a059;"></i>
+                            <span>Select <strong>All Categories</strong> to process every product, or choose a <strong>Specific Category</strong> to scan/refresh only that category while leaving all other categories 100% untouched.</span>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: SELECT CO-WORKER OPERATION -->
                     <h4 style="margin: 0 0 12px 0; font-size: 0.88rem; font-weight: 600; color: var(--gold-light); display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-sliders"></i> Select Co-Worker Operation
+                        <i class="fa-solid fa-sliders"></i> 2. Select Co-Worker Operation
                     </h4>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                         <label id="lblModeDiscovery" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid rgba(197,160,89,0.35); background: rgba(197,160,89,0.06); cursor: pointer;">
                             <input type="radio" name="coworkerSyncMode" value="full_discovery" checked style="margin-top: 3px;" onchange="handleCoworkerModeChange()">
                             <div>
-                                <strong style="font-size: 0.86rem; color: #fff; display: block;">🌐 Scan Every Stock (Full CZMakers Catalog)</strong>
+                                <strong style="font-size: 0.86rem; color: #fff; display: block;">🌐 Scan Every Stock (In Selected Scope)</strong>
                                 <span style="font-size: 0.76rem; color: var(--admin-text-muted); line-height: 1.35; display: block; margin-top: 3px;">
-                                    Deep scan across all 32 CZMakers categories to pull each and every available stock item with verified pricing.
+                                    Deep scan across all categories or the selected category to pull each available stock item with verified pricing.
                                 </span>
                             </div>
                         </label>
@@ -3586,23 +3717,69 @@
                             <div>
                                 <strong style="font-size: 0.86rem; color: #fff; display: block;">⚡ Fast Stock & Price Refresh</strong>
                                 <span style="font-size: 0.76rem; color: var(--admin-text-muted); line-height: 1.35; display: block; margin-top: 3px;">
-                                    Quick refresh of current catalog stock, wholesale costs, and retail prices on top categories.
+                                    Quick refresh of current catalog stock, wholesale costs, and retail prices on top categories or selected scope.
                                 </span>
                             </div>
                         </label>
 
-                        <label id="lblModeCompleteRefresh" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.06); cursor: pointer; grid-column: span 2;">
-                            <input type="radio" name="coworkerSyncMode" value="complete_refresh" style="margin-top: 3px;" onchange="handleCoworkerModeChange()">
-                            <div>
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                    <strong style="font-size: 0.88rem; color: #fca5a5; display: flex; align-items: center; gap: 6px;">
-                                        <i class="fa-solid fa-arrows-rotate" style="color: #ef4444;"></i> Complete Stock Refresh (Delete & Reload All Products)
+                        <label id="lblModeCompleteRefresh" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 8px; border: 1.5px solid rgba(239,68,68,0.45); background: rgba(239,68,68,0.08); cursor: pointer; grid-column: span 2;">
+                            <input type="radio" name="coworkerSyncMode" value="complete_refresh" style="margin-top: 4px; accent-color: #ef4444;" onchange="handleCoworkerModeChange()">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                    <strong style="font-size: 0.9rem; color: #fca5a5; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-arrows-rotate" style="color: #ef4444;"></i> <span id="lblCompleteRefreshTitle">Complete Stock Refresh (Wipe & Reload Selected Category or All)</span>
                                     </strong>
-                                    <span class="badge" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
+                                    <span id="badgeCompleteRefreshModal" class="badge" style="background: rgba(239,68,68,0.25); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px;">WIPE & FRESH RELOAD</span>
                                 </div>
-                                <span style="font-size: 0.76rem; color: #e4e4e7; line-height: 1.4; display: block; margin-top: 4px;">
-                                    Wipes all existing products from the catalog and inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories. Accurately maps each piece to its canonical category (Necklaces, Earrings, Rings, Wristwear, Pendants, Silver, Accessories), assigns specific sub-categories, and applies 2.2x retail markup. Customer accounts & orders remain 100% untouched.
+                                <span id="lblCompleteRefreshSubText" style="font-size: 0.77rem; color: #e4e4e7; line-height: 1.4; display: block; margin-top: 5px;">
+                                    Performs a complete wipe & fresh reload from czmakers.com for the category selected below. If a specific category is chosen, only that category is wiped and reloaded—all other categories stay 100% untouched. Customer accounts (16) & past orders (13) remain 100% preserved.
                                 </span>
+
+                                <!-- Direct category dropdown inside Option 3 card itself -->
+                                <div style="margin-top: 12px; padding: 10px 14px; background: rgba(0,0,0,0.55); border: 1px solid rgba(239,68,68,0.45); border-radius: 6px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;" onclick="event.stopPropagation()">
+                                    <label for="completeRefreshCategoryDirect" style="font-size: 0.82rem; font-weight: 700; color: #fecaca; margin: 0; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                                        <i class="fa-solid fa-bullseye" style="color: #ef4444;"></i> Select Category to Complete Refresh:
+                                    </label>
+                                    <select id="completeRefreshCategoryDirect" class="admin-select" style="padding: 7px 12px; font-size: 0.84rem; flex: 1; min-width: 250px; font-weight: 600; color: #ffffff; background: #121214; border: 1px solid rgba(239,68,68,0.5); border-radius: 6px;" onchange="handleCompleteRefreshCategoryDirectChange(this.value)">
+                                        <option value="all" selected>🌟 All Categories (Wipe & Reload Complete 11k Catalog)</option>
+                                        <optgroup label="Single Category Wipe & Reload (Other Categories 100% Untouched)">
+                                            <option value="necklace">📿 Necklaces & Chokers Only</option>
+                                            <option value="earrings">✨ Earrings & Jhumkas Only</option>
+                                            <option value="rings">💍 Finger Rings Only</option>
+                                            <option value="wristwear">💫 Wristwear & Bangles Only</option>
+                                            <option value="pendants">💎 Pendants & Sets Only</option>
+                                            <option value="silver">🥈 Silver Jewellery (925 Sterling) Only</option>
+                                            <option value="accessories">👑 Accessories & Brooches Only</option>
+                                        </optgroup>
+                                        <optgroup label="Specific Subcategories Only">
+                                            <option value="choker-necklaces">Choker Necklaces</option>
+                                            <option value="traditional-necklaces">Traditional Necklaces</option>
+                                            <option value="bridal-necklaces">Bridal Necklaces</option>
+                                            <option value="classic-necklace">Classic Necklaces</option>
+                                            <option value="collar-necklace">Collar Necklaces</option>
+                                            <option value="mangalsutra">Mangalsutra</option>
+                                            <option value="aurous-collection">Aurous Collection</option>
+                                            <option value="jhumka-earrings">Jhumka Earrings</option>
+                                            <option value="big-size-earrings">Big Size Earrings</option>
+                                            <option value="medium-earrings">Medium Earrings</option>
+                                            <option value="small-earrings">Small Earrings</option>
+                                            <option value="tops-&-studs">Tops & Studs</option>
+                                            <option value="cz-finger-rings">CZ Finger Rings</option>
+                                            <option value="cz-bangles">CZ Bangles</option>
+                                            <option value="cz-bracelets">CZ Bracelets</option>
+                                            <option value="bracelets-rings-combo">Bracelets & Rings Combo</option>
+                                            <option value="cz-pendant-set">CZ Pendant Sets</option>
+                                            <option value="pendant-with-broad-chain">Pendants with Broad Chain</option>
+                                            <option value="pendant-with-medium-chain">Pendants with Medium Chain</option>
+                                            <option value="925-sterling-silver-earrings">925 Sterling Silver Earrings</option>
+                                            <option value="925-sterling-finger-rings">925 Sterling Finger Rings</option>
+                                            <option value="925-sterling-silver-pendants">925 Sterling Silver Pendants</option>
+                                            <option value="cz-accessories">CZ Accessories</option>
+                                            <option value="cz-brooch">CZ Brooches</option>
+                                            <option value="mangtika">Mangtika</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
                             </div>
                         </label>
                     </div>
@@ -3705,7 +3882,7 @@
     <div class="toast-container" id="adminToastContainer"></div>
 
     <!-- Scripts -->
-    <script src="admin.js?v=v43_image_manager_sync"></script>
+    <script src="admin.js?v=v46_direct_category_dropdown"></script>
 
     </body>
 </html>

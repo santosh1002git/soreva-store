@@ -2,6 +2,7 @@
 data/czm-credentials.json
 data/czm-cookie.json
 data/czm-sync-status.json
+data/*.flag
 data/razorpay-config.json
 data/notifications-config.json
 data/inquiries.json

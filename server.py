@@ -3125,6 +3125,12 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 self._send_cors_headers()
                 self.end_headers()
                 return
+        if parsed.path in ('/admin', '/admin/'):
+            self.send_response(302)
+            self.send_header('Location', '/admin.html?v=v46')
+            self._send_cors_headers()
+            self.end_headers()
+            return
         if parsed.path.startswith('/api/'):
             self.send_response(200)
             self._send_cors_headers()
@@ -3134,6 +3140,13 @@ class SorevaHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+
+        if parsed.path in ('/admin', '/admin/'):
+            self.send_response(302)
+            self.send_header('Location', '/admin.html?v=v46')
+            self._send_cors_headers()
+            self.end_headers()
+            return
 
         # Force fresh 200 response for all assets by stripping conditional cache headers (except cached images)
         if not parsed.path.startswith('/api/img'):
@@ -6498,18 +6511,28 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             else:
                 cmd.append('--no-mark-unmatched-oos')
 
+            category = str(payload.get('category', 'all') or 'all').strip()
+            if category and category != 'all':
+                cmd.extend(['--category', category])
+
             # Clear stop flag if present
             stop_flag = os.path.join(DATA_DIR, 'czm-sync-stop.flag')
             if os.path.exists(stop_flag):
                 try: os.remove(stop_flag)
                 except Exception: pass
 
-            subprocess.Popen(cmd)
+            log_file = os.path.join(DATA_DIR, 'czm-sync.log')
+            log_f = open(log_file, 'a', encoding='utf-8')
+            subprocess.Popen(cmd, cwd=BASE_DIR, stdout=log_f, stderr=log_f)
             page_desc = "all pages" if max_pages == 0 else f"{max_pages} pages/cat"
+            cat_desc = f" for '{category.title()}'" if category and category != 'all' else " across all categories"
             if mode == 'complete_refresh':
-                msg = f"CZMakers Complete Stock Refresh launched! Clearing all previous catalog pieces and performing a 100% fresh loading across all categories and mappings ({page_desc})."
+                if category and category != 'all':
+                    msg = f"CZMakers Category Refresh launched for '{category.title()}'! Fresh loading '{category.title()}' pieces with zero duplication ({page_desc})."
+                else:
+                    msg = f"CZMakers Complete Stock Refresh launched! Clearing previous catalog pieces and performing fresh loading across all categories ({page_desc})."
             else:
-                msg = f"CZMakers Stock Co-Worker launched in '{mode}' mode ({page_desc}). Matching existing inventory, adding new stock, and marking unmatched as Out of Stock."
+                msg = f"CZMakers Stock Co-Worker launched in '{mode}' mode{cat_desc} ({page_desc}). Matching existing inventory by SKU, adding new stock, and marking unmatched as Out of Stock."
             self._send_json({
                 "success": True, 
                 "message": msg

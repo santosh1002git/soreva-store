@@ -29,6 +29,7 @@ import re
 import argparse
 import http.cookiejar
 import urllib.parse
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
@@ -43,12 +44,18 @@ STATUS_PATH = os.path.join(PROJECT_DIR, 'data', 'czm-sync-status.json')
 STOP_FLAG_PATH = os.path.join(PROJECT_DIR, 'data', 'czm-sync-stop.flag')
 
 BASE_URL = "https://czmakers.com"
-PAGE_DELAY = 0.25
-AVAIL_CHECK_WORKERS = 6
+PAGE_DELAY = 0.75
+AVAIL_CHECK_WORKERS = 3
+_AUTH_LOCK = threading.Lock()
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"macOS"',
+    'Upgrade-Insecure-Requests': '1',
 }
 
 # ─── Comprehensive CZMakers Category Catalog (32 categories) ──────────
@@ -72,10 +79,11 @@ ALL_CZM_CATEGORIES = [
     ('cz-pendant-set',                'pendants',    'CZ Pendant Sets'),
     ('pendant-with-broad-chain',      'pendants',    'Pendants with Broad Chain'),
     ('pendant-with-medium-chain',     'pendants',    'Pendants with Medium Chain'),
-    ('wristwear',                     'bracelets',   'Wristwear'),
-    ('cz-bangles',                    'bracelets',   'CZ Bangles'),
-    ('cz-braclets',                   'bracelets',   'CZ Bracelets'),
-    ('bracelets-rings-combo',         'bracelets',   'Bracelets & Rings Combo'),
+    ('wristwear',                     'wristwear',   'Wristwear'),
+    ('cz-bangles',                    'wristwear',   'CZ Bangles'),
+    ('cz-braclets',                   'wristwear',   'CZ Bangles & Bracelets'),
+    ('cz-bracelets',                  'wristwear',   'CZ Bracelets'),
+    ('bracelets-rings-combo',         'wristwear',   'Bracelets & Rings Combo'),
     ('silver-jewellery',              'silver',      'Silver Jewellery'),
     ('925-sterling-silver-earrings',  'silver',      '925 Sterling Silver Earrings'),
     ('925-sterling-finger-rings',     'silver',      '925 Sterling Finger Rings'),
@@ -91,6 +99,7 @@ ALL_CZM_CATEGORIES = [
 # ─── Global State Logger ──────────────────────────────────────────────
 class AgentStatusTracker:
     def __init__(self, mode="full_discovery", user_email="sonal.belchada@gmail.com"):
+        self.lock = threading.Lock()
         self.mode = mode
         self.status = "running"
         self.step = "Initializing agent..."
@@ -116,31 +125,40 @@ class AgentStatusTracker:
         self._write_status()
 
     def log(self, message):
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        entry = f"[{timestamp}] {message}"
-        print(entry)
-        self.logs.append(entry)
-        if len(self.logs) > 50:
-            self.logs = self.logs[-50:]
-        self.step = message
-        self._write_status()
+        with self.lock:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            entry = f"[{timestamp}] {message}"
+            print(entry, flush=True)
+            self.logs.append(entry)
+            if len(self.logs) > 60:
+                self.logs = self.logs[-60:]
+            self.step = message
+            self._write_status()
 
     def update_progress(self, cat="", page=0, **kwargs):
-        if cat:
-            self.current_category = cat
-        if page:
-            self.current_page = page
-        for k, v in kwargs.items():
-            if k in self.stats:
-                self.stats[k] = v
-        self._write_status()
+        with self.lock:
+            if cat:
+                self.current_category = cat
+            if page:
+                self.current_page = page
+            for k, v in kwargs.items():
+                if k in self.stats:
+                    self.stats[k] = v
+            self._write_status()
 
     def finish(self, status="completed", message=""):
-        self.status = status
-        self.completed_at = datetime.utcnow().isoformat() + "Z"
-        if message:
-            self.log(message)
-        self._write_status()
+        with self.lock:
+            self.status = status
+            self.completed_at = datetime.utcnow().isoformat() + "Z"
+            if message:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                entry = f"[{timestamp}] {message}"
+                print(entry, flush=True)
+                self.logs.append(entry)
+                if len(self.logs) > 60:
+                    self.logs = self.logs[-60:]
+                self.step = message
+            self._write_status()
 
     def _write_status(self):
         self.updated_at = datetime.utcnow().isoformat() + "Z"
@@ -157,7 +175,7 @@ class AgentStatusTracker:
             "updatedAt": self.updated_at,
             "completedAt": self.completed_at,
             "durationSeconds": round(time.time() - self.start_time, 1),
-            "recentLogs": self.logs[-35:],
+            "recentLogs": self.logs[-40:],
         }
         try:
             tmp_path = STATUS_PATH + ".tmp"
@@ -254,60 +272,81 @@ def get_stored_credentials():
     return email, password
 
 
-def perform_czm_login(ssl_ctx):
-    """Login to CZMakers and return (cookie_str, email)."""
+def perform_czm_login(ssl_ctx, retries=2):
+    """Login to CZMakers and return (cookie_str, email). Uses clean headers to prevent 419 CSRF mismatch."""
     email, password = get_stored_credentials()
     if not email or not password:
         return None, email
 
-    try:
-        cj = http.cookiejar.CookieJar()
-        opener = urllib.request.build_opener(
-            urllib.request.HTTPCookieProcessor(cj),
-            urllib.request.HTTPSHandler(context=ssl_ctx)
-        )
+    clean_headers = {k: v for k, v in HEADERS.items() if k.lower() != 'cookie'}
 
-        req = urllib.request.Request(f'{BASE_URL}/login', headers=HEADERS)
-        resp = opener.open(req)
-        html = resp.read().decode('utf-8')
-        m = re.search(r'name="_token"\s+value="([^"]+)"', html)
-        if not m:
-            return None, email
-        token = m.group(1)
+    for attempt in range(retries + 1):
+        try:
+            cj = http.cookiejar.CookieJar()
+            opener = urllib.request.build_opener(
+                urllib.request.HTTPCookieProcessor(cj),
+                urllib.request.HTTPSHandler(context=ssl_ctx)
+            )
 
-        data = urllib.parse.urlencode({'_token': token, 'email': email, 'password': password}).encode('utf-8')
-        post_req = urllib.request.Request(f'{BASE_URL}/login', data=data, headers=HEADERS)
-        post_resp = opener.open(post_req)
+            req = urllib.request.Request(f'{BASE_URL}/login', headers=clean_headers)
+            resp = opener.open(req, timeout=25)
+            html = resp.read().decode('utf-8', errors='ignore')
+            m = re.search(r'name="_token"\s+value="([^"]+)"', html)
+            if not m:
+                if attempt < retries:
+                    time.sleep(1.0)
+                    continue
+                return None, email
+            token = m.group(1)
 
-        if "/login" in post_resp.geturl() and "dashboard" not in post_resp.geturl():
-            return None, email
+            data = urllib.parse.urlencode({'_token': token, 'email': email, 'password': password}).encode('utf-8')
+            post_req = urllib.request.Request(f'{BASE_URL}/login', data=data, headers=clean_headers)
+            post_resp = opener.open(post_req, timeout=25)
 
-        cookie_dict = {c.name: c.value for c in cj}
-        if cookie_dict:
-            with open(CZM_COOKIE_PATH, 'w', encoding='utf-8') as f:
-                json.dump(cookie_dict, f)
-            cookie_str = "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
-            return cookie_str, email
-    except Exception:
-        pass
+            if "/login" in post_resp.geturl() and "dashboard" not in post_resp.geturl():
+                if attempt < retries:
+                    time.sleep(1.0)
+                    continue
+                return None, email
+
+            cookie_dict = {c.name: c.value for c in cj}
+            if cookie_dict and any('session' in k.lower() or 'xsrf' in k.lower() for k in cookie_dict.keys()):
+                with open(CZM_COOKIE_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(cookie_dict, f)
+                cookie_str = "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
+                HEADERS['Cookie'] = cookie_str
+                return cookie_str, email
+        except Exception as e:
+            if attempt < retries:
+                time.sleep(1.5)
+            else:
+                print(f"[CZM Login Warning] Authentication attempt failed: {e}", flush=True)
+
     return None, email
 
 
-def setup_auth_headers(ssl_ctx):
+def setup_auth_headers(ssl_ctx, tracker=None):
     """Ensure HEADERS has an active CZMakers session cookie."""
     fresh_cookie, email = perform_czm_login(ssl_ctx)
     if fresh_cookie:
         HEADERS['Cookie'] = fresh_cookie
         return True, email
 
+    # Only if fresh login failed, try cached cookie as emergency fallback, but test it first!
     if os.path.exists(CZM_COOKIE_PATH):
         try:
             with open(CZM_COOKIE_PATH, 'r', encoding='utf-8') as f:
                 cookie_dict = json.load(f)
             cookie_str = "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
             if cookie_str:
-                HEADERS['Cookie'] = cookie_str
-                return True, email
+                test_req = urllib.request.Request(f'{BASE_URL}/category/necklaces?page=1', headers={
+                    'User-Agent': HEADERS.get('User-Agent', ''),
+                    'Cookie': cookie_str
+                })
+                with urllib.request.urlopen(test_req, context=ssl_ctx, timeout=15) as test_resp:
+                    if "/login" not in test_resp.geturl() and test_resp.status == 200:
+                        HEADERS['Cookie'] = cookie_str
+                        return True, email
         except Exception:
             pass
 
@@ -493,17 +532,43 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
     return products
 
 
-def fetch_category_page(url, ssl_ctx, retries=2):
-    """Fetch a category URL with headers, timeout, and retry."""
-    req = urllib.request.Request(url, headers=HEADERS)
+def fetch_category_page(url, ssl_ctx, retries=2, tracker=None):
+    """Fetch a category URL with headers, timeout, retry, and auto-reauth."""
     for attempt in range(retries + 1):
         try:
-            with urllib.request.urlopen(req, context=ssl_ctx, timeout=18) as resp:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=35) as resp:
+                final_url = resp.geturl()
+                if "/login" in final_url and "category" not in final_url:
+                    if tracker:
+                        tracker.log(f"⚠ CZMakers session redirected to login on {url}. Re-authenticating...")
+                    with _AUTH_LOCK:
+                        setup_auth_headers(ssl_ctx)
+                    continue
                 if resp.status == 200:
                     return resp.read().decode('utf-8', errors='ignore')
-        except Exception:
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                if tracker:
+                    tracker.log(f"⚠ HTTP {e.code} on {url}. Session expired or restricted. Re-authenticating...")
+                with _AUTH_LOCK:
+                    setup_auth_headers(ssl_ctx)
+                time.sleep(1.0)
+            else:
+                if tracker and attempt == retries:
+                    tracker.log(f"⚠ HTTP {e.code} on {url}: {e.reason}")
+                if attempt < retries:
+                    time.sleep(1.0)
+        except urllib.error.URLError as e:
+            if tracker and attempt == retries:
+                tracker.log(f"⚠ Network error fetching {url}: {e.reason}")
             if attempt < retries:
-                time.sleep(0.5)
+                time.sleep(1.0)
+        except Exception as e:
+            if tracker and attempt == retries:
+                tracker.log(f"⚠ Request error on {url}: {e}")
+            if attempt < retries:
+                time.sleep(1.0)
     return ""
 
 
@@ -534,7 +599,7 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
     """)
 
     # 2. Discover all active categories in canonical aesthetic order
-    preferred_order = ['necklace', 'earrings', 'rings', 'bracelets', 'pendants', 'silver', 'accessories']
+    preferred_order = ['necklace', 'earrings', 'rings', 'wristwear', 'pendants', 'silver', 'accessories']
     cat_rows = c.execute("""
         SELECT DISTINCT category 
         FROM products 
@@ -700,12 +765,13 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
 
 
 # ─── Main Co-Worker Agent Execution ──────────────────────────────────
-def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False, wipe_products=False, mark_unmatched_oos=True):
+def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=False, verify_unseen=False, wipe_products=False, mark_unmatched_oos=True, category="all"):
     """
     Main entry point for the CZMakers Co-Worker Agent.
     - Matches existing stock by ID and SKU, updating prices and marking In Stock while preserving inventory.
     - If mode is 'complete_refresh' or wipe_products is True, deletes all products & inventory and performs a fresh reload.
-    - Categorizes, sub-categorizes, and applies pricing markup across all 32 categories.
+    - If category is provided, refreshes only the specified category without touching others.
+    - Categorizes, sub-categorizes, and applies pricing markup across CZMakers categories.
     - Marks items whose data is not matching as per CZMakers website as Out of Stock (inventory preserved, never deleted).
     """
     email, _ = get_stored_credentials()
@@ -714,12 +780,16 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     tracker.log("🔒 CRITICAL SAFEGUARD: Customer records and orders are strictly isolated & preserved.")
 
     ssl_ctx = ssl.create_default_context()
-    auth_ok, logged_in_email = setup_auth_headers(ssl_ctx)
+    auth_ok, logged_in_email = setup_auth_headers(ssl_ctx, tracker=tracker)
     if auth_ok:
         tracker.log(f"🔑 Successfully authenticated as: {logged_in_email} on czmakers.com")
         tracker.stats["authenticatedUser"] = logged_in_email
     else:
-        tracker.log(f"⚠ Warning: Could not complete login for {logged_in_email}; proceeding with available session.")
+        tracker.finish(
+            status="failed",
+            message=f"❌ Authentication Failed: Could not log in to czmakers.com as {email}. Existing store catalog and orders are 100% preserved."
+        )
+        return
 
     # Pricing setup
     profit_markup, profit_flat = get_profit_config()
@@ -749,18 +819,44 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
         except Exception as e:
             tracker.log(f"⚠ Backup notice: {e}")
 
-    # Load existing products from DB
+    # Load existing products from DB (index by ID, raw PID, and SKU from more_details)
     existing_db_products = {}
-    for r in c.execute("SELECT id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale, disabled, active FROM products").fetchall():
-        existing_db_products[str(r['id'])] = dict(r)
+    existing_by_sku = {}
+    for r in c.execute("SELECT id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale, disabled, active, more_details FROM products").fetchall():
+        r_dict = dict(r)
+        db_id = str(r['id'])
+        existing_db_products[db_id] = r_dict
+        if db_id.startswith('czm_'):
+            existing_db_products[db_id[4:]] = r_dict
+        md_raw = r_dict.get('more_details')
+        if md_raw:
+            try:
+                md = json.loads(md_raw) if isinstance(md_raw, str) else md_raw
+                if isinstance(md, dict):
+                    m_sku = str(md.get('sku') or '').strip().upper()
+                    m_no = str(md.get('modelNo') or '').strip().upper()
+                    m_czm = str(md.get('czmId') or '').strip()
+                    if m_sku:
+                        existing_by_sku[m_sku] = db_id
+                        if m_sku.startswith('SRV-'): existing_by_sku[m_sku[4:]] = db_id
+                        if m_sku.startswith('CZM-'): existing_by_sku[m_sku[4:]] = db_id
+                    if m_no:
+                        existing_by_sku[m_no] = db_id
+                        existing_by_sku[f"SRV-{m_no}"] = db_id
+                    if m_czm:
+                        existing_db_products[m_czm] = r_dict
+                        existing_db_products[f"czm_{m_czm}"] = r_dict
+            except Exception:
+                pass
 
     # Index by SKU and ID from inventory table
-    existing_by_sku = {}
     inventory_by_id = {}
     for r in c.execute("SELECT id, sku, productName, category, status, stockQty, usdWholesale FROM inventory").fetchall():
         r_dict = dict(r)
         db_id = str(r['id'])
         inventory_by_id[db_id] = r_dict
+        if db_id.startswith('czm_'):
+            inventory_by_id[db_id[4:]] = r_dict
         raw_sku = str(r['sku'] or '').strip().upper()
         if raw_sku:
             existing_by_sku[raw_sku] = db_id
@@ -783,6 +879,8 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                 item_id = str(item.get('id', '')).strip()
                 if item_id:
                     sd_by_id[item_id] = item
+                    if item_id.startswith('czm_'):
+                        sd_by_id[item_id[4:]] = item
                 item_sku = str(item.get('sku', '')).strip().upper()
                 if item_sku:
                     sd_by_sku[item_sku] = item
@@ -796,49 +894,78 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     initial_catalog_size = len(existing_db_products)
     tracker.log(f"📦 Current catalog size in Sorèva store: {initial_catalog_size} pieces.")
 
-    # Complete Stock Refresh: wipe products & inventory first, then reload fresh
     if mode == "complete_refresh" or wipe_products:
-        tracker.log("⚠️ COMPLETE STOCK REFRESH INITIATED: Deleting all existing products from catalog & inventory...")
-        c.execute("DELETE FROM products")
-        c.execute("DELETE FROM inventory")
-        conn.commit()
-        existing_db_products.clear()
-        existing_by_sku.clear()
-        inventory_by_id.clear()
-        sd_products = []
-        sd_by_id.clear()
-        sd_by_sku.clear()
-        if 'products' in sd:
-            sd['products'] = []
-        initial_catalog_size = 0
-        tracker.log("🗑️ All prior products and inventory items cleared. Starting fresh loading of all products from CZMakers...")
+        tracker.log("⚠️ Complete Stock Refresh Mode: Discovering all fresh stock from CZMakers first; catalog will be replaced only after successful verification.")
 
-    # Select categories to scan
-    if mode == "refresh_stock" and max_pages > 0 and max_pages <= 3:
+    # Resolve target category filter (Supports main category families and individual subcategory slugs)
+    target_cat = str(category or 'all').strip().lower()
+    cat_aliases = {
+        'bracelets': 'wristwear',
+        'bracelet': 'wristwear',
+        'bangles': 'wristwear',
+        'bangle': 'wristwear',
+        'wristwear': 'wristwear',
+        'necklaces': 'necklace',
+        'necklace': 'necklace',
+        'earrings': 'earrings',
+        'earring': 'earrings',
+        'rings': 'rings',
+        'ring': 'rings',
+        'finger-rings': 'rings',
+        'pendants': 'pendants',
+        'pendant': 'pendants',
+        'silver': 'silver',
+        'silver-jewellery': 'silver',
+        '925': 'silver',
+        'accessories': 'accessories',
+        'accessory': 'accessories',
+    }
+    canonical_cat = cat_aliases.get(target_cat, target_cat)
+
+    if canonical_cat and canonical_cat not in ('all', ''):
+        # 1. Match entire category family (e.g. necklace, earrings, rings, wristwear, pendants, silver, accessories)
+        cat_matches = [c for c in ALL_CZM_CATEGORIES if c[1].lower() == canonical_cat]
+        # 2. If not a main family, match specific CZMakers subcategory slug or title
+        if not cat_matches:
+            cat_matches = [
+                c for c in ALL_CZM_CATEGORIES
+                if c[0].lower() == target_cat
+                or target_cat in c[0].lower()
+                or c[2].lower() == target_cat
+                or target_cat in c[2].lower()
+            ]
+
+        if cat_matches:
+            category_list = cat_matches
+            cat_display_name = category_list[0][2] if len(category_list) == 1 else canonical_cat.title()
+            tracker.log(f"🎯 Category-Specific Refresh: Targeting {len(category_list)} CZMakers subcategories for '{cat_display_name}'.")
+        else:
+            tracker.log(f"⚠ Category '{category}' not found in catalog mapping; scanning all categories.")
+            category_list = ALL_CZM_CATEGORIES
+    elif mode == "refresh_stock" and max_pages > 0 and max_pages <= 3:
         # Quick refresh of top 10 categories
         category_list = ALL_CZM_CATEGORIES[:10]
-        effective_max_pages = max_pages
     else:
-        # Full scan: all 32 categories, up to max_pages or UNLIMITED (0)
+        # Full scan: all categories, up to max_pages or reasonable safety ceiling (25 pages = 2,000 items/cat)
         category_list = ALL_CZM_CATEGORIES
-        effective_max_pages = max_pages if max_pages > 0 else 50  # 50 pages per category is effectively unlimited
+
+    effective_max_pages = max_pages if max_pages > 0 else 25
 
     tracker.total_categories = len(category_list)
-    tracker.log(f"🚀 Scanning each and every stock across {len(category_list)} CZMakers categories...")
+    tracker.log(f"🚀 Scanning each and every stock across {len(category_list)} CZMakers categories (max {effective_max_pages} pages/cat)...")
 
     seen_czm_pids = set()
     discovered_products = {}  # key = czm_id
     total_scanned_count = 0
-    updated_price_count = 0
-    new_added_count = 0
-    out_of_stock_count = 0
-    new_added_ids = []
+    categories_done = 0
+    crawl_lock = threading.Lock()
     fully_exhausted_categories = set()
 
-    for cat_idx, (cat_slug, cat_default, cat_name) in enumerate(category_list, 1):
+    def crawl_category_worker(cat_info, cat_idx):
+        nonlocal categories_done, total_scanned_count
+        cat_slug, cat_default, cat_name = cat_info
+
         if check_stop_requested():
-            tracker.finish(status="stopped", message="🛑 Agent stopped by user request.")
-            conn.close()
             return
 
         tracker.update_progress(cat=cat_name, page=1)
@@ -847,16 +974,15 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
         cat_seen_pids = set()
         empty_page_count = 0
         cat_exhausted = False
+        cat_items = []
 
         for page in range(1, effective_max_pages + 1):
             if check_stop_requested():
-                tracker.finish(status="stopped", message="🛑 Agent stopped by user request.")
-                conn.close()
-                return
+                break
 
             tracker.update_progress(cat=cat_name, page=page)
             url = f"{BASE_URL}/category/{cat_slug}?page={page}"
-            html = fetch_category_page(url, ssl_ctx)
+            html = fetch_category_page(url, ssl_ctx, tracker=tracker)
 
             if not html:
                 empty_page_count += 1
@@ -873,34 +999,89 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
             new_in_page = 0
             for item in items:
                 pid = item['pid']
-                seen_czm_pids.add(pid)
                 if pid not in cat_seen_pids:
                     cat_seen_pids.add(pid)
                     new_in_page += 1
-                    total_scanned_count += 1
-                    discovered_products[item['id']] = item
-
-            tracker.stats["scanned"] = total_scanned_count
+                    cat_items.append(item)
 
             if new_in_page == 0:
-                # No new unique items on this page; category reached its natural end
                 cat_exhausted = True
                 break
 
             time.sleep(PAGE_DELAY)
 
-        if cat_exhausted or (max_pages == 0):
-            fully_exhausted_categories.add(cat_default)
+        with crawl_lock:
+            categories_done += 1
+            for item in cat_items:
+                seen_czm_pids.add(item['pid'])
+                discovered_products[item['id']] = item
+            total_scanned_count = len(discovered_products)
+            tracker.stats["scanned"] = total_scanned_count
+            if cat_exhausted or (max_pages == 0):
+                fully_exhausted_categories.add(cat_default)
+            tracker.log(f"  ✓ {cat_name}: Found {len(cat_seen_pids)} pieces with verified wholesale pricing. ({categories_done}/{len(category_list)} categories done)")
 
-        tracker.log(f"  ✓ {cat_name}: Found {len(cat_seen_pids)} pieces with verified wholesale pricing.")
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(crawl_category_worker, cat, idx) for idx, cat in enumerate(category_list, 1)]
+        for f in as_completed(futures):
+            if check_stop_requested():
+                executor.shutdown(wait=False, cancel_futures=True)
+                tracker.finish(status="stopped", message="🛑 Agent stopped by user request.")
+                conn.close()
+                return
+            try:
+                f.result()
+            except Exception as e:
+                tracker.log(f"⚠ Category worker error: {e}")
 
     tracker.log(f"\n✨ Total live CZMakers pieces discovered across all categories: {len(discovered_products)}")
 
-    # ─── STEP 2: Match Existing Stock & Just Add New Stock ───────────
-    tracker.log("⚙️ Matching inventory: updating matched stock, adding new stock (existing stock is never replaced)...")
+    # ─── CRITICAL ZERO-DATA-LOSS SAFETY CHECK ──────────────────────────
+    if len(discovered_products) == 0:
+        tracker.finish(
+            status="failed",
+            message=f"❌ Sync Aborted: 0 products could be pulled from czmakers.com (website unreachable, blocked, or credentials expired). Existing catalog ({initial_catalog_size} pieces) protected and 100% preserved."
+        )
+        conn.close()
+        return
+
+    # ─── ATOMIC WIPE & FRESH RELOAD (ONLY AFTER SUCCESSFUL DISCOVERY) ──
+    if mode == "complete_refresh" or wipe_products:
+        if target_cat and target_cat not in ('all', ''):
+            scanned_cat_names = {c[1].lower() for c in category_list} | {c[0].lower() for c in category_list}
+            tracker.log(f"⚠️ CATEGORY REFRESH: Replacing catalog pieces for '{category}' with {len(discovered_products)} freshly discovered pieces...")
+            placeholders_cat = ','.join('?' for _ in scanned_cat_names)
+            c.execute(f"DELETE FROM products WHERE LOWER(category) IN ({placeholders_cat})", list(scanned_cat_names))
+            c.execute(f"DELETE FROM inventory WHERE LOWER(category) IN ({placeholders_cat})", list(scanned_cat_names))
+            conn.commit()
+            existing_db_products = {k: v for k, v in existing_db_products.items() if v.get('category', '').lower() not in scanned_cat_names}
+            sd_products = [p for p in sd_products if str(p.get('category', '')).lower() not in scanned_cat_names]
+            sd_by_id = {k: v for k, v in sd_by_id.items() if str(v.get('category', '')).lower() not in scanned_cat_names}
+            sd_by_sku = {k: v for k, v in sd_by_sku.items() if str(v.get('category', '')).lower() not in scanned_cat_names}
+        else:
+            tracker.log(f"⚠️ COMPLETE STOCK REFRESH: Replacing catalog with {len(discovered_products)} freshly discovered pieces from CZMakers...")
+            c.execute("DELETE FROM products")
+            c.execute("DELETE FROM inventory")
+            conn.commit()
+            existing_db_products.clear()
+            existing_by_sku.clear()
+            inventory_by_id.clear()
+            sd_products = []
+            sd_by_id.clear()
+            sd_by_sku.clear()
+            if 'products' in sd:
+                sd['products'] = []
+            initial_catalog_size = 0
+
+    # ─── STEP 2: Match Existing Stock & Add New Stock ─────────────────
+    tracker.log("⚙️ Synchronizing inventory: updating matched stock, adding new arrivals...")
 
     matched_existing_ids = set()
     sync_time_iso = datetime.utcnow().isoformat() + "Z"
+    updated_price_count = 0
+    new_added_count = 0
+    out_of_stock_count = 0
+    new_added_ids = []
 
     for czm_id, p in discovered_products.items():
         raw_pid = str(p['pid']).strip()
@@ -1107,8 +1288,102 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
             sd_by_id[p['id']] = new_item
             if srv_sku:
                 sd_by_sku[srv_sku] = new_item
+            existing_db_products[p['id']] = new_item
+            existing_db_products[raw_pid] = new_item
+            inventory_by_id[p['id']] = new_item
+            inventory_by_id[raw_pid] = new_item
+            sd_by_id[p['id']] = new_item
+            sd_by_id[raw_pid] = new_item
             matched_existing_ids.add(p['id'])
+            matched_existing_ids.add(raw_pid)
+            if srv_sku:
+                existing_by_sku[srv_sku] = p['id']
+                sd_by_sku[srv_sku] = new_item
+                if srv_sku.startswith('SRV-'):
+                    existing_by_sku[srv_sku[4:]] = p['id']
+                    sd_by_sku[srv_sku[4:]] = new_item
+            if model_sku:
+                existing_by_sku[model_sku] = p['id']
+                existing_by_sku[f"SRV-{model_sku}"] = p['id']
+                sd_by_sku[model_sku] = new_item
+                sd_by_sku[f"SRV-{model_sku}"] = new_item
             new_added_count += 1
+            new_added_ids.append(p['id'])
+        else:
+            # UNMATCHED & Out of Stock on CZMakers: insert as disabled / Out of Stock
+            c.execute("""
+                INSERT OR IGNORE INTO products (
+                    id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale,
+                    plating, primaryImg, hoverImg, videoUrl, badge, description, disabled, active, rating, reviews,
+                    gallery, setContents, stoneColor, stoneSize, more_details,
+                    lastRefreshed, dateAdded
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?, 1, 0, 4.9, 14, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                p['id'], p['name'], p['category'], p['subCategory'], p['priceINR'], p['originalPriceINR'],
+                p['wholesaleINR'], p['plating'], p['primaryImg'], p['hoverImg'], p['videoUrl'],
+                p['description'], json.dumps(p['gallery']),
+                p['setContents'], p['stoneColor'], p['stoneSize'],
+                json.dumps(p['more_details']),
+                sync_time_iso, sync_time_iso
+            ))
+
+            c.execute("""
+                INSERT OR IGNORE INTO inventory (
+                    id, productName, sku, category, subCategory, stockQty, lowStockThreshold, status, usdWholesale, lastRefreshed, dateAdded
+                ) VALUES (?, ?, ?, ?, ?, 0, 3, 'Out of Stock', ?, ?, ?)
+            """, (p['id'], p['name'], p['sku'], p['category'], p['subCategory'], p['wholesaleINR'], sync_time_iso, sync_time_iso))
+
+            new_item = {
+                "id": p['id'],
+                "sku": p['sku'],
+                "name": p['name'],
+                "category": p['category'],
+                "subCategory": p['subCategory'],
+                "priceINR": p['priceINR'],
+                "originalPriceINR": p['originalPriceINR'],
+                "usdWholesale": p['wholesaleINR'],
+                "rating": 4.9,
+                "reviews": 14,
+                "plating": p['plating'],
+                "availableFinishes": ["24K Gold", "Rose Gold", "Rhodium Silver"],
+                "badge": "",
+                "disabled": 1,
+                "active": 0,
+                "stockStatus": "Out of Stock",
+                "stockQty": 0,
+                "primaryImg": p['primaryImg'],
+                "hoverImg": p['hoverImg'],
+                "videoUrl": p['videoUrl'],
+                "gallery": p['gallery'],
+                "description": p['description'],
+                "setContents": p['setContents'],
+                "stoneColor": p['stoneColor'],
+                "stoneSize": p['stoneSize'],
+                "more_details": p['more_details'],
+                "lastRefreshed": sync_time_iso,
+                "dateAdded": sync_time_iso
+            }
+            sd_products.append(new_item)
+            sd_by_id[p['id']] = new_item
+            sd_by_id[raw_pid] = new_item
+            existing_db_products[p['id']] = new_item
+            existing_db_products[raw_pid] = new_item
+            inventory_by_id[p['id']] = new_item
+            inventory_by_id[raw_pid] = new_item
+            matched_existing_ids.add(p['id'])
+            matched_existing_ids.add(raw_pid)
+            if srv_sku:
+                sd_by_sku[srv_sku] = new_item
+                existing_by_sku[srv_sku] = p['id']
+                if srv_sku.startswith('SRV-'):
+                    existing_by_sku[srv_sku[4:]] = p['id']
+                    sd_by_sku[srv_sku[4:]] = new_item
+            if model_sku:
+                sd_by_sku[model_sku] = new_item
+                sd_by_sku[f"SRV-{model_sku}"] = new_item
+                existing_by_sku[model_sku] = p['id']
+                existing_by_sku[f"SRV-{model_sku}"] = p['id']
+            out_of_stock_count += 1
             new_added_ids.append(p['id'])
 
     conn.commit()
@@ -1119,10 +1394,25 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     # ─── STEP 3: Handle Unmatched Stock (Mark as Out of Stock) ──────────
     tracker.log("🔍 Identifying stock not matching CZMakers live website data...")
     all_existing_ids = set(existing_db_products.keys()) | set(inventory_by_id.keys()) | set(sd_by_id.keys())
-    unmatched_db_ids = [
-        db_id for db_id in all_existing_ids
-        if db_id not in matched_existing_ids
-    ]
+
+    # If a specific category was scanned, only evaluate existing products in that category!
+    if target_cat and target_cat not in ('all', ''):
+        scanned_cat_defs = {c[1].lower() for c in category_list} | {c[0].lower() for c in category_list}
+        unmatched_db_ids = [
+            db_id for db_id in all_existing_ids
+            if db_id not in matched_existing_ids
+            and (
+                existing_db_products.get(db_id, {}).get('category', '').lower() in scanned_cat_defs
+                or inventory_by_id.get(db_id, {}).get('category', '').lower() in scanned_cat_defs
+                or str(sd_by_id.get(db_id, {}).get('category', '')).lower() in scanned_cat_defs
+            )
+        ]
+        tracker.log(f"  Filtering evaluation to {len(unmatched_db_ids)} pieces in category '{category}'...")
+    else:
+        unmatched_db_ids = [
+            db_id for db_id in all_existing_ids
+            if db_id not in matched_existing_ids
+        ]
 
     missing_to_mark = []
     if unmatched_db_ids:
@@ -1210,17 +1500,21 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     # ─── STEP 4: Save store-data.json ─────────────────────────────────
     tracker.log("🔄 Saving updated store-data.json (public storefront)...")
     if os.path.exists(STORE_DATA_PATH):
-        try:
-            sd['products'] = sd_products
-            if 'settings' in sd:
-                sd['settings']['lastStockSync'] = datetime.utcnow().isoformat() + "Z"
+        existing_sd_count = len(sd.get('products', []))
+        if len(sd_products) == 0 and existing_sd_count > 0:
+            tracker.log(f"🛑 SAFETY HALT: Refusing to overwrite store-data.json with 0 products when {existing_sd_count} products exist! Catalog preserved.")
+        else:
+            try:
+                sd['products'] = sd_products
+                if 'settings' in sd:
+                    sd['settings']['lastStockSync'] = datetime.utcnow().isoformat() + "Z"
 
-            with open(STORE_DATA_PATH, 'w', encoding='utf-8') as f:
-                json.dump(sd, f, ensure_ascii=False, indent=2)
+                with open(STORE_DATA_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(sd, f, ensure_ascii=False, indent=2)
 
-            tracker.log(f"✓ store-data.json successfully updated with {len(sd_products)} total products.")
-        except Exception as e:
-            tracker.log(f"⚠ store-data.json save error: {e}")
+                tracker.log(f"✓ store-data.json successfully updated with {len(sd_products)} total products.")
+            except Exception as e:
+                tracker.log(f"⚠ store-data.json save error: {e}")
 
     # ─── STEP 5: Final Isolation Verification & Audit Log ──────────────
     final_ord_count, final_cust_count = verify_customer_order_isolation(conn)
@@ -1270,6 +1564,8 @@ if __name__ == '__main__':
                         help="Mark all unmatched/non-matching CZMakers products as Out of Stock")
     parser.add_argument('--no-mark-unmatched-oos', dest='mark_unmatched_oos', action='store_false',
                         help="Do not mark unmatched products as Out of Stock")
+    parser.add_argument('--category', type=str, default='all',
+                        help="Specific category or collection to refresh (e.g. 'necklaces', 'earrings', 'rings', 'bracelets', 'pendants', 'silver', 'accessories', or specific slug like 'choker-necklaces')")
     args = parser.parse_args()
 
     run_czm_coworker_agent(
@@ -1278,5 +1574,6 @@ if __name__ == '__main__':
         remove_missing=args.remove_missing,
         verify_unseen=args.verify_unseen,
         wipe_products=args.wipe_products,
-        mark_unmatched_oos=args.mark_unmatched_oos
+        mark_unmatched_oos=args.mark_unmatched_oos,
+        category=args.category
     )
