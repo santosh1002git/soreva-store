@@ -171,64 +171,18 @@ def perform_czm_login():
         except Exception:
             pass
 
-    if not os.path.exists(CZM_CRED_PATH):
-        return None
     try:
-        with open(CZM_CRED_PATH, 'r', encoding='utf-8') as f:
-            creds = json.load(f)
-        email = creds.get('email')
-        password = creds.get('password')
-        if not email or not password:
-            return None
-
+        if BASE_DIR not in sys.path:
+            sys.path.insert(0, BASE_DIR)
+        from scripts.czm_sync_agent import perform_czm_login as agent_czm_login
         ssl_ctx = ssl.create_default_context()
-        cj = http.cookiejar.CookieJar()
-        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj), urllib.request.HTTPSHandler(context=ssl_ctx))
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        }
-        
-        req = urllib.request.Request('https://czmakers.com/login', headers=headers)
-        resp = opener.open(req, timeout=8)
-        html = resp.read().decode('utf-8')
-        m = re.search(r'name="_token"\s+value="([^"]+)"', html)
-        if not m:
-            return None
-        token = m.group(1)
-        
-        data = urllib.parse.urlencode({
-            '_token': token,
-            'email': email,
-            'password': password
-        }).encode('utf-8')
-        
-        post_req = urllib.request.Request('https://czmakers.com/login', data=data, headers=headers)
-        post_resp = opener.open(post_req, timeout=8)
-        final_url = post_resp.geturl()
-        
-        post_html = post_resp.read().decode('utf-8', errors='ignore')
-        
-        if "/login" in final_url and "dashboard" not in final_url and "home" not in final_url:
-            return None
-            
-        usd_match = re.search(r'href="([^"]*/USD)"', post_html)
-        if usd_match:
-            usd_url = usd_match.group(1)
-            if usd_url.startswith('/'):
-                usd_url = "https://czmakers.com" + usd_url
-            opener.open(urllib.request.Request(usd_url, headers=headers), timeout=5)
-            
-        cookie_dict = {}
-        for c in cj:
-            cookie_dict[c.name] = c.value
-            
-        if cookie_dict:
-            with open(CZM_COOKIE_PATH, 'w', encoding='utf-8') as f:
-                json.dump(cookie_dict, f)
-            return "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
-    except Exception:
-        pass
-    return None
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+        cookie_str, _ = agent_czm_login(ssl_ctx)
+        return cookie_str
+    except Exception as e:
+        print(f"[CZM Login] Delegate login error: {e}")
+        return None
 
 
 

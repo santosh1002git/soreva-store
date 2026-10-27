@@ -30,6 +30,8 @@ import argparse
 import http.cookiejar
 import urllib.parse
 import threading
+import subprocess
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
@@ -272,25 +274,168 @@ def get_stored_credentials():
     return email, password
 
 
-def perform_czm_login(ssl_ctx, retries=2):
+_GLOBAL_OPENER = None
+_GLOBAL_CJ = http.cookiejar.CookieJar()
+
+
+def get_czm_proxies():
+    """Detect if local Privoxy/Tor proxy is available on port 8118, or from environment."""
+    env_proxy = os.environ.get('CZM_PROXY') or os.environ.get('HTTP_PROXY') or os.environ.get('http_proxy')
+    if env_proxy:
+        return {'http': env_proxy, 'https': env_proxy}
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        if s.connect_ex(('127.0.0.1', 8118)) == 0:
+            s.close()
+            return {'http': 'http://127.0.0.1:8118', 'https': 'http://127.0.0.1:8118'}
+        s.close()
+    except Exception:
+        pass
+    return {}
+
+
+def get_czm_opener(ssl_ctx=None):
+    """Returns a unified urllib opener configured with proxy, cookie jar, and SSL context."""
+    global _GLOBAL_OPENER, _GLOBAL_CJ
+    if _GLOBAL_OPENER is None:
+        if ssl_ctx is None:
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+        proxies = get_czm_proxies()
+        handlers = [
+            urllib.request.ProxyHandler(proxies),
+            urllib.request.HTTPCookieProcessor(_GLOBAL_CJ),
+            urllib.request.HTTPSHandler(context=ssl_ctx)
+        ]
+        _GLOBAL_OPENER = urllib.request.build_opener(*handlers)
+    return _GLOBAL_OPENER
+
+
+def solve_czm_antibot_challenge(html, opener, headers):
+    """
+    Solves the cPanel / Bluehost anti-bot JavaScript challenge.
+    Executes the challenge script in Node.js with the necessary browser globals,
+    then submits the verification request to get clearance cookie (wssplashchk).
+    Returns the HTML content after verification (which contains the real login form or page).
+    """
+    if "One moment, please" not in html and "wsidchk" not in html and "a0v" not in html:
+        return html
+
+    solver_js = """
+const fs = require('fs');
+const html = fs.readFileSync(process.argv[2], 'utf-8');
+const scripts = html.match(/<script>([\\s\\S]*?)<\\/script>/gi) || [];
+let challengeCode = '';
+for (const s of scripts) {
+  const code = s.replace(/<\\/?script>/gi, '');
+  if (code.includes('wsidchk') || code.includes('a0v')) {
+    challengeCode = code;
+    break;
+  }
+}
+let formAction = '', formFields = {}, formMethod = 'GET';
+const mockForm = {
+  set action(val) { formAction = val; },
+  set method(val) { formMethod = val; },
+  set id(val) {},
+  appendChild(child) { if (child && child.name) formFields[child.name] = child.value || ''; },
+  submit() {}
+};
+const mockDoc = {
+  getElementById(id) { return { appendChild() {} }; },
+  createElement(tag) { if (tag === 'form') return mockForm; return { name: '', value: '', id: '', appendChild() {} }; },
+  addEventListener(evt, fn) { try { fn(); } catch(e){} }
+};
+const mockWin = {
+  document: mockDoc,
+  navigator: {
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    appVersion: '5.0 (Macintosh)',
+    language: 'en-US',
+    languages: ['en-US', 'en'],
+    plugins: { length: 5, 0: { __proto__: Object.prototype } },
+    mimeTypes: { length: 5, 0: { __proto__: Object.prototype } }
+  },
+  addEventListener(evt, fn) { try { fn(); } catch(e){} },
+  location: { reload() {} },
+  outerHeight: 1080, outerWidth: 1920
+};
+mockWin.navigator.plugins[0].__proto__ = Object.prototype;
+mockWin.navigator.mimeTypes[0].__proto__ = Object.prototype;
+global.window = mockWin;
+global.document = mockDoc;
+global.navigator = mockWin.navigator;
+global.PluginArray = { prototype: mockWin.navigator.plugins[0].__proto__ };
+global.Plugin = { prototype: mockWin.navigator.plugins[0].__proto__ };
+global.MimeTypeArray = { prototype: mockWin.navigator.mimeTypes[0].__proto__ };
+global.MimeType = { prototype: mockWin.navigator.mimeTypes[0].__proto__ };
+global.setTimeout = function(fn) { try { fn(); } catch(e){} };
+global.URLSearchParams = function() {
+  this.append = function(k, v) { formFields[k] = v; };
+  this.toString = function() { return ''; };
+};
+global.XMLHttpRequest = function() {
+  this.open = function(method, url) { formAction = url; };
+  this.send = function() {};
+};
+try { eval(challengeCode); } catch(e) { console.error('Eval error:', e.message); }
+console.log(JSON.stringify({ method: formMethod, action: formAction, fields: formFields }));
+"""
+    tmp_html = None
+    tmp_js = None
+    try:
+        with tempfile.NamedTemporaryFile('w', suffix='.html', delete=False, encoding='utf-8') as f_html:
+            f_html.write(html)
+            tmp_html = f_html.name
+        with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as f_js:
+            f_js.write(solver_js)
+            tmp_js = f_js.name
+
+        res = subprocess.run(["node", tmp_js, tmp_html], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10)
+        solution = json.loads(res.stdout)
+        action = solution.get("action", "")
+        fields = solution.get("fields", {})
+        if action and fields:
+            query_str = urllib.parse.urlencode(fields)
+            verify_url = f"{BASE_URL}{action}?{query_str}"
+            clean_headers = {k: v for k, v in headers.items() if k.lower() != 'cookie'}
+            vreq = urllib.request.Request(verify_url, headers=clean_headers)
+            vresp = opener.open(vreq, timeout=25)
+            verified_html = vresp.read().decode("utf-8", errors="ignore")
+            return verified_html
+    except Exception as e:
+        print(f"[Anti-Bot Challenge Solver] Error: {e}", flush=True)
+    finally:
+        for p in (tmp_html, tmp_js):
+            if p and os.path.exists(p):
+                try: os.remove(p)
+                except Exception: pass
+    return html
+
+
+def perform_czm_login(ssl_ctx, retries=2, tracker=None):
     """Login to CZMakers and return (cookie_str, email). Uses clean headers to prevent 419 CSRF mismatch."""
     email, password = get_stored_credentials()
     if not email or not password:
         return None, email
 
     clean_headers = {k: v for k, v in HEADERS.items() if k.lower() != 'cookie'}
+    opener = get_czm_opener(ssl_ctx)
 
     for attempt in range(retries + 1):
         try:
-            cj = http.cookiejar.CookieJar()
-            opener = urllib.request.build_opener(
-                urllib.request.HTTPCookieProcessor(cj),
-                urllib.request.HTTPSHandler(context=ssl_ctx)
-            )
-
             req = urllib.request.Request(f'{BASE_URL}/login', headers=clean_headers)
             resp = opener.open(req, timeout=25)
             html = resp.read().decode('utf-8', errors='ignore')
+
+            if "One moment, please" in html or "wsidchk" in html:
+                if tracker:
+                    tracker.log("⚡ Anti-bot challenge detected on CZMakers login. Solving verification...")
+                html = solve_czm_antibot_challenge(html, opener, clean_headers)
+
             m = re.search(r'name="_token"\s+value="([^"]+)"', html)
             if not m:
                 if attempt < retries:
@@ -309,8 +454,15 @@ def perform_czm_login(ssl_ctx, retries=2):
                     continue
                 return None, email
 
-            cookie_dict = {c.name: c.value for c in cj}
-            if cookie_dict and any('session' in k.lower() or 'xsrf' in k.lower() for k in cookie_dict.keys()):
+            # Try to switch session currency to INR
+            try:
+                curr_req = urllib.request.Request(f'{BASE_URL}/set-session-currency/1/INR', headers=clean_headers)
+                opener.open(curr_req, timeout=10)
+            except Exception:
+                pass
+
+            cookie_dict = {c.name: c.value for c in _GLOBAL_CJ}
+            if cookie_dict and any('session' in k.lower() or 'xsrf' in k.lower() or 'splash' in k.lower() for k in cookie_dict.keys()):
                 with open(CZM_COOKIE_PATH, 'w', encoding='utf-8') as f:
                     json.dump(cookie_dict, f)
                 cookie_str = "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
@@ -327,7 +479,7 @@ def perform_czm_login(ssl_ctx, retries=2):
 
 def setup_auth_headers(ssl_ctx, tracker=None):
     """Ensure HEADERS has an active CZMakers session cookie."""
-    fresh_cookie, email = perform_czm_login(ssl_ctx)
+    fresh_cookie, email = perform_czm_login(ssl_ctx, tracker=tracker)
     if fresh_cookie:
         HEADERS['Cookie'] = fresh_cookie
         return True, email
@@ -339,11 +491,12 @@ def setup_auth_headers(ssl_ctx, tracker=None):
                 cookie_dict = json.load(f)
             cookie_str = "; ".join([f"{k}={v}" for k, v in cookie_dict.items()])
             if cookie_str:
+                opener = get_czm_opener(ssl_ctx)
                 test_req = urllib.request.Request(f'{BASE_URL}/category/necklaces?page=1', headers={
                     'User-Agent': HEADERS.get('User-Agent', ''),
                     'Cookie': cookie_str
                 })
-                with urllib.request.urlopen(test_req, context=ssl_ctx, timeout=15) as test_resp:
+                with opener.open(test_req, timeout=15) as test_resp:
                     if "/login" not in test_resp.geturl() and test_resp.status == 200:
                         HEADERS['Cookie'] = cookie_str
                         return True, email
@@ -389,11 +542,27 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
             continue
         model_sku = dm.group(1).strip()
 
-        # Extract wholesale INR price from data-price
+        # Extract wholesale INR price from card (or data-price * USD-to-INR conversion)
         dp = re.search(r'data-price=[\"\']([0-9.]+)[\"\']', part)
         try:
-            wholesale_inr = float(dp.group(1)) if dp else 0.0
+            raw_price = float(dp.group(1)) if dp else 0.0
         except ValueError:
+            raw_price = 0.0
+
+        # Check if card has explicit INR price display (e.g. ₹ 1,736)
+        inr_m = re.search(r'(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d+)?)', part, re.I)
+        if inr_m:
+            try:
+                wholesale_inr = float(inr_m.group(1).replace(',', ''))
+            except ValueError:
+                wholesale_inr = 0.0
+        elif raw_price > 0:
+            # If raw_price is in USD range (< 200), convert to INR using standard exchange rate (85.0)
+            if raw_price < 200:
+                wholesale_inr = round(raw_price * 85.0, 2)
+            else:
+                wholesale_inr = round(raw_price, 2)
+        else:
             wholesale_inr = 0.0
 
         # Check if the card explicitly says Out of Stock, Sold Out, Unavailable or has 0 stock/price
@@ -534,25 +703,33 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
 
 def fetch_category_page(url, ssl_ctx, retries=2, tracker=None):
     """Fetch a category URL with headers, timeout, retry, and auto-reauth."""
+    opener = get_czm_opener(ssl_ctx)
     for attempt in range(retries + 1):
         try:
             req = urllib.request.Request(url, headers=HEADERS)
-            with urllib.request.urlopen(req, context=ssl_ctx, timeout=35) as resp:
+            with opener.open(req, timeout=35) as resp:
                 final_url = resp.geturl()
                 if "/login" in final_url and "category" not in final_url:
                     if tracker:
                         tracker.log(f"⚠ CZMakers session redirected to login on {url}. Re-authenticating...")
                     with _AUTH_LOCK:
-                        setup_auth_headers(ssl_ctx)
+                        setup_auth_headers(ssl_ctx, tracker=tracker)
                     continue
                 if resp.status == 200:
-                    return resp.read().decode('utf-8', errors='ignore')
+                    html = resp.read().decode('utf-8', errors='ignore')
+                    if "One moment, please" in html or "wsidchk" in html:
+                        if tracker:
+                            tracker.log(f"⚡ Anti-bot challenge on category page {url}. Solving...")
+                        solve_czm_antibot_challenge(html, opener, HEADERS)
+                        retry_resp = opener.open(req, timeout=35)
+                        return retry_resp.read().decode('utf-8', errors='ignore')
+                    return html
         except urllib.error.HTTPError as e:
             if e.code in (401, 403):
                 if tracker:
                     tracker.log(f"⚠ HTTP {e.code} on {url}. Session expired or restricted. Re-authenticating...")
                 with _AUTH_LOCK:
-                    setup_auth_headers(ssl_ctx)
+                    setup_auth_headers(ssl_ctx, tracker=tracker)
                 time.sleep(1.0)
             else:
                 if tracker and attempt == retries:
@@ -1419,11 +1596,12 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
         tracker.log(f"  Evaluating {len(unmatched_db_ids)} pieces whose data was not matched as per CZMakers website in current run...")
         if verify_unseen:
             tracker.log(f"  Verifying availability directly on https://czmakers.com for {len(unmatched_db_ids)} unmatched pieces...")
+            opener = get_czm_opener(ssl_ctx)
             def check_single_avail(db_id):
                 pid = db_id.replace('czm_', '')
                 url = f"{BASE_URL}/product/{pid}/slug"
                 try:
-                    with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), context=ssl_ctx, timeout=10) as resp:
+                    with opener.open(urllib.request.Request(url, headers=HEADERS), timeout=10) as resp:
                         final_url = resp.geturl()
                         if "/product/" not in final_url or final_url.rstrip("/") == BASE_URL:
                             return db_id, False
