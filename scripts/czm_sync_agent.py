@@ -1339,6 +1339,22 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         lastRefreshed = ?
                     WHERE id = ?
                 """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['subCategory'], sync_time_iso, matched_id))
+                if c.rowcount == 0:
+                    c.execute("""
+                        INSERT OR REPLACE INTO products (
+                            id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale,
+                            plating, primaryImg, hoverImg, videoUrl, badge, description, disabled, active, rating, reviews,
+                            gallery, setContents, stoneColor, stoneSize, more_details,
+                            lastRefreshed, dateAdded
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', ?, 1, 0, 4.9, 14, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        matched_id, p['name'], p['category'], p['subCategory'], p['priceINR'], p['originalPriceINR'],
+                        p['wholesaleINR'], p['plating'], p['primaryImg'], p['hoverImg'], p['videoUrl'],
+                        p['description'], json.dumps(p['gallery']),
+                        p['setContents'], p['stoneColor'], p['stoneSize'],
+                        json.dumps(p['more_details']),
+                        sync_time_iso, sync_time_iso
+                    ))
 
                 c.execute("""
                     UPDATE inventory 
@@ -1350,6 +1366,12 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         lastRefreshed = ?
                     WHERE id = ? OR sku = ? OR sku = ?
                 """, (p['wholesaleINR'], p['category'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                if c.rowcount == 0:
+                    c.execute("""
+                        INSERT OR REPLACE INTO inventory (
+                            id, productName, sku, category, subCategory, stockQty, lowStockThreshold, status, usdWholesale, lastRefreshed, dateAdded
+                        ) VALUES (?, ?, ?, ?, ?, 0, 3, 'Out of Stock', ?, ?, ?)
+                    """, (matched_id, p['name'], p['sku'], p['category'], p['subCategory'], p['wholesaleINR'], sync_time_iso, sync_time_iso))
 
                 sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
                 if sd_item:
@@ -1404,6 +1426,22 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     sync_time_iso,
                     matched_id
                 ))
+                if c.rowcount == 0:
+                    c.execute("""
+                        INSERT OR REPLACE INTO products (
+                            id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale,
+                            plating, primaryImg, hoverImg, videoUrl, badge, description, disabled, active, rating, reviews,
+                            gallery, setContents, stoneColor, stoneSize, more_details,
+                            lastRefreshed, dateAdded
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New Launch', ?, 0, 1, 4.9, 14, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        matched_id, p['name'], p['category'], p['subCategory'], p['priceINR'], p['originalPriceINR'],
+                        p['wholesaleINR'], p['plating'], p['primaryImg'], p['hoverImg'], p['videoUrl'],
+                        p['description'], json.dumps(p['gallery']),
+                        p['setContents'], p['stoneColor'], p['stoneSize'],
+                        json.dumps(p['more_details']),
+                        sync_time_iso, sync_time_iso
+                    ))
 
                 c.execute("""
                     UPDATE inventory 
@@ -1416,9 +1454,50 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         lastRefreshed = ?
                     WHERE id = ? OR sku = ? OR sku = ?
                 """, (p['name'], p['wholesaleINR'], p['category'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                if c.rowcount == 0:
+                    c.execute("""
+                        INSERT OR REPLACE INTO inventory (
+                            id, productName, sku, category, subCategory, stockQty, lowStockThreshold, status, usdWholesale, lastRefreshed, dateAdded
+                        ) VALUES (?, ?, ?, ?, ?, 15, 3, 'In Stock', ?, ?, ?)
+                    """, (matched_id, p['name'], p['sku'], p['category'], p['subCategory'], p['wholesaleINR'], sync_time_iso, sync_time_iso))
 
                 sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
-                if sd_item:
+                if not sd_item:
+                    sd_item = {
+                        "id": matched_id,
+                        "sku": p['sku'],
+                        "name": p['name'],
+                        "category": p['category'],
+                        "subCategory": p['subCategory'],
+                        "priceINR": p['priceINR'],
+                        "originalPriceINR": p['originalPriceINR'],
+                        "usdWholesale": p['wholesaleINR'],
+                        "rating": 4.9,
+                        "reviews": 14,
+                        "plating": p['plating'],
+                        "availableFinishes": ["24K Gold", "Rose Gold", "Rhodium Silver"],
+                        "badge": "New Launch",
+                        "disabled": 0,
+                        "active": 1,
+                        "stockStatus": "In Stock",
+                        "stockQty": 15,
+                        "primaryImg": p['primaryImg'],
+                        "hoverImg": p['hoverImg'],
+                        "videoUrl": p['videoUrl'],
+                        "gallery": p['gallery'],
+                        "description": p['description'],
+                        "setContents": p['setContents'],
+                        "stoneColor": p['stoneColor'],
+                        "stoneSize": p['stoneSize'],
+                        "more_details": p['more_details'],
+                        "lastRefreshed": sync_time_iso,
+                        "dateAdded": sync_time_iso
+                    }
+                    sd_products.append(sd_item)
+                    sd_by_id[matched_id] = sd_item
+                    if srv_sku: sd_by_sku[srv_sku] = sd_item
+                    if model_sku: sd_by_sku[model_sku] = sd_item
+                else:
                     sd_item['name'] = p['name']
                     sd_item['priceINR'] = p['priceINR']
                     sd_item['originalPriceINR'] = p['originalPriceINR']
