@@ -7376,6 +7376,56 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         # ----------------------------------------------------
+        # API: Reset All Stock to Zero (Out of Stock across catalog)
+        # CRITICAL SAFETY: NEVER touches or alters 'orders' or 'customers' tables.
+        # ----------------------------------------------------
+        if parsed.path in ('/api/admin/inventory/reset-all-stock', '/api/inventory/reset-all-stock'):
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                c = conn.cursor()
+                # 1. Update inventory
+                c.execute("UPDATE inventory SET stockQty = 0, status = 'Out of Stock'")
+                inv_updated = c.rowcount
+
+                # 2. Update products
+                c.execute("UPDATE products SET disabled = 1, active = 0")
+                prod_updated = c.rowcount
+
+                # 3. Log audit event
+                c.execute("""
+                    INSERT INTO audit_log (id, employeeName, action, targetType, targetId, details)
+                    VALUES (?, 'Admin', 'Reset All Stock', 'Inventory', 'bulk', ?)
+                """, (f"log_{gen_pb_id()}", f"Reset {inv_updated} inventory items to 0 stock. Catalog preserved for CZMakers refresh."))
+
+                conn.commit()
+
+                # 4. Update store-data.json
+                sd = get_stored_data() or {}
+                if 'products' in sd and isinstance(sd['products'], list):
+                    for p in sd['products']:
+                        p['stockQty'] = 0
+                        p['status'] = 'Out of Stock'
+                        p['stockStatus'] = 'Out of Stock'
+                        p['inStock'] = False
+                        p['disabled'] = 1
+                        p['active'] = 0
+                    save_stored_data(sd)
+
+                self._send_json({
+                    "success": True,
+                    "itemsReset": inv_updated,
+                    "message": f"Successfully reset stock for {inv_updated} catalog items to 0 (Out of Stock). Catalog is ready for fresh CZMakers refresh."
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # ----------------------------------------------------
                 # ----------------------------------------------------
         # API: Upload Image for Website Sections
         # ----------------------------------------------------

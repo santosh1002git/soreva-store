@@ -6634,6 +6634,37 @@ async function confirmDeleteOutOfStockProducts() {
 
 window.confirmDeleteOutOfStockProducts = confirmDeleteOutOfStockProducts;
 
+async function confirmResetAllStock() {
+    const confirmed = confirm(
+        "Are you sure you want to reset all catalog stock to 0 (Out of Stock)?\n\n" +
+        "🛡️ EXCLUSIVE DATA GUARANTEE:\n" +
+        "All customer accounts, contact details, and past order records will remain 100% intact and protected.\n" +
+        "Products will be refreshed live when you run the CZMakers catalog sync."
+    );
+    if (!confirmed) return;
+
+    showToast("Resetting all stock to 0 across the database...", "info");
+    try {
+        const resp = await fetch('/api/admin/inventory/reset-all-stock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const res = await resp.json();
+        if (res.success) {
+            showToast(res.message || "All stock successfully reset to 0!");
+            await loadStoreData();
+            fetchInventory();
+            fetchDatabaseInfo();
+        } else {
+            showToast("Reset error: " + (res.error || "Server error"), "error");
+        }
+    } catch (err) {
+        showToast("Failed to reset stock: " + err.message, "error");
+    }
+}
+
+window.confirmResetAllStock = confirmResetAllStock;
+
 
 async function diagnoseMetaWhatsApp() {
     const btn = document.getElementById('btnDiagnoseWa');

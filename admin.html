@@ -526,6 +526,9 @@
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer;" title="Delete all out of stock products">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock
                             </button>
+                            <button type="button" class="btn-admin-outline" id="btnResetAllStockInv" onclick="confirmResetAllStock()" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-weight: 600; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.4); color: #fcd34d; cursor: pointer;" title="Reset all inventory stock quantities to 0 (Out of Stock)">
+                                <i class="fa-solid fa-rotate-left"></i> Reset All Stock to 0
+                            </button>
                             <button class="btn-admin-primary" id="btnOpenCoworkerStock" onclick="openCzmCoworkerModal()" style="background: linear-gradient(135deg, #18181b, #27272a); border: 1px solid rgba(197,160,89,0.4); color: #fef08a;"><i class="fa-solid fa-robot"></i> Stock Co-Worker</button>
                             <button class="btn-admin-outline" id="btnCzmLogin" onclick="openCzmLoginModal()" style="color: #6366f1; border-color: rgba(99,102,241,0.3);"><i class="fa-solid fa-right-to-bracket"></i> CZMakers Auth</button>
                         </div>
@@ -961,6 +964,9 @@
                             </button>
                             <button type="button" class="btn-admin-danger" id="btnDeleteOutOfStock" onclick="confirmDeleteOutOfStockProducts()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; cursor: pointer; margin-right: 8px;" title="Permanently delete all out of stock products from catalog">
                                 <i class="fa-solid fa-trash-can"></i> Delete Out of Stock (<span id="oosProductBadge">0</span>)
+                            </button>
+                            <button type="button" class="btn-admin-outline" id="btnResetAllStockProd" onclick="confirmResetAllStock()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-weight: 600; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.4); color: #fcd34d; cursor: pointer; margin-right: 8px;" title="Reset all inventory stock quantities to 0 (Out of Stock)">
+                                <i class="fa-solid fa-rotate-left"></i> Reset All Stock to 0
                             </button>
                             <button class="btn-admin-primary" onclick="openCzmCoworkerModal()" style="background: linear-gradient(135deg, #18181b, #27272a); border: 1px solid rgba(197,160,89,0.4); margin-right: 8px; color: #fef08a;" title="Open CZMakers Stock & Pricing Co-Worker Agent">
                                 <i class="fa-solid fa-robot"></i> Stock Co-Worker
