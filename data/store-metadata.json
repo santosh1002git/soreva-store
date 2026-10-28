@@ -182,22 +182,22 @@
     },
     "USD": {
       "symbol": "$",
-      "rate": 0.01034,
+      "rate": 0.010513,
       "label": "USD ($)"
     },
     "AED": {
       "symbol": "د.إ",
-      "rate": 0.03797365,
+      "rate": 0.038608992499999994,
       "label": "AED (د.إ)"
     },
     "GBP": {
       "symbol": "£",
-      "rate": 0.00783,
+      "rate": 0.0078878,
       "label": "GBP (£)"
     },
     "EUR": {
       "symbol": "€",
-      "rate": 0.00925,
+      "rate": 0.0094286,
       "label": "EUR (€)"
     }
   },
