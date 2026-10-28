@@ -4850,8 +4850,6 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 ('pendants',                      'pendants',    'Pendants'),
                 ('cz-bangles',                    'wristwear',   'CZ Bangles'),
                 ('wristwear',                     'wristwear',   'Wristwear'),
-                ('silver-jewellery',              'silver',      'Silver Jewellery'),
-                ('accessories',                   'accessories', 'Accessories'),
             ]
 
             if scan_categories:
@@ -6466,6 +6464,13 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 cmd.append('--no-mark-unmatched-oos')
 
             category = str(payload.get('category', 'all') or 'all').strip()
+            if category.lower() in ('silver', 'accessories', 'silver-jewellery', 'cz-accessories', 'cz-brooch', 'mangtika'):
+                self._send_json({
+                    "success": False,
+                    "error": f"Category '{category}' has been removed from Sorèva store & inventory and is bypassed from sync."
+                }, status=400)
+                return
+
             if category and category != 'all':
                 cmd.extend(['--category', category])
 

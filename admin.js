@@ -976,13 +976,6 @@ const MASTER_CATEGORY_SUBCATEGORIES = {
     ],
     'pendants': [
         'Pendants', 'CZ Pendant Sets', 'Pendants with Broad Chain', 'Pendants with Medium Chain'
-    ],
-    'silver': [
-        'Silver Jewellery', 'Sterling Silver', '925 Sterling Silver Earrings',
-        '925 Sterling Finger Rings', '925 Sterling Silver Pendants'
-    ],
-    'accessories': [
-        'Accessories', 'CZ Accessories', 'CZ Brooches', 'Mangtika'
     ]
 };
 
@@ -1011,9 +1004,6 @@ function getDistinctSubCategories(category = 'all', source = 'products') {
             match = true;
         } else if (category === 'wristwear' || category === 'bracelets') {
             match = (itemCat === 'wristwear' || itemCat === 'bracelets');
-        } else if (category === 'silver') {
-            const sub = (item.subCategory || item.sub_category || '').toLowerCase();
-            match = (itemCat === 'silver' || sub.includes('silver'));
         } else if (category === 'necklace') {
             match = itemCat.includes('neck');
         } else if (category === 'earrings') {
@@ -1022,8 +1012,6 @@ function getDistinctSubCategories(category = 'all', source = 'products') {
             match = itemCat.includes('ring');
         } else if (category === 'pendants') {
             match = itemCat.includes('pendant');
-        } else if (category === 'accessories') {
-            match = itemCat.includes('access');
         } else {
             match = itemCat === category.toLowerCase();
         }
@@ -1356,9 +1344,7 @@ function renderProductsTable(filterText = '', filterCat = 'all', filterBadge = '
                     <option value="earrings" ${p.category === 'earrings' ? 'selected' : ''}>Earrings</option>
                     <option value="rings" ${p.category === 'rings' ? 'selected' : ''}>Finger Rings</option>
                     <option value="pendants" ${p.category === 'pendants' ? 'selected' : ''}>Pendants</option>
-                    <option value="silver" ${p.category === 'silver' ? 'selected' : ''}>Silver</option>
-                    <option value="accessories" ${p.category === 'accessories' ? 'selected' : ''}>Accessories</option>
-                    ${!['wristwear', 'necklace', 'earrings', 'rings', 'pendants', 'silver', 'accessories'].includes(p.category) && p.category ? `<option value="${p.category}" selected>${p.category}</option>` : ''}
+                    ${!['wristwear', 'necklace', 'earrings', 'rings', 'pendants'].includes(p.category) && p.category ? `<option value="${p.category}" selected>${p.category}</option>` : ''}
                 </select>
             </td>
             <td>
@@ -7679,7 +7665,7 @@ async function fetchCoworkerStatus() {
             // Calculate progress estimate
             let progress = 10;
             if (data.currentCategory && data.totalCategories) {
-                const catIdx = ['necklaces', 'choker-necklaces', 'traditional-necklaces', 'earrings', 'jhumka-earrings', 'finger-rings', 'pendants', 'wristwear', 'silver-jewellery', 'accessories'].findIndex(k => k.toLowerCase() === (data.currentCategory || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                const catIdx = ['necklaces', 'choker-necklaces', 'traditional-necklaces', 'earrings', 'jhumka-earrings', 'finger-rings', 'pendants', 'wristwear'].findIndex(k => k.toLowerCase() === (data.currentCategory || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
                 const curIdx = catIdx >= 0 ? catIdx : Math.min(8, Math.floor(stats.scanned / 80));
                 progress = Math.min(95, Math.max(10, Math.round(((curIdx + 1) / 10) * 90)));
             }

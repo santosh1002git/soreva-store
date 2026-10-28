@@ -60,7 +60,7 @@ HEADERS = {
     'Upgrade-Insecure-Requests': '1',
 }
 
-# ─── Comprehensive CZMakers Category Catalog (32 categories) ──────────
+# ─── Active CZMakers Category Catalog (Excluding Silver & Accessories) ──
 ALL_CZM_CATEGORIES = [
     ('necklaces',                     'necklace',    'Necklaces'),
     ('choker-necklaces',              'necklace',    'Choker Necklaces'),
@@ -86,16 +86,15 @@ ALL_CZM_CATEGORIES = [
     ('cz-braclets',                   'wristwear',   'CZ Bangles & Bracelets'),
     ('cz-bracelets',                  'wristwear',   'CZ Bracelets'),
     ('bracelets-rings-combo',         'wristwear',   'Bracelets & Rings Combo'),
-    ('silver-jewellery',              'silver',      'Silver Jewellery'),
-    ('925-sterling-silver-earrings',  'silver',      '925 Sterling Silver Earrings'),
-    ('925-sterling-finger-rings',     'silver',      '925 Sterling Finger Rings'),
-    ('925-sterling-silver-pendants',  'silver',      '925 Sterling Silver Pendants'),
-    ('accessories',                   'accessories', 'Accessories'),
-    ('cz-accessories',                'accessories', 'CZ Accessories'),
-    ('cz-brooch',                     'accessories', 'CZ Brooches'),
-    ('mangtika',                      'accessories', 'Mangtika'),
     ('aurous-collection',             'necklace',    'Aurous Collection'),
 ]
+
+# Strict bypass categories: never crawled, never inserted, purged from DB/inventory
+BYPASS_CATEGORIES = {
+    'silver', 'accessories', 'silver-jewellery', 'cz-accessories', 
+    'cz-brooch', 'mangtika', '925-sterling-silver-earrings', 
+    '925-sterling-finger-rings', '925-sterling-silver-pendants'
+}
 
 
 # ─── Global State Logger ──────────────────────────────────────────────
@@ -525,7 +524,7 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
     Accurately splits cards by the `product_list` container so that
     data-model, data-price, PID, title, and images are perfectly paired.
     """
-    if not html:
+    if not html or cat_default.lower() in BYPASS_CATEGORIES or cat_slug.lower() in BYPASS_CATEGORIES:
         return []
 
     # Split HTML by each product card container
@@ -776,14 +775,14 @@ def enforce_new_launch_fifo(conn, sd_products, new_launch_capacity=30, newly_add
     """)
 
     # 2. Discover all active categories in canonical aesthetic order
-    preferred_order = ['necklace', 'earrings', 'rings', 'wristwear', 'pendants', 'silver', 'accessories']
+    preferred_order = ['necklace', 'earrings', 'rings', 'wristwear', 'pendants']
     cat_rows = c.execute("""
         SELECT DISTINCT category 
         FROM products 
         WHERE disabled = 0 AND active = 1 AND category IS NOT NULL AND category != ''
         ORDER BY category ASC
     """).fetchall()
-    active_cats = [r[0] for r in cat_rows]
+    active_cats = [r[0] for r in cat_rows if r[0].lower() not in BYPASS_CATEGORIES]
 
     ordered_cats = [cat for cat in preferred_order if cat in active_cats] + [cat for cat in active_cats if cat not in preferred_order]
     if not ordered_cats:
@@ -956,6 +955,19 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     tracker.log("🤖 CZMakers Stock & Price Refresh Co-Worker Agent initializing...")
     tracker.log("🔒 CRITICAL SAFEGUARD: Customer records and orders are strictly isolated & preserved.")
 
+    target_cat = str(category or 'all').strip().lower()
+    cat_aliases = {
+        'bracelets': 'wristwear', 'bracelet': 'wristwear', 'bangles': 'wristwear', 'bangle': 'wristwear',
+        'wristwear': 'wristwear', 'necklaces': 'necklace', 'necklace': 'necklace', 'earrings': 'earrings',
+        'earring': 'earrings', 'rings': 'rings', 'ring': 'rings', 'finger-rings': 'rings',
+        'pendants': 'pendants', 'pendant': 'pendants',
+    }
+    canonical_cat = cat_aliases.get(target_cat, target_cat)
+    if target_cat in BYPASS_CATEGORIES or canonical_cat in BYPASS_CATEGORIES:
+        tracker.log(f"🚫 Category '{category}' is BYPASSED (removed from Sorèva store & inventory). No sync performed.")
+        tracker.finish(status="completed", message=f"Category '{category}' is removed and bypassed from Sorèva store & inventory.")
+        return
+
     ssl_ctx = ssl.create_default_context()
     auth_ok, logged_in_email = setup_auth_headers(ssl_ctx, tracker=tracker)
     if auth_ok:
@@ -983,6 +995,11 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     tracker.stats["preservedCustomers"] = init_cust_count
     tracker.log(f"🔒 Checkpoint verified: {init_ord_count} Orders and {init_cust_count} Customers locked & protected.")
 
+    # ── Hard purge & safeguard: Silver & Accessories removed from store & inventory ──
+    c.execute("DELETE FROM products WHERE LOWER(category) IN ('silver', 'accessories')")
+    c.execute("DELETE FROM inventory WHERE LOWER(category) IN ('silver', 'accessories')")
+    conn.commit()
+
     # Backup files
     ts = int(time.time())
     if os.path.exists(STORE_DATA_PATH):
@@ -999,7 +1016,7 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     # Load existing products from DB (index by ID, raw PID, and SKU from more_details)
     existing_db_products = {}
     existing_by_sku = {}
-    for r in c.execute("SELECT id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale, disabled, active, more_details FROM products").fetchall():
+    for r in c.execute("SELECT id, name, category, subCategory, priceINR, originalPriceINR, usdWholesale, disabled, active, more_details FROM products WHERE LOWER(category) NOT IN ('silver', 'accessories')").fetchall():
         r_dict = dict(r)
         db_id = str(r['id'])
         existing_db_products[db_id] = r_dict
@@ -1028,7 +1045,7 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
 
     # Index by SKU and ID from inventory table
     inventory_by_id = {}
-    for r in c.execute("SELECT id, sku, productName, category, status, stockQty, usdWholesale FROM inventory").fetchall():
+    for r in c.execute("SELECT id, sku, productName, category, status, stockQty, usdWholesale FROM inventory WHERE LOWER(category) NOT IN ('silver', 'accessories')").fetchall():
         r_dict = dict(r)
         db_id = str(r['id'])
         inventory_by_id[db_id] = r_dict
@@ -1051,7 +1068,7 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
         try:
             with open(STORE_DATA_PATH, 'r', encoding='utf-8') as f:
                 sd = json.load(f)
-            sd_products = sd.get('products', [])
+            sd_products = [p for p in sd.get('products', []) if str(p.get('category', '')).lower() not in BYPASS_CATEGORIES]
             for item in sd_products:
                 item_id = str(item.get('id', '')).strip()
                 if item_id:
@@ -1091,16 +1108,16 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
         'finger-rings': 'rings',
         'pendants': 'pendants',
         'pendant': 'pendants',
-        'silver': 'silver',
-        'silver-jewellery': 'silver',
-        '925': 'silver',
-        'accessories': 'accessories',
-        'accessory': 'accessories',
     }
     canonical_cat = cat_aliases.get(target_cat, target_cat)
 
+    if target_cat in BYPASS_CATEGORIES or canonical_cat in BYPASS_CATEGORIES:
+        tracker.log(f"🚫 Category '{category}' is BYPASSED (removed from Sorèva store & inventory). No sync performed.")
+        tracker.finish(status="completed", message=f"Category '{category}' is removed and bypassed from Sorèva store.")
+        return
+
     if canonical_cat and canonical_cat not in ('all', ''):
-        # 1. Match entire category family (e.g. necklace, earrings, rings, wristwear, pendants, silver, accessories)
+        # 1. Match entire category family (e.g. necklace, earrings, rings, wristwear, pendants)
         cat_matches = [c for c in ALL_CZM_CATEGORIES if c[1].lower() == canonical_cat]
         # 2. If not a main family, match specific CZMakers subcategory slug or title
         if not cat_matches:
@@ -1261,6 +1278,8 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
     new_added_ids = []
 
     for czm_id, p in discovered_products.items():
+        if p.get('category', '').lower() in BYPASS_CATEGORIES or p.get('subCategory', '').lower() in BYPASS_CATEGORIES:
+            continue
         raw_pid = str(p['pid']).strip()
         model_sku = str(p.get('modelSku') or '').strip().upper()
         srv_sku = str(p.get('sku') or '').strip().upper()
@@ -1683,7 +1702,10 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
             tracker.log(f"🛑 SAFETY HALT: Refusing to overwrite store-data.json with 0 products when {existing_sd_count} products exist! Catalog preserved.")
         else:
             try:
+                sd_products = [p for p in sd_products if str(p.get('category', '')).lower() not in BYPASS_CATEGORIES]
                 sd['products'] = sd_products
+                if 'categories' in sd and isinstance(sd['categories'], list):
+                    sd['categories'] = [c for c in sd['categories'] if (c.get('slug') if isinstance(c, dict) else str(c)).lower() not in BYPASS_CATEGORIES]
                 if 'settings' in sd:
                     sd['settings']['lastStockSync'] = datetime.utcnow().isoformat() + "Z"
 

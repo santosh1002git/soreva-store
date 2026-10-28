@@ -619,9 +619,7 @@ const CATEGORY_OPTIONS = [
     { key: 'earrings', label: 'Earrings' },
     { key: 'wristwear', label: 'Wristwear' },
     { key: 'rings', label: 'Finger Rings' },
-    { key: 'pendants', label: 'Pendants' },
-    { key: 'silver', label: 'Silver Jewellery' },
-    { key: 'accessories', label: 'Accessories' }
+    { key: 'pendants', label: 'Pendants' }
 ];
 
 const PLATING_OPTIONS = [
@@ -727,9 +725,7 @@ function renderCategories(categories) {
         'necklace': 'assets/uploads/category_Gemini_Generated_Image_9lfkoo9lfkoo9lfk_1792569510.jpeg',
         'earrings': 'assets/uploads/category_ear_1792569584.jpeg',
         'rings': 'assets/uploads/category_ring_1792568855.jpeg',
-        'pendants': 'assets/uploads/category_Gemini_Generated_Image_clctxdclctxdclct_1792568195.jpeg',
-        'silver': 'assets/uploads/category_Gemini_Generated_Image_ovsom7ovsom7ovso_1792567578.jpeg',
-        'accessories': 'assets/uploads/category_Bindya2_1792567880.jpeg'
+        'pendants': 'assets/uploads/category_Gemini_Generated_Image_clctxdclctxdclct_1792568195.jpeg'
     };
 
     const generateCardsHtml = (isClone = false) => categories.map((cat, idx) => {
@@ -1862,7 +1858,6 @@ function initMobileNav() {
                     <div class="mobile-nav-acc-body">
                         <a href="catalog.html?cat=rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Finger Rings</a>
                         <a href="catalog.html?cat=rings&sub=CZ%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Statement Rings</a>
-                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
                     </div>
                 </div>
 
@@ -1883,7 +1878,6 @@ function initMobileNav() {
                         <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Medium%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Medium Chain</a>
                         <a href="catalog.html?cat=pendants&sub=Pendants%20with%20Broad%20Chain" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Pendants with Broad Chain</a>
                         <a href="catalog.html?cat=pendants&sub=CZ%20Mangalsutra" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">CZ Mangalsutra</a>
-                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
                     </div>
                 </div>
 
@@ -1906,43 +1900,7 @@ function initMobileNav() {
                     </div>
                 </div>
 
-                <!-- 6. Silver Jewellery -->
-                <div class="mobile-nav-acc-item">
-                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
-                        <span class="mobile-nav-acc-title">
-                            <i class="fa-solid fa-shield-halved"></i> Silver Jewellery
-                        </span>
-                        <span class="mobile-nav-acc-meta">
-                            <span class="mobile-nav-badge">925 Pure</span>
-                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
-                        </span>
-                    </button>
-                    <div class="mobile-nav-acc-body">
-                        <a href="catalog.html?cat=silver" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">925 Sterling Masterpieces</a>
-                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Finger%20Rings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Rings</a>
-                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Pendants" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Pendants</a>
-                        <a href="catalog.html?cat=silver&sub=925%20Sterling%20Silver%20Earrings" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Sterling Silver Earrings</a>
-                    </div>
-                </div>
 
-                <!-- 7. Accessories -->
-                <div class="mobile-nav-acc-item">
-                    <button type="button" class="mobile-nav-acc-header" onclick="toggleMobileNavAccordion(this)">
-                        <span class="mobile-nav-acc-title">
-                            <i class="fa-solid fa-crown"></i> Accessories
-                        </span>
-                        <span class="mobile-nav-acc-meta">
-                            <span class="mobile-nav-badge">300+</span>
-                            <i class="fa-solid fa-chevron-down mobile-nav-chevron"></i>
-                        </span>
-                    </button>
-                    <div class="mobile-nav-acc-body">
-                        <a href="catalog.html?cat=accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">All Accessories</a>
-                        <a href="catalog.html?cat=accessories&sub=Mangtika" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Royal Maang Tikka</a>
-                        <a href="catalog.html?cat=accessories&sub=CZ%20Brooches" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Artisanal Brooches</a>
-                        <a href="catalog.html?cat=accessories&sub=CZ%20Accessories" class="mobile-nav-sub-link" onclick="closeMobileNavDrawer()">Hair &amp; Couture Accessories</a>
-                    </div>
-                </div>
 
                 <div class="mobile-nav-section-title">Discover Sorèva</div>
                 <button type="button" class="mobile-nav-direct-link" onclick="closeMobileNavDrawer(); openWishlistDrawer();" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
@@ -2874,9 +2832,7 @@ function updateCatalogTitleDesc(catKey, sub, badge) {
         necklaces: { title: "Necklace <em>Collection</em>", desc: "Royal chokers, grand bridal sets, and delicate pavé statement pieces.", docTitle: "Necklaces" },
         earrings: { title: "Earrings <em>Collection</em>", desc: "From majestic royal jhumkas and chandeliers to essential daily studs.", docTitle: "Earrings" },
         rings: { title: "Finger Rings <em>Collection</em>", desc: "Exquisite cocktail rings, engagement solitaires, and eternal bands.", docTitle: "Finger Rings" },
-        pendants: { title: "Pendants <em>Collection</em>", desc: "Lustrous solitaires, traditional mangalsutras, and festive pendant sets.", docTitle: "Pendants" },
-        silver: { title: "Silver Jewellery <em>Collection</em>", desc: "Certified 925 Sterling Silver creations with anti-tarnish rhodium plating.", docTitle: "Silver Jewellery" },
-        accessories: { title: "Accessories <em>Collection</em>", desc: "Heritage maang tikkas and artisanal brooches.", docTitle: "Accessories" }
+        pendants: { title: "Pendants <em>Collection</em>", desc: "Lustrous solitaires, traditional mangalsutras, and festive pendant sets.", docTitle: "Pendants" }
     };
 
     const info = catInfoMap[catKey] || {
@@ -6785,7 +6741,7 @@ function ensureSearchOverlayInDOM() {
                 <button type="button" class="search-chip" data-query="Solitaire Ring">Solitaire Rings</button>
                 <button type="button" class="search-chip" data-query="Earrings">Earrings</button>
                 <button type="button" class="search-chip" data-query="Bangles">Bangles & Kadas</button>
-                <button type="button" class="search-chip" data-query="Sterling Silver">925 Sterling Silver</button>
+                <button type="button" class="search-chip" data-query="Pendants">Solitaire Pendants</button>
                 <button type="button" class="search-chip" data-query="Choker">Bridal Chokers</button>
             </div>
 
@@ -6921,7 +6877,7 @@ function renderSearchSuggestions(query, results, totalCount) {
         resultsWrap.innerHTML = `
             <div style="padding: 24px 20px; text-align: center;">
                 <p style="color: var(--text-dark); font-weight: 600; margin-bottom: 6px;">No pieces found for "<strong>${escapeHtml(query)}</strong>"</p>
-                <span style="color: var(--text-muted); font-size: 0.82rem;">Try searching for necklaces, rings, earrings, bangles, or 925 sterling silver.</span>
+                <span style="color: var(--text-muted); font-size: 0.82rem;">Try searching for necklaces, rings, earrings, bangles, or pendants.</span>
             </div>
         `;
         resultsWrap.classList.add('show');
