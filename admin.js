@@ -5449,10 +5449,11 @@ async function launchSyncAgent() {
     }
 
     try {
+        const selectedCat = document.getElementById('inventoryCategoryFilter')?.value || document.getElementById('productCategoryFilter')?.value || 'all';
         const res = await fetch('/api/inventory/refresh', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ limit: 40, scanCategories: true })
+            body: JSON.stringify({ limit: 40, scanCategories: true, category: selectedCat })
         });
         const data = await res.json();
         if (data.success) {
@@ -7117,10 +7118,11 @@ async function syncInventoryFromCZM() {
     showToast("Connecting to https://czmakers.com to sync live inventory...", "info");
 
     try {
+        const selectedCat = document.getElementById('inventoryCategoryFilter')?.value || 'all';
         const resp = await fetch('/api/inventory/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ limit: 30, scanCategories: true })
+            body: JSON.stringify({ limit: 30, scanCategories: true, category: selectedCat })
         });
         const data = await resp.json();
         if (data.success) {

@@ -591,11 +591,32 @@ def parse_category_cards(html, cat_slug, cat_default, subcat_default, profit_mar
         # Extract primary image and high-resolution URL
         img_m = re.search(r'<img[^>]+(?:src|data-src)=[\"\']([^\"\']+)[\"\']', part)
         img_thumb = img_m.group(1) if img_m else ''
-        primary_img = img_thumb.replace('/product_medium_images/', '/product_images/') if img_thumb else ''
-        hover_img = primary_img.replace('.jpg', 'A.jpg') if primary_img else ''
-        # High-definition video URL mapping pointing to supplier video repository
-        video_url = primary_img.replace('/product_medium_images/', '/product_videos/').replace('/product_images/', '/product_videos/').replace('.jpg', 'V1.mp4') if primary_img else ''
-        gallery = [primary_img, hover_img] if hover_img else [primary_img]
+        primary_img = (
+            img_thumb.replace('/product_medium_images/', '/product_images/')
+                     .replace('/product_small_images/', '/product_images/')
+        ) if img_thumb else ''
+
+        hover_m = re.search(r'<img[^>]+(?:data-hover|data-secondary-image|data-hover-src)=[\"\']([^\"\']+)[\"\']', part)
+        if hover_m:
+            hover_img = (
+                hover_m.group(1).replace('/product_medium_images/', '/product_images/')
+                                .replace('/product_small_images/', '/product_images/')
+            )
+        else:
+            hover_img = primary_img.replace('.jpg', 'A.jpg') if primary_img else ''
+
+        video_m = re.search(r'(?:href|src|data-video)=[\"\']([^\"\']+\.mp4)[\"\']', part)
+        if video_m:
+            video_url = video_m.group(1).replace('/product_images/', '/product_videos/')
+        else:
+            video_url = (
+                primary_img.replace('/product_images/', '/product_videos/')
+                           .replace('/product_medium_images/', '/product_videos/')
+                           .replace('/product_small_images/', '/product_videos/')
+                           .replace('.jpg', 'V1.mp4')
+            ) if primary_img else ''
+
+        gallery = [primary_img, hover_img] if (hover_img and hover_img != primary_img) else ([primary_img] if primary_img else [])
 
         retail_inr, orig_inr = calculate_retail_pricing(wholesale_inr, profit_markup, profit_flat)
         title_lower = title.lower()
@@ -1313,22 +1334,22 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                 c.execute("""
                     UPDATE products 
                     SET disabled = 1, active = 0, usdWholesale = ?, priceINR = ?, originalPriceINR = ?,
-                        category = CASE WHEN ? != '' THEN ? ELSE category END,
-                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        category = ?,
+                        subCategory = ?,
                         lastRefreshed = ?
                     WHERE id = ?
-                """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id))
+                """, (p['wholesaleINR'], p['priceINR'], p['originalPriceINR'], p['category'], p['subCategory'], sync_time_iso, matched_id))
 
                 c.execute("""
                     UPDATE inventory 
                     SET status = 'Out of Stock', 
                         stockQty = 0, 
                         usdWholesale = ?,
-                        category = CASE WHEN ? != '' THEN ? ELSE category END,
-                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        category = ?,
+                        subCategory = ?,
                         lastRefreshed = ?
                     WHERE id = ? OR sku = ? OR sku = ?
-                """, (p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                """, (p['wholesaleINR'], p['category'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
 
                 sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
                 if sd_item:
@@ -1350,8 +1371,8 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                 c.execute("""
                     UPDATE products 
                     SET name = ?,
-                        category = CASE WHEN ? != '' THEN ? ELSE category END,
-                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        category = ?,
+                        subCategory = ?,
                         priceINR = ?,
                         originalPriceINR = ?,
                         usdWholesale = ?,
@@ -1371,8 +1392,8 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     WHERE id = ?
                 """, (
                     p['name'],
-                    p['category'], p['category'],
-                    p['subCategory'], p['subCategory'],
+                    p['category'],
+                    p['subCategory'],
                     p['priceINR'], p['originalPriceINR'], p['wholesaleINR'],
                     p['plating'],
                     p['primaryImg'], p['hoverImg'], p['videoUrl'],
@@ -1390,11 +1411,11 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                         status = 'In Stock', 
                         stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END, 
                         usdWholesale = ?,
-                        category = CASE WHEN ? != '' THEN ? ELSE category END,
-                        subCategory = CASE WHEN ? != '' THEN ? ELSE subCategory END,
+                        category = ?,
+                        subCategory = ?,
                         lastRefreshed = ?
                     WHERE id = ? OR sku = ? OR sku = ?
-                """, (p['name'], p['wholesaleINR'], p['category'], p['category'], p['subCategory'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
+                """, (p['name'], p['wholesaleINR'], p['category'], p['subCategory'], sync_time_iso, matched_id, p['sku'], p['modelSku']))
 
                 sd_item = sd_by_id.get(matched_id) or sd_by_sku.get(srv_sku) or sd_by_sku.get(model_sku)
                 if sd_item:

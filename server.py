@@ -4698,26 +4698,61 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             check_all = bool(payload.get('all', False))
             scan_categories = bool(payload.get('scanCategories', True))
 
+            target_cat_raw = str(payload.get('category', 'all') or 'all').strip().lower()
+            cat_aliases = {
+                'necklaces': 'necklace', 'necklace': 'necklace',
+                'earrings': 'earrings', 'earring': 'earrings',
+                'bracelets': 'wristwear', 'bracelet': 'wristwear', 'bangles': 'wristwear', 'bangle': 'wristwear',
+                'wristwear': 'wristwear', 'rings': 'rings', 'ring': 'rings', 'finger-rings': 'rings',
+                'pendants': 'pendants', 'pendant': 'pendants'
+            }
+            canonical_cat = cat_aliases.get(target_cat_raw, target_cat_raw)
+
             c = conn.cursor()
 
             # Select inventory items with their current retained CZM wholesale cost
-            if check_all:
-                rows = c.execute("""
-                    SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
-                           COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
-                    FROM inventory i
-                    LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
-                    ORDER BY i.rowid ASC
-                """).fetchall()
+            if canonical_cat and canonical_cat not in ('all', ''):
+                if check_all:
+                    rows = c.execute("""
+                        SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
+                               COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
+                        FROM inventory i
+                        LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
+                        WHERE (LOWER(i.category) = ? OR LOWER(COALESCE(p.category, '')) = ?)
+                          AND LOWER(i.category) NOT IN ('silver', 'accessories')
+                        ORDER BY i.rowid ASC
+                    """, (canonical_cat, canonical_cat)).fetchall()
+                else:
+                    rows = c.execute("""
+                        SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
+                               COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
+                        FROM inventory i
+                        LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
+                        WHERE (LOWER(i.category) = ? OR LOWER(COALESCE(p.category, '')) = ?)
+                          AND LOWER(i.category) NOT IN ('silver', 'accessories')
+                        ORDER BY RANDOM() 
+                        LIMIT ?
+                    """, (canonical_cat, canonical_cat, limit)).fetchall()
             else:
-                rows = c.execute("""
-                    SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
-                           COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
-                    FROM inventory i
-                    LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
-                    ORDER BY RANDOM() 
-                    LIMIT ?
-                """, (limit,)).fetchall()
+                if check_all:
+                    rows = c.execute("""
+                        SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
+                               COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
+                        FROM inventory i
+                        LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
+                        WHERE LOWER(i.category) NOT IN ('silver', 'accessories')
+                        ORDER BY i.rowid ASC
+                    """).fetchall()
+                else:
+                    rows = c.execute("""
+                        SELECT i.id, i.sku, i.productName, i.status, i.stockQty,
+                               COALESCE(i.usdWholesale, p.usdWholesale, 0.0) as usdWholesale 
+                        FROM inventory i
+                        LEFT JOIN products p ON (i.id = p.id OR i.productName = p.name)
+                        WHERE LOWER(i.category) NOT IN ('silver', 'accessories')
+                        ORDER BY RANDOM() 
+                        LIMIT ?
+                    """, (limit,)).fetchall()
 
             store_data = get_stored_data() or {}
             settings = store_data.get('settings', {})
@@ -4973,16 +5008,35 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 ('traditional-necklaces',         'necklace',    'Traditional Necklaces'),
                 ('bridal-necklaces',              'necklace',    'Bridal Necklaces'),
                 ('classic-necklace',              'necklace',    'Classic Necklaces'),
+                ('collar-necklace',               'necklace',    'Collar Necklaces'),
+                ('mangalsutra',                   'necklace',    'Mangalsutra'),
+                ('aurous-collection',             'necklace',    'Aurous Collection'),
                 ('earrings',                      'earrings',    'Earrings'),
                 ('jhumka-earrings',               'earrings',    'Jhumka Earrings'),
+                ('big-size-earrings',             'earrings',    'Big Size Earrings'),
+                ('medium-earrings',               'earrings',    'Medium Earrings'),
+                ('small-earrings',                'earrings',    'Small Earrings'),
+                ('tops-&-studs',                  'earrings',    'Tops & Studs'),
                 ('finger-rings',                  'rings',       'Finger Rings'),
+                ('cz-finger-rings',               'rings',       'CZ Finger Rings'),
                 ('pendants',                      'pendants',    'Pendants'),
-                ('cz-bangles',                    'wristwear',   'CZ Bangles'),
+                ('cz-pendant-set',                'pendants',    'CZ Pendant Sets'),
+                ('pendant-with-broad-chain',      'pendants',    'Pendants with Broad Chain'),
+                ('pendant-with-medium-chain',     'pendants',    'Pendants with Medium Chain'),
                 ('wristwear',                     'wristwear',   'Wristwear'),
+                ('cz-bangles',                    'wristwear',   'CZ Bangles'),
+                ('cz-braclets',                   'wristwear',   'CZ Bangles & Bracelets'),
+                ('cz-bracelets',                  'wristwear',   'CZ Bracelets'),
+                ('bracelets-rings-combo',         'wristwear',   'Bracelets & Rings Combo'),
             ]
 
             if scan_categories:
-                cats_to_scan = CZM_SCAN_CATEGORIES if check_all else CZM_SCAN_CATEGORIES[:6]
+                if canonical_cat and canonical_cat not in ('all', ''):
+                    cats_to_scan = [c for c in CZM_SCAN_CATEGORIES if c[1].lower() == canonical_cat or c[0].lower() == target_cat_raw]
+                    if not cats_to_scan:
+                        cats_to_scan = [c for c in CZM_SCAN_CATEGORIES if target_cat_raw in c[0].lower() or target_cat_raw in c[2].lower()]
+                else:
+                    cats_to_scan = CZM_SCAN_CATEGORIES if check_all else CZM_SCAN_CATEGORIES[:10]
 
                 def _fetch_cat(cat_info):
                     cat_slug, cat_def, subcat_def = cat_info
@@ -5029,10 +5083,35 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 name = title_m.group(1).strip() if title_m else slug.replace('_', ' ').replace('-', ' ').title()
                                 name = name.replace('&amp;', '&').replace('&quot;', '"').replace('&#039;', "'")
 
-                                img_m = re.search(r'<img[^>]+src=[\"\']([^\"\']+)[\"\']', part)
-                                primary_img = img_m.group(1) if img_m else ""
-                                if '/product_medium_images/' in primary_img:
-                                    primary_img = primary_img.replace('/product_medium_images/', '/product_images/')
+                                img_m = re.search(r'<img[^>]+(?:src|data-src)=[\"\']([^\"\']+)[\"\']', part)
+                                img_thumb = img_m.group(1) if img_m else ""
+                                primary_img = (
+                                    img_thumb.replace('/product_medium_images/', '/product_images/')
+                                             .replace('/product_small_images/', '/product_images/')
+                                ) if img_thumb else ""
+
+                                hover_m = re.search(r'<img[^>]+(?:data-hover|data-secondary-image|data-hover-src)=[\"\']([^\"\']+)[\"\']', part)
+                                if hover_m:
+                                    hover_img = (
+                                        hover_m.group(1).replace('/product_medium_images/', '/product_images/')
+                                                        .replace('/product_small_images/', '/product_images/')
+                                    )
+                                else:
+                                    hover_img = primary_img.replace('.jpg', 'A.jpg') if primary_img else ""
+
+                                video_m = re.search(r'(?:href|src|data-video)=[\"\']([^\"\']+\.mp4)[\"\']', part)
+                                if video_m:
+                                    video_url = video_m.group(1).replace('/product_images/', '/product_videos/')
+                                else:
+                                    video_url = (
+                                        primary_img.replace('/product_images/', '/product_videos/')
+                                                   .replace('/product_medium_images/', '/product_videos/')
+                                                   .replace('/product_small_images/', '/product_videos/')
+                                                   .replace('.jpg', 'V1.mp4')
+                                    ) if primary_img else ""
+
+                                gallery = [primary_img, hover_img] if (hover_img and hover_img != primary_img) else ([primary_img] if primary_img else [])
+                                gallery_json = json.dumps(gallery)
 
                                 retail_inr = max(1499, int(round((discovered_cost * profit_markup + profit_flat) / 100) * 100) - 1) if discovered_cost > 0 else 2499
                                 orig_inr = int(round(retail_inr * 1.1 / 100) * 100) - 1
@@ -5041,18 +5120,32 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                 if existing:
                                     c.execute("""
                                         UPDATE products 
-                                        SET category = CASE WHEN category IS NULL OR category = '' OR category = 'bracelets' THEN ? ELSE category END,
-                                            subCategory = CASE WHEN subCategory IS NULL OR subCategory = '' THEN ? ELSE subCategory END,
+                                        SET category = ?,
+                                            subCategory = ?,
                                             usdWholesale = CASE WHEN ? > 0 THEN ? ELSE usdWholesale END,
                                             priceINR = CASE WHEN ? > 0 THEN ? ELSE priceINR END,
                                             originalPriceINR = CASE WHEN ? > 0 THEN ? ELSE originalPriceINR END,
+                                            primaryImg = CASE WHEN ? != '' THEN ? ELSE primaryImg END,
+                                            hoverImg = CASE WHEN ? != '' THEN ? ELSE hoverImg END,
+                                            videoUrl = CASE WHEN ? != '' THEN ? ELSE videoUrl END,
+                                            gallery = CASE WHEN ? != '[]' THEN ? ELSE gallery END,
                                             disabled = 0, active = 1, lastRefreshed = ?
                                         WHERE id = ? OR name = ?
-                                    """, (cat_default, subcat_name, discovered_cost, discovered_cost, retail_inr, retail_inr, orig_inr, orig_inr, sync_time_iso, czm_id, name))
+                                    """, (
+                                        cat_default, subcat_name,
+                                        discovered_cost, discovered_cost,
+                                        retail_inr, retail_inr,
+                                        orig_inr, orig_inr,
+                                        primary_img, primary_img,
+                                        hover_img, hover_img,
+                                        video_url, video_url,
+                                        gallery_json, gallery_json,
+                                        sync_time_iso, czm_id, name
+                                    ))
                                     c.execute("""
                                         UPDATE inventory 
-                                        SET category = CASE WHEN category IS NULL OR category = '' OR category = 'bracelets' THEN ? ELSE category END,
-                                            subCategory = CASE WHEN subCategory IS NULL OR subCategory = '' THEN ? ELSE subCategory END,
+                                        SET category = ?,
+                                            subCategory = ?,
                                             status = 'In Stock',
                                             stockQty = CASE WHEN stockQty <= 0 THEN 15 ELSE stockQty END,
                                             usdWholesale = CASE WHEN ? > 0 THEN ? ELSE usdWholesale END,
@@ -5063,9 +5156,9 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                                     c.execute("""
                                         INSERT OR IGNORE INTO products (
                                             id, name, category, subCategory, priceINR, originalPriceINR,
-                                            primaryImg, disabled, active, usdWholesale, lastRefreshed, dateAdded, badge
-                                        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, ?, ?, ?, 'New Launch')
-                                    """, (czm_id, name, cat_default, subcat_name, retail_inr, orig_inr, primary_img, discovered_cost, sync_time_iso, sync_time_iso))
+                                            primaryImg, hoverImg, videoUrl, gallery, disabled, active, usdWholesale, lastRefreshed, dateAdded, badge
+                                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?, ?, ?, 'New Launch')
+                                    """, (czm_id, name, cat_default, subcat_name, retail_inr, orig_inr, primary_img, hover_img, video_url, gallery_json, discovered_cost, sync_time_iso, sync_time_iso))
                                     c.execute("""
                                         INSERT OR IGNORE INTO inventory (
                                             id, sku, productName, category, subCategory, stockQty, lowStockThreshold, status, usdWholesale, lastRefreshed, dateAdded
@@ -5117,14 +5210,14 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     VALUES (?, 'Admin', 'Stock Refresh', 'Inventory', 'czmakers.com', ?)
                 """, (
                     f"log_stock_sync_{int(time.time())}",
-                    f"Live SKU inventory sync with czmakers.com: {len(checked_results)} items checked ({in_stock_count} matched/available, {oos_count} unmatched/out-of-stock), {len(new_discovered)} new arrivals. Sub-categories and wholesale costs updated."
+                    f"Live SKU inventory sync with czmakers.com: {len(checked_results)} items checked ({in_stock_count} matched/available, {oos_count} unmatched/out-of-stock), {len(new_discovered)} new arrivals. Exact sub-categories, photos, and videos updated."
                 ))
             except Exception:
                 pass
 
             conn.commit()
 
-            # Synchronize into data/store-data.json so storefront immediately reflects stock, actual costs, and sub-categories
+            # Synchronize into data/store-data.json so storefront immediately reflects stock, actual costs, sub-categories, and media
             try:
                 sd = get_stored_data() or {}
                 if 'products' in sd and sd['products']:
@@ -5146,6 +5239,13 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         db_plating_map[str(r['id'])] = r['plating']
                         if r['name']:
                             db_plating_map[str(r['name'])] = r['plating']
+
+                    # Build media lookup map from DB (primaryImg, hoverImg, videoUrl, gallery)
+                    db_media_map = {}
+                    for r in c.execute("SELECT id, name, primaryImg, hoverImg, videoUrl, gallery FROM products WHERE primaryImg IS NOT NULL AND primaryImg != ''").fetchall():
+                        db_media_map[str(r['id'])] = (r['primaryImg'], r['hoverImg'], r['videoUrl'], r['gallery'])
+                        if r['name']:
+                            db_media_map[str(r['name'])] = (r['primaryImg'], r['hoverImg'], r['videoUrl'], r['gallery'])
 
                     # Ensure any existing Out of Stock inventory rows are included
                     db_oos_rows = c.execute("SELECT id, sku FROM inventory WHERE status = 'Out of Stock'").fetchall()
@@ -5176,6 +5276,33 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                         plating_val = db_plating_map.get(p_id) or db_plating_map.get(p_db_id) or db_plating_map.get(p_name)
                         if plating_val and p.get('plating') != plating_val:
                             p['plating'] = plating_val
+                            sd_modified = True
+
+                        # Ensure media mapping (primaryImg, hoverImg, videoUrl, gallery) matches CZMakers exactly
+                        media_info = db_media_map.get(p_id) or db_media_map.get(p_db_id) or db_media_map.get(p_name)
+                        if media_info:
+                            prim_val, hov_val, vid_val, gal_val = media_info
+                            if prim_val and p.get('primaryImg') != prim_val:
+                                p['primaryImg'] = prim_val
+                                sd_modified = True
+                            if hov_val and p.get('hoverImg') != hov_val:
+                                p['hoverImg'] = hov_val
+                                sd_modified = True
+                            if vid_val and p.get('videoUrl') != vid_val:
+                                p['videoUrl'] = vid_val
+                                sd_modified = True
+                            if gal_val:
+                                try:
+                                    gal_parsed = json.loads(gal_val) if isinstance(gal_val, str) else gal_val
+                                    if gal_parsed and p.get('gallery') != gal_parsed:
+                                        p['gallery'] = gal_parsed
+                                        sd_modified = True
+                                except Exception:
+                                    pass
+
+                        # Fix any remaining /product_images/ in videoUrl
+                        if p.get('videoUrl') and '/product_images/' in p['videoUrl']:
+                            p['videoUrl'] = p['videoUrl'].replace('/product_images/', '/product_videos/')
                             sd_modified = True
 
                         # Retain and update actual CZMakers wholesale cost
