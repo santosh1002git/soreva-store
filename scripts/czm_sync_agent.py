@@ -1743,15 +1743,21 @@ def run_czm_coworker_agent(mode="full_discovery", max_pages=0, remove_missing=Fa
                     except Exception:
                         pass
         else:
-            if mark_unmatched_oos or mode in ["full_discovery", "complete_refresh", "refresh_stock"]:
-                # Default stock refresh behavior: mark any piece not matching CZMakers website data as Out of Stock
+            # SAFETY GUARD: If this was a partial/page-limited scan, DO NOT mark unscanned products as Out of Stock!
+            # Only mark Out of Stock if:
+            # 1. The category was genuinely fully exhausted (scanned to the very end of CZMakers pages), OR
+            # 2. Mode is complete_refresh with all categories and unlimited pages (max_pages == 0)
+            if mode == "complete_refresh" and (max_pages == 0) and (not target_cat or target_cat == 'all'):
                 missing_to_mark = unmatched_db_ids
             else:
-                # Partial scan: only mark out of stock for categories that were fully exhausted
+                # Only mark out of stock for pieces in categories that were truly fully exhausted
                 missing_to_mark = [
                     db_id for db_id in unmatched_db_ids
-                    if existing_db_products.get(db_id, {}).get('category') in fully_exhausted_categories
+                    if (existing_db_products.get(db_id, {}).get('category') in fully_exhausted_categories
+                        or inventory_by_id.get(db_id, {}).get('category') in fully_exhausted_categories
+                        or str(sd_by_id.get(db_id, {}).get('category', '')).lower() in fully_exhausted_categories)
                 ]
+                tracker.log(f"  Safeguard active: Preserving stock status for {len(unmatched_db_ids) - len(missing_to_mark)} unscanned products in catalog.")
 
     if missing_to_mark:
         tracker.log(f"🔴 Marking {len(missing_to_mark)} non-matching pieces as Out of Stock (inventory preserved, never deleted)...")

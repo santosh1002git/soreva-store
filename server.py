@@ -3070,22 +3070,35 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             else:
                 candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_images/{filename}")
                 candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_medium_images/{filename}")
+                # Secondary angle fallback to primary if secondary 404s
+                if filename.endswith('A.jpg'):
+                    base_primary = filename[:-5] + '.jpg'
+                    candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_images/{base_primary}")
+                    candidate_urls.append(f"https://indian-jewellery.com/core/thumb_images/product_medium_images/{base_primary}")
 
-            fetched_content = None
+            cookie_str = perform_czm_login()
+
             req_headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Referer': 'https://indian-jewellery.com/',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Referer': 'https://czmakers.com/',
                 'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Sec-Fetch-Dest': 'image',
                 'Sec-Fetch-Mode': 'no-cors',
                 'Sec-Fetch-Site': 'same-origin'
             }
+            if cookie_str:
+                req_headers['Cookie'] = cookie_str
 
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+
+            fetched_content = None
             for cand_url in candidate_urls:
                 try:
                     req = urllib.request.Request(cand_url, headers=req_headers)
-                    with urllib.request.urlopen(req, timeout=7) as resp:
+                    with urllib.request.urlopen(req, context=ssl_ctx, timeout=7) as resp:
                         if resp.status == 200:
                             data = resp.read()
                             if len(data) > 100:
