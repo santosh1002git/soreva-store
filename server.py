@@ -3094,11 +3094,19 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             ssl_ctx.check_hostname = False
             ssl_ctx.verify_mode = ssl.CERT_NONE
 
+            if BASE_DIR not in sys.path:
+                sys.path.insert(0, BASE_DIR)
+            try:
+                from scripts.czm_sync_agent import get_czm_opener
+                opener = get_czm_opener(ssl_ctx)
+            except Exception:
+                opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_ctx))
+
             fetched_content = None
             for cand_url in candidate_urls:
                 try:
                     req = urllib.request.Request(cand_url, headers=req_headers)
-                    with urllib.request.urlopen(req, context=ssl_ctx, timeout=7) as resp:
+                    with opener.open(req, timeout=7) as resp:
                         if resp.status == 200:
                             data = resp.read()
                             if len(data) > 100:
