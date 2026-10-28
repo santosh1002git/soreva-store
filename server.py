@@ -7553,6 +7553,46 @@ class SorevaHandler(SimpleHTTPRequestHandler):
             return
 
         # ----------------------------------------------------
+        # API: Clear Customer Accounts, Orders, and Total Revenue
+        # ----------------------------------------------------
+        if parsed.path in ('/api/admin/clear-customers-orders', '/api/admin/reset-customers-orders'):
+            conn = get_db()
+            if not conn:
+                self._send_json({"error": "Database unavailable"}, 500)
+                return
+            try:
+                c = conn.cursor()
+                ord_count = c.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+                cust_count = c.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
+                rev_sum = c.execute("SELECT COALESCE(SUM(totalAmount), 0) FROM orders WHERE status != 'Cancelled'").fetchone()[0]
+
+                c.execute("DELETE FROM orders")
+                c.execute("DELETE FROM customers")
+                c.execute("DELETE FROM users WHERE LOWER(email) NOT IN ('admin@soreva.in', 'sonal@soreva.in', 'santosh.1002@gmail.com')")
+                c.execute("DELETE FROM user_sessions WHERE user_id NOT IN (SELECT id FROM users)")
+                c.execute("DELETE FROM user_carts")
+
+                c.execute("""
+                    INSERT INTO audit_log (id, employeeName, action, targetType, targetId, details)
+                    VALUES (?, 'Admin', 'Clear Customers and Orders', 'StoreData', 'customers_orders', ?)
+                """, (f"log_{gen_pb_id()}", f"Cleared {cust_count} customer accounts, {ord_count} orders (Total Revenue: ₹{rev_sum:,.2f}). Future registrations & orders will be cleanly tracked & preserved."))
+
+                conn.commit()
+
+                self._send_json({
+                    "success": True,
+                    "ordersCleared": ord_count,
+                    "customersCleared": cust_count,
+                    "revenueCleared": rev_sum,
+                    "message": f"Successfully cleared {cust_count} customer accounts and {ord_count} customer orders (Total Revenue: ₹{rev_sum:,.2f}). Newly incoming registrations, orders, and revenue will now be freshly recorded and preserved during refreshes."
+                })
+            except Exception as e:
+                self._send_json({"error": str(e)}, 500)
+            finally:
+                conn.close()
+            return
+
+        # ----------------------------------------------------
                 # ----------------------------------------------------
         # API: Upload Image for Website Sections
         # ----------------------------------------------------

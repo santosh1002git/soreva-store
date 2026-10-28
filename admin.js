@@ -7328,7 +7328,7 @@ function handleCoworkerCategoryChange() {
                 badge.textContent = `CATEGORY WIPE & RELOAD: ${catText.toUpperCase()}`;
                 badge.style.background = 'rgba(239,68,68,0.25)';
                 badge.style.color = '#fca5a5';
-                subText.innerHTML = `Wipes and performs a complete fresh reload for pieces belonging to <strong>${catText}</strong> from CZMakers. <strong>All other categories, past customer orders (13), and customer accounts (16) remain 100% untouched.</strong>`;
+                subText.innerHTML = `Wipes and performs a complete fresh reload for pieces belonging to <strong>${catText}</strong> from CZMakers. <strong>All other categories, past customer orders, and customer accounts remain 100% untouched.</strong>`;
             }
         } else {
             if (notice) {
@@ -7341,7 +7341,7 @@ function handleCoworkerCategoryChange() {
                 badge.textContent = 'ENTIRE CATALOG WIPE & RELOAD';
                 badge.style.background = 'rgba(239,68,68,0.2)';
                 badge.style.color = '#fca5a5';
-                subText.innerHTML = 'Performs a complete wipe & fresh reload from czmakers.com across all 32 categories. Customer accounts (16) & past orders (13) remain 100% untouched.';
+                subText.innerHTML = 'Performs a complete wipe & fresh reload from czmakers.com across all 32 categories. Customer accounts & past orders remain 100% untouched.';
             }
         }
     }
@@ -7446,7 +7446,7 @@ function handleBannerCategoryChange() {
             badge.style.color = '#fca5a5';
         }
         if (desc) {
-            desc.innerHTML = `Wipes and replaces only pieces belonging to <strong>${catText}</strong> from CZMakers with fresh wholesale pricing (2.2x markup), photos, and videos. <strong>All other categories, past customer orders (13), and customer accounts (16) remain 100% untouched.</strong>`;
+            desc.innerHTML = `Wipes and replaces only pieces belonging to <strong>${catText}</strong> from CZMakers with fresh wholesale pricing (2.2x markup), photos, and videos. <strong>All other categories, past customer orders, and customer accounts remain 100% untouched.</strong>`;
         }
     } else {
         if (btnText) btnText.textContent = 'Start Complete Refresh (All Products)';
@@ -7456,7 +7456,7 @@ function handleBannerCategoryChange() {
             badge.style.color = '#fca5a5';
         }
         if (desc) {
-            desc.innerHTML = 'Wipes all existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories. Customer accounts (16) & past orders (13) remain 100% untouched.';
+            desc.innerHTML = 'Wipes all existing products from catalog & inventory, then performs a complete fresh reload of all pieces from czmakers.com across all 32 categories. Customer accounts & past orders remain 100% untouched.';
         }
     }
 }
@@ -7488,7 +7488,7 @@ function confirmCompleteStockRefresh(targetCategory = null) {
             `2. Perform a complete, fresh loading of '${catDisplayName}' pieces directly from CZMakers.\n` +
             `3. Accurately assign sub-categories, photos, videos, and apply 2.2x retail pricing.\n\n` +
             `🛡️ ZERO DATA LOSS GUARANTEE:\n` +
-            `All other categories, customer accounts (16), and past orders (13) are 100% PRESERVED.\n\n` +
+            `All other categories, customer accounts, and past orders are 100% PRESERVED.\n\n` +
             `Do you want to proceed with Complete Refresh for '${catDisplayName}'?`;
     } else {
         confirmMsg = 
@@ -7535,7 +7535,7 @@ async function startCzmCoworkerAgent(skipConfirm = false) {
     if (mode === 'complete_refresh' && !skipConfirm) {
         let confirmMsg = '';
         if (category && category !== 'all') {
-            confirmMsg = `⚠️ CATEGORY COMPLETE STOCK REFRESH CONFIRMATION\n\nThis will wipe and fresh-reload pieces in '${catText}' from CZMakers without touching other categories.\nAll other categories, past customer orders (13), and accounts (16) are 100% preserved.\n\nDo you want to continue?`;
+            confirmMsg = `⚠️ CATEGORY COMPLETE STOCK REFRESH CONFIRMATION\n\nThis will wipe and fresh-reload pieces in '${catText}' from CZMakers without touching other categories.\nAll other categories, past customer orders, and accounts are 100% preserved.\n\nDo you want to continue?`;
         } else {
             confirmMsg = "⚠️ COMPLETE STOCK REFRESH CONFIRMATION\n\nThis will delete ALL existing products in the store and perform a fresh, full loading from CZMakers across all 32 categories.\nAll customer accounts and past order records are 100% safe.\n\nDo you want to continue?";
         }
