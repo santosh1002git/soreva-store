@@ -36,6 +36,7 @@ import threading
 import html
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
+import http.client
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -219,6 +220,45 @@ def get_lan_ip():
     finally:
         s.close()
     return ip
+
+
+def ensure_pocketbase_running():
+    """Ensure PocketBase daemon is listening on port 8090."""
+    try:
+        s = socket.create_connection(('127.0.0.1', 8090), timeout=0.5)
+        s.close()
+        return True
+    except Exception:
+        pass
+
+    candidates = [
+        os.path.join(BASE_DIR, 'pb', 'pocketbase'),
+        os.path.join(BASE_DIR, 'pocketbase'),
+        '/usr/local/bin/pocketbase'
+    ]
+    pb_bin = None
+    for cand in candidates:
+        if os.path.exists(cand) and os.access(cand, os.X_OK):
+            pb_bin = cand
+            break
+
+    if not pb_bin:
+        return False
+
+    pb_dir = os.path.join(BASE_DIR, 'pb', 'pb_data')
+    os.makedirs(pb_dir, exist_ok=True)
+    try:
+        subprocess.Popen(
+            [pb_bin, 'serve', '--dir', pb_dir, '--http', '127.0.0.1:8090'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        time.sleep(0.5)
+        return True
+    except Exception as e:
+        print(f"[PocketBase Launch Notice] {e}")
+        return False
 
 
 def get_role_permissions(role):
@@ -2853,6 +2893,68 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
+    def _is_pocketbase_req(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        if path == '/_' or path.startswith('/_/'):
+            return True
+        pb_prefixes = (
+            '/api/collections', '/api/admins', '/api/superusers',
+            '/api/settings', '/api/health', '/api/batch',
+            '/api/realtime', '/api/files', '/api/backups',
+            '/api/logs', '/api/crons'
+        )
+        for prefix in pb_prefixes:
+            if path == prefix or path.startswith(prefix + '/'):
+                return True
+        return False
+
+    def _proxy_pocketbase(self):
+        parsed = urlparse(self.path)
+        if parsed.path == '/_':
+            self.send_response(301)
+            new_path = '/_/' + (f"?{parsed.query}" if parsed.query else "")
+            self.send_header('Location', new_path)
+            self._send_cors_headers()
+            self.end_headers()
+            return
+
+        ensure_pocketbase_running()
+
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length) if content_length > 0 else None
+
+        try:
+            conn = http.client.HTTPConnection('127.0.0.1', 8090, timeout=30)
+            headers = {}
+            for k, v in self.headers.items():
+                if k.lower() not in ('host', 'content-length', 'connection', 'keep-alive', 'transfer-encoding'):
+                    headers[k] = v
+            headers['Host'] = '127.0.0.1:8090'
+            if body is not None:
+                headers['Content-Length'] = str(len(body))
+
+            conn.request(self.command, self.path, body=body, headers=headers)
+            resp = conn.getresponse()
+
+            self._custom_cache_headers = True
+            self.send_response(resp.status, resp.reason)
+            for k, v in resp.getheaders():
+                if k.lower() not in ('transfer-encoding', 'connection', 'content-length'):
+                    self.send_header(k, v)
+            resp_body = resp.read()
+            self.send_header('Content-Length', str(len(resp_body)))
+            if not resp.getheader('Access-Control-Allow-Origin'):
+                self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(resp_body)
+            conn.close()
+        except Exception as e:
+            self._send_json({
+                "error": "PocketBase service is unreachable on port 8090",
+                "details": str(e)
+            }, 502)
+
     def _serve_image_file(self, filepath, mime_type):
         try:
             stat_res = os.stat(filepath)
@@ -3057,11 +3159,17 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_OPTIONS(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
         self.send_response(204)
         self._send_cors_headers()
         self.end_headers()
 
     def do_HEAD(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
         parsed = urlparse(self.path)
         if parsed.path.startswith('/api/img'):
             self._custom_cache_headers = True
@@ -3093,6 +3201,9 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         super().do_HEAD()
 
     def do_GET(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
         parsed = urlparse(self.path)
 
         if parsed.path in ('/admin', '/admin/'):
@@ -3568,7 +3679,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                     "status": "online",
                     "connected": True,
                     "databaseEngine": "PocketBase v0.40.4 (Embedded SQLite)",
-                    "studioUrl": "http://localhost:8090/_/",
+                    "studioUrl": "/_/",
                     "credentials": {
                         "username": "admin@soreva.in",
                         "passwordHint": "soreva@2026"
@@ -3761,7 +3872,7 @@ class SorevaHandler(SimpleHTTPRequestHandler):
                 "adminLocalUrl": f"http://localhost:{port}/admin.html",
                 "storeLanUrl": f"http://{lan_ip}:{port}/",
                 "storeLocalUrl": f"http://localhost:{port}/",
-                "pocketbaseUrl": "http://localhost:8090/_/"
+                "pocketbaseUrl": "/_/"
             })
             return
 
@@ -3864,7 +3975,22 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         # Default: Serve static files
         super().do_GET()
 
+    def do_PATCH(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
+        self._send_json({"error": "Method not allowed"}, 405)
+
+    def do_PUT(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
+        self._send_json({"error": "Method not allowed"}, 405)
+
     def do_DELETE(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
         parsed = urlparse(self.path)
         content_length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(content_length) if content_length > 0 else b'{}'
@@ -3925,6 +4051,9 @@ class SorevaHandler(SimpleHTTPRequestHandler):
         self._send_json({"error": "DELETE endpoint not found"}, 404)
 
     def do_POST(self):
+        if self._is_pocketbase_req():
+            self._proxy_pocketbase()
+            return
         parsed = urlparse(self.path)
 
         content_length = int(self.headers.get('Content-Length', 0))
@@ -7541,6 +7670,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 def run_server(port=8000):
     init_extended_tables()
+    ensure_pocketbase_running()
     lan_ip = get_lan_ip()
     try:
         httpd = DualStackServer(('::', port), SorevaHandler)
@@ -7555,7 +7685,7 @@ def run_server(port=8000):
     print(f"  👥 Employee GUI: http://localhost:{port}/portal.html")
     print(f"  📡 Wi-Fi Share:  http://{lan_ip}:{port}/portal.html")
     print(f"  🔒 Master Admin: http://localhost:{port}/admin.html")
-    print(f"  📦 PocketBase:   http://localhost:8090/_/")
+    print(f"  📦 PocketBase:   http://localhost:{port}/_/")
     print(f"==================================================")
     sys.stdout.flush()
     try:
